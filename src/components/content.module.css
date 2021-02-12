@@ -1,0 +1,48 @@
+.markdown {
+  @apply text-lg leading-relaxed;
+}
+
+.markdown p,
+.markdown ul,
+.markdown ol,
+.markdown blockquote {
+  @apply my-6;
+}
+
+.markdown h2 {
+  @apply text-3xl mt-10 mb-10 leading-snug font-bold;
+}
+
+.markdown h3 {
+  @apply text-2xl mt-8 mb-8 leading-snug font-bold;
+}
+
+.markdown ol,
+.markdown ul {
+  @apply ml-6;
+}
+
+.markdown li {
+  @apply py-2;
+}
+
+.markdown ol {
+  @apply list-decimal list-inside;
+}
+
+.markdown ul {
+  @apply list-disc list-inside;
+}
+
+.markdown a {
+  @apply underline hover:opacity-70;
+}
+
+.markdown pre {
+  @apply rounded;
+}
+
+.markdown code {
+  @apply rounded px-1.5 py-1 text-sm text-white !important;
+  background: #011627;
+}

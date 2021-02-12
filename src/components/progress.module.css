@@ -1,0 +1,24 @@
+.progress {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 0.5rem;
+  appearance: none;
+  border: none;
+  background-color: transparent;
+  color: black;
+  z-index: 2;
+}
+
+.progress::-webkit-progress-bar {
+  background-color: transparent;
+}
+
+.progress::-webkit-progress-value {
+  background-color: black;
+}
+
+.progress::-moz-progress-bar {
+  background-color: black;
+}
