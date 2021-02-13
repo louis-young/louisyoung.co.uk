@@ -51,8 +51,8 @@ const Code = ({ code, language, metastring }) => {
                   key: i,
                   style: shouldHighlightLine(i) && {
                     backgroundColor: "rgba(201, 167, 255, 0.2)",
-                    margin: "0 -1rem 0 -.75rem",
-                    padding: " 0px 5px",
+                    margin: "0px -1rem 0 -0.75rem",
+                    padding: " 0px 7px",
                     borderLeft: "5px solid rgb(201, 167, 255)",
                   },
                 })}
