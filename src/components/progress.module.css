@@ -7,7 +7,7 @@
   appearance: none;
   border: none;
   background-color: transparent;
-  color: black;
+  color: currentcolor;
   z-index: 2;
 }
 
@@ -16,9 +16,9 @@
 }
 
 .progress::-webkit-progress-value {
-  background-color: black;
+  background-color: currentcolor;
 }
 
 .progress::-moz-progress-bar {
-  background-color: black;
+  background-color: currentcolor;
 }

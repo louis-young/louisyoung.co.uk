@@ -6,13 +6,15 @@ import Markdown from "./markdown";
 
 const Layout = ({ children }) => {
   return (
-    <>
-      <Header />
-      <main>
-        <Markdown>{children}</Markdown>
-      </main>
-      <Footer />
-    </>
+    <section className="layout">
+      <div className="dark:bg-dark dark:text-white">
+        <Header />
+        <main>
+          <Markdown>{children}</Markdown>
+        </main>
+        <Footer />
+      </div>
+    </section>
   );
 };
 

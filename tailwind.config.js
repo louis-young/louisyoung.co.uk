@@ -1,7 +1,12 @@
 module.exports = {
-  purge: ["./src/components/**/*.js", "./src/pages/**/*.js", "./src/templates/**/*.js"],
+  purge: ["./src/components/**/*.js", "./src/components/*.css", "./src/pages/**/*.js", "./src/templates/**/*.js"],
+  darkMode: "class",
   theme: {
     extend: {
+      colors: {
+        dark: "#0f1420",
+        darker: "#0d0f17",
+      },
       letterSpacing: {
         tighter: "-.04em",
       },

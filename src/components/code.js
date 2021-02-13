@@ -1,7 +1,13 @@
 import React from "react";
 
 import Highlight, { defaultProps } from "prism-react-renderer";
-import theme from "prism-react-renderer/themes/nightOwl";
+
+import nightOwl from "prism-react-renderer/themes/nightOwl";
+import palenight from "prism-react-renderer/themes/palenight";
+
+const dark = true; // Mock dark mode.
+
+const theme = dark ? palenight : nightOwl;
 
 const calculateLinesToHighlight = (meta) => {
   const RegEx = /{([\d,-]+)}/;
@@ -31,7 +37,7 @@ const Code = ({ code, language, metastring }) => {
   return (
     <Highlight {...defaultProps} code={code} language={language} theme={theme}>
       {({ className, style, tokens, getLineProps, getTokenProps }) => (
-        <div style={{ overflow: "auto" }}>
+        <div style={{ overflow: "auto", borderRadius: "0.25rem" }}>
           <pre
             className={className}
             style={{

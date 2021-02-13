@@ -7,3 +7,8 @@
 ::selection {
   background: #b4d5ff;
 }
+
+/* Temporary fix for dark mode. */
+.dark code {
+  background: #292d3e !important;
+}

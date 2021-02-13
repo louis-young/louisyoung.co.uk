@@ -10,7 +10,7 @@
 }
 
 .markdown blockquote {
-  @apply border-l-4 border-black pl-4 italic leading-normal;
+  @apply border-l-4 border-current pl-4 italic leading-normal;
 }
 
 .markdown h2 {
@@ -40,10 +40,6 @@
 
 .markdown a {
   @apply underline hover:opacity-70;
-}
-
-.markdown pre {
-  @apply rounded;
 }
 
 .markdown code {
