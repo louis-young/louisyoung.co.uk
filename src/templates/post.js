@@ -4,7 +4,6 @@ import { graphql } from "gatsby";
 import Image from "gatsby-image";
 
 import Author from "../components/author";
-import Layout from "../components/layout";
 import Meta from "../components/meta";
 import Container from "../components/container";
 import Progress from "../components/progress";
@@ -15,7 +14,7 @@ const Post = ({ data }) => {
   const post = data.mdx;
 
   return (
-    <Layout>
+    <>
       <Meta
         title={post.frontmatter.title}
         description={post.excerpt}
@@ -48,7 +47,7 @@ const Post = ({ data }) => {
           <Content content={post.body} />
         </article>
       </Container>
-    </Layout>
+    </>
   );
 };
 
