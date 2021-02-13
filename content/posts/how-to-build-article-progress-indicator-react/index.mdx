@@ -7,6 +7,18 @@ image: "./introduction.jpg"
 
 Today, we're going to build an article progress indicator, also known as a reading position indicator. These can be useful to allow readers to easily visualise the length of an article, and see their reading progress (more on this later).
 
+## Table Of Contents
+
+1. [What is an article progress indicator?](#what-is-an-article-progress-indicator)
+2. [Why use an article progress indicator?](#why-use-an-article-progress-indicator)
+3. [Tutorial](#tutorial)
+   1. [Component and state](#component-and-state)
+   2. [Effects](#effects)
+   3. [Events](#events)
+   4. [Functionality](#functionality)
+   5. [Styling](#styling)
+4. [Conclusion](#conclusion)
+
 ## What is an article progress indicator?
 
 There are many different implementations but the most common is a slim bar along the top of the page (as you can see above on my site).
@@ -29,13 +41,13 @@ However, the use of such progress indicators is highly contrived. Arguments agai
 
 Use your own judgement here and decide whether or not to implement one on your site.
 
-## Let's get started
+## Tutorial
 
 ### Component and state
 
 Let's start by creating a new component called `Progress` and returning a native `progress` element.
 
-```js
+```jsx
 const Progress = () => {
   return <progress />;
 };
@@ -43,7 +55,7 @@ const Progress = () => {
 
 Great, now let's add a `progress` state to our component and initialise it's value to `0`.
 
-```js {1,4}
+```jsx {1,4}
 import { useState } from "react";
 
 const Progress = () => {
@@ -62,7 +74,7 @@ Awesome. The native `progress` element has two attributes we're going to use in 
 
 Let's add those to our `progress` element.
 
-```js
+```jsx
 <progress value={progress} max="100" />
 ```
 
@@ -72,7 +84,7 @@ Next we will make our progress indicator work.
 
 Let's create an effect using `useEffect` with an empty dependency array which will run when our component mounts.
 
-```js
+```jsx
 useEffect(() => {
   // ...
 }, []);
@@ -82,7 +94,7 @@ Note: Remember to import `useEffect` if you haven't already.
 
 Now, let's create a function within our effect called `calculatePercentage` which will calculate our progress percentage.
 
-```js {2,3,4}
+```jsx {2,3,4}
 useEffect(() => {
   const calculatePercentage = () => {
     // ...
@@ -94,7 +106,7 @@ useEffect(() => {
 
 We'll also bind a scroll event to the window, and call our `calculatePercentage` function which we just defined.
 
-```js {6,7,8,9}
+```jsx {6,7,8,9}
 useEffect(() => {
   const calculatePercentage = () => {
     // ...
@@ -117,7 +129,7 @@ Great, now let's add the business logic to our `calculatePercentage` function.
 
 ### Functionality
 
-```js
+```jsx
 const calculatePercentage = () => {
   const scrolled = window.scrollY;
 
@@ -132,7 +144,7 @@ Now, our `total` variable is the maximum scrollable distance of our page. This m
 
 Finally, we will store this percentage in our `progress` state.
 
-```js {6,8}
+```jsx {6,8}
 const calculatePercentage = () => {
   const scrolled = window.scrollY;
 
@@ -146,7 +158,7 @@ const calculatePercentage = () => {
 
 Now you have a functional article progress indicator within your React application. Your final component should look like this:
 
-```js
+```jsx
 import { useEffect, useState } from "react";
 
 const Progress = () => {

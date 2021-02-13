@@ -9,6 +9,10 @@
   @apply my-6;
 }
 
+.markdown blockquote {
+  @apply border-l-4 border-black pl-4 italic leading-normal;
+}
+
 .markdown h2 {
   @apply text-3xl mt-10 mb-10 leading-snug font-bold;
 }
@@ -23,7 +27,7 @@
 }
 
 .markdown li {
-  @apply py-2;
+  @apply py-1;
 }
 
 .markdown ol {
@@ -45,4 +49,8 @@
 .markdown code {
   @apply rounded px-1.5 py-1 text-sm text-white !important;
   background: #011627;
+}
+
+.markdown ol ol {
+  @apply my-2;
 }

@@ -11,17 +11,23 @@ This article assumes that you're using functional components. If you aren't, a l
 
 There are many approaches and this topic can be quite subjective, so make your own judgements as to what works for you and your team.
 
+## Table Of Contents
+
+1. [What are props?](#what-are-props)
+2. [Patterns](#patterns)
+   1. [Destructuring in the component parameters](#destructuring-in-the-component-parameters)
+   2. [Destructuring in the component body](#destructuring-in-the-component-body)
+   3. [Directly accessing props](#directly-accessing-props)
+3. [Something to think about](#something-to-think-about)
+4. [Conclusion](#conclusion)
+
 ## What are props?
 
 Props (short for properties) are immutable properties that are passed down through React components from parent to child. They are key to React and it's unidirectional data flow.
 
 ## Patterns
 
-The three most common patterns we see when accessing props in React components are as follows:
-
-1. [Destructuring in the component parameters](#destructuring-in-the-component-parameters)
-2. [Destructuring in the component body](#destructuring-in-the-component-body)
-3. [Directly accessing props](#directly-accessing-props)
+The three most common patterns we see when accessing props in React components are:
 
 ### Destructuring in the component parameters
 
@@ -29,7 +35,7 @@ Arguably the most common (and my preferred method), destructuring props in the c
 
 Here is an example of this pattern:
 
-```js
+```jsx
 const Component = ({ title }) => {
   return <p>{title}</p>;
 };
@@ -39,7 +45,7 @@ As you can see, this is very clean and concise and it exposes all of the props t
 
 Take this as an example:
 
-```js
+```jsx
 const Component = ({ title }) => {
   // Lots of code here...
 
@@ -56,7 +62,7 @@ Now, this isn't something I have personally found to be a challenge and you can 
 
 A common mistake when destructuring using this approach is to miss the object notation in the parenthesis. Here's an example of what _not_ to do.
 
-```js
+```jsx
 const Component = (title) => ... // Note that we are missing the {} here.
 ```
 
@@ -64,7 +70,7 @@ const Component = (title) => ... // Note that we are missing the {} here.
 
 Less common (and not my preferred approach) is destructuring props within the component body. In my opinion this pattern is a little too verbose and doesn't solve many of the pitfalls mentioned above, but let's have a look at an example of this pattern:
 
-```js
+```jsx
 const Component = (props) => {
   const { title } = props;
 
@@ -76,7 +82,7 @@ Again, this is a very small example; let's remember that we can have multiple de
 
 Take this as an example:
 
-```js
+```jsx
 const Component = (props) => {
   const { title } = props;
 
@@ -95,7 +101,7 @@ If you don't like any of the above, then consider not destructuring. One of the 
 
 Here's an example of accessing props directly:
 
-```js
+```jsx
 const Component = (props) => {
   return <p>{props.title}</p>;
 };

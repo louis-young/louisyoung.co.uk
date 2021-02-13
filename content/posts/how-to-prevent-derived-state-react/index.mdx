@@ -7,6 +7,13 @@ image: "./introduction.jpg"
 
 Today, we'll look at how to prevent derived state in React.
 
+## Table Of Contents
+
+1. [What is derived state?](#what-is-derived-state)
+2. [Examples](#examples)
+3. [Performance](#performance)
+4. [Conclusion](#conclusion)
+
 ## What is derived state?
 
 Derived state is state that can be derived from an existing piece of state, or state which is derived from props.
@@ -17,7 +24,7 @@ The chances are that if a value can be derived from an existing piece of state, 
 
 A basic example is some state containing messages.
 
-```js
+```jsx
 const Messages = () => {
   const [messages, setMessages] = useState([]);
   const [total, setTotal] = useState(0);
@@ -42,7 +49,7 @@ This is a form of derived state and should be avoided where possible. We shouldn
 
 Let's see what that looks like:
 
-```js {12}
+```jsx {12}
 const Messages = () => {
   const [messages, setMessages] = useState([]);
 
