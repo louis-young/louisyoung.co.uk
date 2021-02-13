@@ -45,7 +45,7 @@ export const pageQuery = graphql`
   query {
     allMdx(sort: { fields: [frontmatter___date], order: DESC }) {
       nodes {
-        excerpt(pruneLength: 160)
+        excerpt(pruneLength: 165)
         fields {
           slug
         }
