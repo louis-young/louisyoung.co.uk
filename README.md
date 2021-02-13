@@ -2,6 +2,8 @@
 
 A statically generated personal blog website built with Gatsby.
 
+![Personal Blog](documentation/personal-blog.jpg)
+
 ## Description
 
 This is a Gatsby application for my own personal blog. It is statically generated using Gatsby and uses posts written in markdown (MDX).
