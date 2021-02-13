@@ -2,10 +2,7 @@ import React from "react";
 
 import Social from "./social";
 
-import website from "../assets/icons/website.svg";
-import github from "../assets/icons/github.svg";
-import twitter from "../assets/icons/twitter.svg";
-import linkedin from "../assets/icons/linkedin.svg";
+import { website, github, twitter, linkedin } from "./icons";
 
 const Socials = () => {
   return (

@@ -13,7 +13,7 @@ const Index = ({ data }) => {
       <Meta />
 
       <section>
-        <h1 className="py-20 text-center text-2xl md:text-4xl font-bold tracking-tight leading-normal md:leading-normal">
+        <h1 className="py-14 md:py-20 text-center text-2xl md:text-4xl font-bold tracking-tight leading-normal md:leading-normal">
           Software development blog
           <br />
           by Louis Young
