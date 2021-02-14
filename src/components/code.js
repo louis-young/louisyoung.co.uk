@@ -5,7 +5,7 @@ import Highlight, { defaultProps } from "prism-react-renderer";
 import nightOwl from "prism-react-renderer/themes/nightOwl";
 import palenight from "prism-react-renderer/themes/palenight";
 
-const dark = false; // Mock dark mode.
+const dark = true; // Mock dark mode.
 
 const theme = dark ? palenight : nightOwl;
 

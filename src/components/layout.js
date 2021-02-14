@@ -6,7 +6,7 @@ import Markdown from "./markdown";
 
 const Layout = ({ children }) => {
   return (
-    <section className="layout">
+    <section className="dark">
       <div className="dark:bg-dark dark:text-white">
         <Header />
         <main>
