@@ -1,0 +1,127 @@
+---
+title: "Handling protected routes with React Router"
+date: "2021-02-14T05:35:07.322Z"
+description: "Today, we'll look at how to handle protected routes (also known as private routes) using React Router and the Context API. Protected routes prevent unauthenicated and unauthorised users from acessing certain parts of our application."
+image: "./introduction.jpg"
+---
+
+Today, we'll look at how to handle protected routes (also known as private routes) using <a href="https://reactrouter.com/web/guides/quick-start" target="_blank">React Router</a> and the <a href="https://reactjs.org/docs/context.html" target="_blank">Context API</a>.
+
+## Table Of Contents
+
+1. [What are protected routes?](#what-are-protected-routes)
+2. [A note about security](#a-note-about-security)
+3. [Implementation](#implementation)
+   1. [Context](#context)
+   2. [Protected route component](#protected-route-component)
+   3. [Usage](#usage)
+4. [Conclusion](#conclusion)
+
+## What are protected routes?
+
+Protected routes prevent unauthenicated and unauthorised users from acessing certain parts of our application.
+
+Please be aware that this is not a way to secure your application (more on this next).
+
+## A note about security
+
+It is important to note that implementing protected routes is _not_ a way to secure your application, but a way to control what the client sees when they try to access certain routes. Requests to your back-end should be secured with a form of authentication.
+
+As our routing is handled on the client side, it is possible for somebody to spoof the authentication state we are about to implement and access the protected route. This is why interactions between your client and server _must_ be secured.
+
+Let's say somebody manages to access our dashboard without _actually_ being authenticated. This isn't an issue as none of the requests to get any sensitive data will succeed as they will lack the authentication required.
+
+## Implementation
+
+### Context
+
+We are going to use the <a href="https://reactjs.org/docs/context.html" target="_blank">Context API</a> to provide our authentication state to the relevant components.
+
+Let's take a look at what that might look like:
+
+```jsx
+import React, { useEffect, useState, createContext } from "react";
+
+const AuthenticationContext = createContext();
+
+const AuthenticationProvider = ({ children }) => {
+  const [authenticating, setAuthenticating] = useState(false);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    // Authenticate the user and set state...
+  }, []);
+
+  return <AuthenticationContext.Provider value={{ authenticating, user }}>{children}</AuthenticationContext.Provider>;
+};
+
+export { AuthenticationContext, AuthenticationProvider };
+```
+
+The actual logic has been omitted from this example as it will likely differ to your implementation. A common pattern is to have an effect which runs and makes a request to your back-end which will return whether the user is authenticated or not.
+
+For the purposes of this tutorial, let's mock this and simply immediately authenticate ourselves.
+
+```jsx {2}
+useEffect(() => {
+  setUser({ id: 0, name: "Louis Young" });
+}, []);
+```
+
+Great. Now we can consume this state in the relevant components.
+
+### Protected route component
+
+Now, we want to build a component which allows us to interface with it similiarly to how we do with the `Route` component from React Router.
+
+Let's see what that looks like:
+
+```jsx
+import React, { useContext } from "react";
+
+import { Redirect, Route } from "react-router-dom";
+
+import { AuthenticationContext } from "../../context/AuthenticationContext";
+
+const ProtectedRoute = ({ component: Component, path, exact }) => {
+  const { authenticating, user } = useContext(AuthenticationContext);
+
+  if (authenticating) {
+    return <p>Authenticating...</p>;
+  }
+
+  return user ? <Route path={path} exact={exact} component={Component} /> : <Redirect to="/" />;
+};
+
+export default ProtectedRoute;
+```
+
+Now, let's step through this code:
+
+- We import our components and context
+- We define a `ProtectedRoute` component which accepts similar props to the standard `Route` component
+- We consume our context, and if we are authenticating (loading) then we show a loading state
+- We then conditionally render our route, or a redirect depending on state from our context provider
+
+Note: You can spread any additional props on to the `Route` component should you need to.
+
+This is a very simple implementation, but it works. Let's see how we'd use our new component.
+
+### Usage
+
+We can use our new `ProtectedRoute` component in the same way we would use the `Route` component from React Router.
+
+Here is an example of this:
+
+```jsx {2}
+<Route path="/" component={Home} exact />
+<ProtectedRoute path="/dashboard" component={Dashboard} />
+```
+
+You can see that both route components offer a similar API, so if you're familiar with the standard `Route` component then there's no learning curve.
+
+## Conclusion
+
+This is a minimal example for the purposes of this tutorial, but this can be easily extended to meet your requirements.
+
+Hopefully this article helped you to handle protected routes in your React applications and reminded you of good client/server security practices.

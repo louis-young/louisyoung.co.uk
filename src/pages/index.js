@@ -1,6 +1,8 @@
 import React from "react";
 import { graphql } from "gatsby";
 
+import truncate from "../utilities/truncate";
+
 import Meta from "../components/meta";
 import Post from "../components/post";
 import Container from "../components/container";
@@ -29,7 +31,7 @@ const Index = ({ data }) => {
                 title={post.frontmatter.title}
                 image={post.frontmatter.image}
                 link={post.fields.slug}
-                excerpt={post.excerpt}
+                excerpt={truncate(post.frontmatter.description)}
               />
             );
           })}
