@@ -1,15 +1,14 @@
 import React, { useEffect } from "react";
 
+import isDarkMode from "../utilities/dark-mode";
+
 import Footer from "./footer";
 import Header from "./header";
 import Markdown from "./markdown";
 
 const Layout = ({ children }) => {
   useEffect(() => {
-    if (
-      localStorage.theme === "dark" ||
-      (!("theme" in localStorage) && window.matchMedia("(prefers-color-scheme: dark)").matches)
-    ) {
+    if (isDarkMode()) {
       document.documentElement.classList.add("dark");
     } else {
       document.documentElement.classList.remove("dark");
