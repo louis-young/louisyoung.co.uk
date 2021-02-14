@@ -1,19 +1,21 @@
 import React, { useEffect } from "react";
 
-import isDarkMode from "../utilities/dark-mode";
+import useDarkMode from "../hooks/useDarkMode";
 
 import Footer from "./footer";
 import Header from "./header";
 import Markdown from "./markdown";
 
 const Layout = ({ children }) => {
+  const dark = useDarkMode();
+
   useEffect(() => {
-    if (isDarkMode()) {
+    if (dark) {
       document.documentElement.classList.add("dark");
     } else {
       document.documentElement.classList.remove("dark");
     }
-  }, []);
+  }, [dark]);
 
   return (
     <section className="dark:bg-dark dark:text-white">

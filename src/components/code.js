@@ -2,7 +2,7 @@ import React from "react";
 
 import Highlight, { defaultProps } from "prism-react-renderer";
 
-import isDarkMode from "../utilities/dark-mode";
+import useDarkMode from "../hooks/useDarkMode";
 
 import nightOwl from "prism-react-renderer/themes/nightOwl";
 import palenight from "prism-react-renderer/themes/palenight";
@@ -32,7 +32,7 @@ const calculateLinesToHighlight = (meta) => {
 const Code = ({ code, language, metastring }) => {
   const shouldHighlightLine = calculateLinesToHighlight(metastring);
 
-  const dark = isDarkMode();
+  const dark = useDarkMode();
 
   const theme = dark ? palenight : nightOwl;
 
