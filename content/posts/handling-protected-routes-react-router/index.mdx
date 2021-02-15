@@ -1,21 +1,21 @@
 ---
 title: "Handling protected routes with React Router"
-date: "2021-02-14T05:35:07.322Z"
+date: "2021-02-08T05:35:07.322Z"
 description: "Today, we'll look at how to handle protected routes (also known as private routes) using React Router and the Context API. Protected routes prevent unauthenicated and unauthorised users from acessing certain parts of our application."
 image: "./introduction.jpg"
 ---
 
 Today, we'll look at how to handle protected routes (also known as private routes) using <a href="https://reactrouter.com/web/guides/quick-start" target="_blank">React Router</a> and the <a href="https://reactjs.org/docs/context.html" target="_blank">Context API</a>.
 
-## Table Of Contents
+## Table of contents
 
-1. [What are protected routes?](#what-are-protected-routes)
-2. [A note about security](#a-note-about-security)
-3. [Implementation](#implementation)
-   1. [Context](#context)
-   2. [Protected route component](#protected-route-component)
-   3. [Usage](#usage)
-4. [Conclusion](#conclusion)
+- [What are protected routes?](#what-are-protected-routes)
+- [A note about security](#a-note-about-security)
+- [Implementation](#implementation)
+  - [Context](#context)
+  - [Protected route component](#protected-route-component)
+  - [Usage](#usage)
+- [Conclusion](#conclusion)
 
 ## What are protected routes?
 
@@ -103,7 +103,7 @@ Now, let's step through this code:
 - We consume our context, and if we are authenticating (loading) then we show a loading state
 - We then conditionally render our route, or a redirect depending on state from our context provider
 
-Note: You can spread any additional props on to the `Route` component should you need to.
+> Note: You can spread any additional props on to the `Route` component should you need to.
 
 This is a very simple implementation, but it works. Let's see how we'd use our new component.
 

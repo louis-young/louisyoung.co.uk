@@ -7,12 +7,13 @@ image: "./introduction.jpg"
 
 Today, we'll look at how to prevent derived state in React. This is an anti-pattern that is common amongst beginners, and something that can catch experienced developers out and become an issue at scale.
 
-## Table Of Contents
+## Table of contents
 
-1. [What is derived state?](#what-is-derived-state)
-2. [Examples](#examples)
-3. [Performance](#performance)
-4. [Conclusion](#conclusion)
+- [What is derived state?](#what-is-derived-state)
+- [Examples](#examples)
+- [Performance](#performance)
+- [Why avoid derived state?](#why-avoid-derived-state)
+- [Conclusion](#conclusion)
 
 ## What is derived state?
 
@@ -70,9 +71,15 @@ const Messages = () => {
 
 That's better. We are now calculating the total message count at render instead. This makes our code more clean and concise and prevents storing unnecessary derived state.
 
+## Why avoid derived state?
+
+Derived state can cause silent, hard to trace issues in an application which can prove difficult to find and fix. Whilst deriving state is often unnecessary, it also goes against the single source of truth principle.
+
+For example, the messages in the above example could be changed elsewhere (in another component or by another side effect) and the derived total state wouldn't update. On the contrary, it would update if it was calculated from the `messages` state at render.
+
 ## Performance
 
-If computing your value at render is expensive and is _actually_ causing performance issues, then consider memoization.
+If computing a value at render is expensive and is _actually_ causing performance issues, then consider <a href="https://epicreact.dev/memoization-and-react/" target="_blank">memoization</a>.
 
 ## Conclusion
 

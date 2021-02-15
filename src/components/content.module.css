@@ -47,6 +47,7 @@
   background: #011627;
 }
 
-.markdown ol ol {
+.markdown ol ol,
+.markdown ul ul {
   @apply my-2;
 }

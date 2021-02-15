@@ -7,17 +7,17 @@ image: "./introduction.jpg"
 
 Today, we're going to build an article progress indicator, also known as a reading position indicator. These can be useful to allow readers to easily visualise the length of an article, and see their reading progress (more on this later).
 
-## Table Of Contents
+## Table of contents
 
-1. [What is an article progress indicator?](#what-is-an-article-progress-indicator)
-2. [Why use an article progress indicator?](#why-use-an-article-progress-indicator)
-3. [Tutorial](#tutorial)
-   1. [Component and state](#component-and-state)
-   2. [Effects](#effects)
-   3. [Events](#events)
-   4. [Functionality](#functionality)
-   5. [Styling](#styling)
-4. [Conclusion](#conclusion)
+- [What is an article progress indicator?](#what-is-an-article-progress-indicator)
+- [Why use an article progress indicator?](#why-use-an-article-progress-indicator)
+- [Tutorial](#tutorial)
+  - [Component and state](#component-and-state)
+  - [Effects](#effects)
+  - [Events](#events)
+  - [Functionality](#functionality)
+  - [Styling](#styling)
+- [Conclusion](#conclusion)
 
 ## What is an article progress indicator?
 
@@ -65,7 +65,7 @@ const Progress = () => {
 };
 ```
 
-Note: Remember to import `useState` if you haven't already.
+> Note: Remember to import `useState` if you haven't already.
 
 Awesome. The native `progress` element has two attributes we're going to use in this tutorial.
 
@@ -75,7 +75,7 @@ Awesome. The native `progress` element has two attributes we're going to use in 
 Let's add those to our `progress` element.
 
 ```jsx
-<progress value={progress} max="100" />
+<progress value={progress} max={100} />
 ```
 
 Next we will make our progress indicator work.
@@ -90,7 +90,7 @@ useEffect(() => {
 }, []);
 ```
 
-Note: Remember to import `useEffect` if you haven't already.
+> Note: Remember to import `useEffect` if you haven't already.
 
 Now, let's create a function within our effect called `calculatePercentage` which will calculate our progress percentage.
 
@@ -121,9 +121,9 @@ useEffect(() => {
 
 Let's step through this code a little.
 
-1. We define our `calculatePercentage` function within our effect.
-2. When our effect runs (on component mount), we bind a scroll event to the window.
-3. When our component unmounts, the cleanup function runs (which is what we return from our effect), which removes our event listener.
+- We define our `calculatePercentage` function within our effect.
+- When our effect runs (on component mount), we bind a scroll event to the window.
+- When our component unmounts, the cleanup function runs (which is what we return from our effect), which removes our event listener.
 
 Great, now let's add the business logic to our `calculatePercentage` function.
 
@@ -137,8 +137,8 @@ const calculatePercentage = () => {
 };
 ```
 
-1. We've declared a variable called `scrolled` which references how far we've scrolled on the Y axis within the window.
-2. We've declared a variable called `total` which references the total height of the document (`scrollHeight`) minus the window height (`clientHeight`).
+- We've declared a variable called `scrolled` which references how far we've scrolled on the Y axis within the window.
+- We've declared a variable called `total` which references the total height of the document (`scrollHeight`) minus the window height (`clientHeight`).
 
 Now, our `total` variable is the maximum scrollable distance of our page. This means that we can easily work out our progress percentage by dividing how far we've scrolled by our total scrollable distance and multiplying it by 100.
 
@@ -181,7 +181,7 @@ const Progress = () => {
     };
   }, []);
 
-  return <progress value={progress} max="100" />;
+  return <progress value={progress} max={100} />;
 };
 ```
 

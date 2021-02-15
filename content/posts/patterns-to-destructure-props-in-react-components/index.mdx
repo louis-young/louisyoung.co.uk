@@ -11,15 +11,16 @@ This article assumes that you're using functional components. If you aren't, a l
 
 There are many approaches and this topic can be quite subjective, so make your own judgements as to what works for you and your team.
 
-## Table Of Contents
+## Table of contents
 
-1. [What are props?](#what-are-props)
-2. [Patterns](#patterns)
-   1. [Destructuring in the component parameters](#destructuring-in-the-component-parameters)
-   2. [Destructuring in the component body](#destructuring-in-the-component-body)
-   3. [Directly accessing props](#directly-accessing-props)
-3. [Something to think about](#something-to-think-about)
-4. [Conclusion](#conclusion)
+- [What are props?](#what-are-props)
+- [Patterns](#patterns)
+  - [Destructuring in the component parameters](#destructuring-in-the-component-parameters)
+  - [Destructuring in the component body](#destructuring-in-the-component-body)
+  - [Directly accessing props](#directly-accessing-props)
+- [Using the spread operator](#using-the-spread-operator)
+- [Something to think about](#something-to-think-about)
+- [Conclusion](#conclusion)
 
 ## What are props?
 
@@ -112,6 +113,28 @@ At first glance, it isn't immediately obvious what props are passed down to this
 Some would consider this approach too verbose as you have to repeat `props.` every time you want to access a prop. This is highly contrived and you can make your own decision, but personally it's a no-issue for me.
 
 Following on from the above, accessing properties via `props.` clearly indicates where the title in the above example originated from.
+
+## Using the spread operator
+
+It is worth nothing that you can also use the <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_syntax" target="_blank">spread</a> operator to gather props implicitly and to spread props on to a child element or component.
+
+Let's see this in action:
+
+```jsx
+const Component = ({title, ...rest}) => ...
+```
+
+Any props which we passed down to the component but didn't explicitly destructure will be accesible in the `rest` object. You can pass these down by spreading `rest` on to another component which is the most common use case for spreading props.
+
+Let's take a look at what that would look like:
+
+```jsx
+<Child {...rest} />
+```
+
+> Note: You can name `rest` whatever you want, but `rest` is a typical convention that implies it contains the _rest_ of the props.
+
+Now, these props are also accessible in the child component.
 
 ## Something to think about
 
