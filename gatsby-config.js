@@ -22,18 +22,6 @@ module.exports = {
       },
     },
     {
-      resolve: "gatsby-plugin-manifest",
-      options: {
-        name: "Software Development Blog",
-        short_name: "Louis Young",
-        start_url: "/",
-        background_color: "#ffffff",
-        theme_color: "#000000",
-        display: "minimal-ui",
-        icon: "content/assets/icon/icon.png",
-      },
-    },
-    {
       resolve: "gatsby-plugin-mdx",
       options: {
         gatsbyRemarkPlugins: [
