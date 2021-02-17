@@ -20,7 +20,7 @@ const Author = () => {
 
   return (
     <a
-      href="hhttps://www.louisyoung.co.uk"
+      href="https://www.louisyoung.co.uk"
       target="_blank"
       rel="noopener noreferrer"
       className="block hover:opacity-80 transition duration-200"
