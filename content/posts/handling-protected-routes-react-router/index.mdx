@@ -1,7 +1,7 @@
 ---
 title: "Handling protected routes with React Router"
 date: "2021-02-08T05:35:07.322Z"
-description: "Today, we'll look at how to handle protected routes (also known as private routes) using React Router and the Context API. Protected routes prevent unauthenicated and unauthorised users from acessing certain parts of our application."
+description: "Today, we'll look at how to handle protected routes (also known as private routes) using React Router and the Context API. Protected routes prevent unauthenticated  and unauthorised users from accessing certain parts of our application."
 image: "./introduction.jpg"
 ---
 
@@ -15,11 +15,12 @@ Today, we'll look at how to handle protected routes (also known as private route
   - [Context](#context)
   - [Protected route component](#protected-route-component)
   - [Usage](#usage)
+- [Example](#example)
 - [Conclusion](#conclusion)
 
 ## What are protected routes?
 
-Protected routes prevent unauthenicated and unauthorised users from acessing certain parts of our application.
+Protected routes prevent unauthenticated and unauthorised users from accessing certain parts of our application.
 
 Please be aware that this is not a way to secure your application (more on this next).
 
@@ -45,7 +46,7 @@ import React, { useEffect, useState, createContext } from "react";
 const AuthenticationContext = createContext();
 
 const AuthenticationProvider = ({ children }) => {
-  const [authenticating, setAuthenticating] = useState(false);
+  const [authenticating, setAuthenticating] = useState(true);
   const [user, setUser] = useState(null);
 
   useEffect(() => {
@@ -60,11 +61,13 @@ export { AuthenticationContext, AuthenticationProvider };
 
 The actual logic has been omitted from this example as it will likely differ to your implementation. A common pattern is to have an effect which runs and makes a request to your back-end which will return whether the user is authenticated or not.
 
-For the purposes of this tutorial, let's mock this and simply immediately authenticate ourselves.
+For the purposes of this tutorial, let's mock this and simply immediately authenticate ourselves and set our authenticating state to `false`.
 
-```jsx {2}
+```jsx {2,4}
 useEffect(() => {
   setUser({ id: 0, name: "Louis Young" });
+
+  setAuthenticating(false);
 }, []);
 ```
 
@@ -72,7 +75,7 @@ Great. Now we can consume this state in the relevant components.
 
 ### Protected route component
 
-Now, we want to build a component which allows us to interface with it similiarly to how we do with the `Route` component from React Router.
+Now, we want to build a component which allows us to interface with it similarly to how we do with the `Route` component from React Router.
 
 Let's see what that looks like:
 
@@ -119,6 +122,20 @@ Here is an example of this:
 ```
 
 You can see that both route components offer a similar API, so if you're familiar with the standard `Route` component then there's no learning curve.
+
+## Example
+
+Here's an example application showing all of the above sections glued together.
+
+> Note: This examples uses a `setTimeout` of 1 second to mock an API request.
+
+<iframe
+  src="https://codesandbox.io/embed/protected-routes-zkqs1?fontsize=14&hidenavigation=1&theme=dark&view=preview"
+  style="width:100%; height:500px; border:0; border-radius: 4px; overflow:hidden;"
+  title="Protected Routes"
+  allow="accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking"
+  sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts"
+></iframe>
 
 ## Conclusion
 

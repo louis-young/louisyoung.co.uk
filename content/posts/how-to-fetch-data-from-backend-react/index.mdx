@@ -20,7 +20,7 @@ Today, we're going to talk about fetching data in React. One of the most common 
 - [Abstracting logic out to a custom hook](#abstracting-logic-out-to-a-custom-hook)
   - [Writing the hook](#writing-the-hook)
   - [Using the hook](#using-the-hook)
-- [Application](#application)
+- [Example](#example)
 - [React Query](#react-query)
 - [Conclusion](#conclusion)
 
@@ -28,7 +28,7 @@ Today, we're going to talk about fetching data in React. One of the most common 
 
 > The Fetch API provides an interface for fetching resources (including across the network). It will seem familiar to anyone who has used XMLHttpRequest, but the new API provides a more powerful and flexible feature set.
 
-Put simply, it's a newer, more flexible interface to make HTTP requests without the need for the ancient <a href="https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API" target="_blank">XMLHttpRequest API</a> (browser compatability permitting).
+Put simply, it's a newer, more flexible interface to make HTTP requests without the need for the ancient <a href="https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API" target="_blank">XMLHttpRequest API</a> (browser compatibility permitting).
 
 ## Tutorial
 
@@ -343,11 +343,11 @@ const App = () => {
 };
 ```
 
-Great, now you'll notice a quick loading state whilst we make our request which then dissapears once the tasks have been fetched. Also, if you simulate an endpoint which doesn't exist again, our error message shows.
+Great, now you'll notice a quick loading state whilst we make our request which then disappears once the tasks have been fetched. Also, if you simulate an endpoint which doesn't exist again, our error message shows.
 
 ## Abstracting logic out to a custom hook
 
-You may have noticed that we are beginning to polute our component with a lot of code which could be kept elsewhere.
+You may have noticed that we are beginning to pollute our component with a lot of code which could be kept elsewhere.
 
 This is an ideal use case for writing our own <a href="https://reactjs.org/docs/hooks-custom.html" target="_blank">custom hook</a>. Custom hooks are often easy to write and are often an ideal solution to reusing and sharing logic between components.
 
@@ -519,7 +519,7 @@ export default useRequest;
 
 Now, in our `App` component, let's import our hook and use it. If you're used to using hooks in React, this should look familiar.
 
-We'll pass in our endpoint to fetch from, and recieve our loading, error, and data states. Here we're renaming `data` to `tasks` in our destructuring assignment to keep the naming consistant.
+We'll pass in our endpoint to fetch from, and receive our loading, error, and data states. Here we're renaming `data` to `tasks` in our destructuring assignment to keep the naming consistent.
 
 ```jsx {2}
 const App = () => {
@@ -551,7 +551,7 @@ const App = () => {
 
 That's it. Now our `App` component is much cleaner.
 
-## Application
+## Example
 
 Here's what we've built:
 

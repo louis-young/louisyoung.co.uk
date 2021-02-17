@@ -1,0 +1,154 @@
+---
+title: "Implicit and explicit returns in JavaScript"
+date: "2021-02-17T05:35:07.322Z"
+description: Today, we'll look at the difference between implicit and explicit returns in JavaScript, dive into a few examples of these in action and explain what they do and how they work.
+image: "./introduction.jpg"
+---
+
+Today, we'll look at the difference between implicit and explicit <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/return" target="_blank">returns</a> in JavaScript, dive into a few examples of these in action and explain what they do and how they work.
+
+## Table of contents
+
+- [What is a return statement?](#what-is-a-return-statement)
+- [Explicit returns](#explicit-returns)
+- [Implicit returns](#implicit-returns)
+- [Mistakes](#mistakes)
+- [Conclusion](#conclusion)
+
+## What is a return statement?
+
+> The `return` statement ends function execution and specifies a value to be returned to the function caller.
+
+A basic example of a return is one used to stop function execution.
+
+```js
+const greet = () => {
+  console.log("Hello");
+
+  return;
+
+  console.log("World");
+};
+
+greet();
+```
+
+> Note: This return statement renders the code beneath it unreachable and is solely for example purposes.
+
+This function will only log `"Hello"` to the console because the `return` prevents it from getting any further.
+
+## Explicit returns
+
+An explicit return is one which uses the `return` keyword explicitly, hence its name.
+
+Explicit returns are used within the body of a function like so:
+
+```js {4}
+const greet = () => {
+  console.log("Hello");
+
+  return; // We can only use an explicit return here.
+
+  console.log("World");
+};
+
+greet();
+```
+
+Let's see what an explicit return looks like with a simple arrow function.
+
+```js
+const greet = () => {
+  return "Hello World";
+};
+```
+
+> Note: This can be written on a single line, but we'll use multiple lines for this example.
+
+And now let's look at what an explicit return looks like within a `map`.
+
+```js
+const numbers = [1, 2, 3];
+
+const multipliedNumbers = numbers.map((number) => {
+  return number * 2;
+});
+
+console.log(multipliedNumbers); // [4, 2, 6]
+```
+
+Now, let's take a look at these same examples using implicit returns.
+
+## Implicit returns
+
+Our first example can be rewritten to omit the curly braces and the return statement.
+
+This is called an implicit return (because it returns without explicitly using a `return` statement) and looks like this:
+
+```js
+const greet = () => "Hello World";
+```
+
+Now, let's look at how we can clean up our `map` callback using an implicit return:
+
+```js
+const numbers = [1, 2, 3];
+
+const multipliedNumbers = numbers.map((number) => number * 2);
+
+console.log(multipliedNumbers); // [4, 2, 6]
+```
+
+You may be wondering how to implicitly return an object as curly braces are also used to surround function bodies.
+
+We can do this by wrapping our object in parenthesis:
+
+```js
+const foo = () => ({ bar: "Bar" });
+
+console.log(foo()); // {bar: "Bar"}
+```
+
+## Mistakes
+
+A common mistake for people who are new to React and JavaScript is forgetting to return components from a `map` in the return statement of their function component.
+
+Here's an example of this:
+
+```jsx
+return (
+  <ul>
+    {items.map((item) => {
+      <Component />;
+    })}
+  </ul>
+);
+```
+
+Note that as the component is inside a function body, so this will _not_ work. If you are inside a function body, it must be explicitly returned like so:
+
+```jsx {4}
+return (
+  <ul>
+    {items.map((item) => {
+      return <Component />;
+    })}
+  </ul>
+);
+```
+
+Or implicitly returned by replacing the curly braces with parenthesis:
+
+```jsx
+return (
+  <ul>
+    {items.map((item) => (
+      <Component />
+    ))}
+  </ul>
+);
+```
+
+## Conclusion
+
+Hopefully this article helped you to understand implicit and explicit returns, and gave you some practical examples of how to utilise them in your JavaScript projects.
