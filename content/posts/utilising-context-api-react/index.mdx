@@ -1,0 +1,217 @@
+---
+title: "Utilising the Context API in React"
+date: "2021-02-18"
+description: "Today, we're going to look at utilising the Context API in React applications and discuss some of the possible scenarios where you could consider using it."
+image: "./introduction.jpg"
+---
+
+Today, we're going to look at utilising the <a href="https://reactjs.org/docs/context.html" target="_blank">Context API</a> in React applications and discuss some of the possible scenarios where you could consider using it.
+
+## Table of contents
+
+- [What is the Context API?](#what-is-the-context-api)
+- [When should I use it?](#when-should-i-use-it)
+- [What problems does it solve?](#what-problems-does-it-solve)
+- [Example](#example)
+  - [Creating Context](#creating-context)
+  - [Creating a Provider](#creating-a-provider)
+  - [State in Context](#state-in-context)
+  - [Creating a consumer](#creating-a-consumer)
+  - [Wrapping consumers](#wrapping-consumers)
+  - [Consuming Context](#consuming-context)
+  - [Updating state in a consumer](#updating-state-in-a-consumer)
+- [Conclusion](#conclusion)
+
+## What is the Context API?
+
+Context is an invaluable part of a developer's toolkit for creating React applications.
+
+> Context provides a way to pass data through the component tree without having to pass props down manually at every level.
+
+Usually, you pass data down through components from parent to child. This can be frustrating when working with deeply nested components. Context alleviates this issue for us by allowing us to share this data without explicitly <a href="https://kentcdodds.com/blog/prop-drilling" target="_blank">drilling</a> it through components.
+
+## When should I use it?
+
+You should consider using Context when you need to provide "global" data to components.
+
+A good indicator that you could benefit from using Context is if you find yourself passing data through lots of deeply nested components.
+
+## What problems does it solve?
+
+Context alleviates frustrations you may have when trying to provide data to numerous, potentially deeply nested components.
+
+A few common examples of where we could effectively utilise Context include:
+
+- Sharing theme state
+- Sharing authentication state
+- Sharing language/translation state
+
+These are all common pieces of "global" data that are often used by multiple different components at many different levels.
+
+Let's look at a practical example next...
+
+## Example
+
+Context consists of two key parts, a provider and a consumer. As you'd expect, the provider provides the data, and the consumer consumes it.
+
+Looking at the code examples below should aid you in understanding this concept.
+
+### Creating Context
+
+Create a directory named `context` and create a file within it named `ThemeContext.js`.
+
+We can create a Context by using the `createContext` method:
+
+```jsx
+import { createContext } from "react";
+
+const ThemeContext = createContext();
+
+export { ThemeContext };
+```
+
+### Creating a Provider
+
+Our `ThemeContext` that we just created contains a `Provider` component that we will use to provide our data to other components:
+
+```jsx
+const ThemeProvider = ({ children }) => {
+  return <ThemeContext.Provider>{children}</ThemeContext.Provider>;
+};
+```
+
+We will return our Context provider in this component and pass any children through it.
+
+### State in Context
+
+Now, let's add some state to our Context provider:
+
+```jsx {2,4}
+const ThemeProvider = ({ children }) => {
+  const [dark, setDark] = useState(true);
+
+  return <ThemeContext.Provider value={{ dark, setDark }}>{children}</ThemeContext.Provider>;
+};
+```
+
+Here we pass an object as a `value` prop to our provider which contains our theme state and the associated state setter. This allows us to consume this data from other components.
+
+Your theme Context should look like this:
+
+```jsx
+import { createContext, useState } from "react";
+
+const ThemeContext = createContext();
+
+const ThemeProvider = ({ children }) => {
+  const [dark, setDark] = useState(true);
+
+  return <ThemeContext.Provider value={{ dark, setDark }}>{children}</ThemeContext.Provider>;
+};
+
+export { ThemeContext, ThemeProvider };
+```
+
+### Creating a consumer
+
+There's nothing special about consumers, they are just standard React components.
+
+Let's create a `Button` component in which we will consume the data from our Context.
+
+```jsx
+const Button = () => {
+  return <button>Dark</button>;
+};
+
+export default Button;
+```
+
+Now we'll render this component in our `App`:
+
+```jsx
+const App = () => {
+  return <Button />;
+};
+```
+
+> Note: Remember to import your `Button` component.
+
+### Wrapping consumers
+
+You may have noticed earlier in the article that the `ThemeProvider` receives and renders children. This is because when using Context, consumers must be wrapped in their respective provider.
+
+Let's wrap our `Button` in our `ThemeProvider`:
+
+```jsx
+const App = () => {
+  return (
+    <ThemeProvider>
+      <Button />
+    </ThemeProvider>
+  );
+};
+```
+
+> Note: Remember to import your `ThemeProvider` component.
+
+### Consuming Context
+
+Now it's time to consume the data from our Context in our `Button` component.
+
+Consuming data from a Context is very simple. Simply import your Context and use the `useContext` hook to consume the data returned from our provider.
+
+```jsx
+const Button = () => {
+  const { dark } = useContext(ThemeContext);
+
+  return <button>{dark ? "Dark" : "Light"}</button>;
+};
+```
+
+> Note: Remember to import your `ThemeContext` and the `useContext` hook.
+
+Fantastic, we have access to our `user` state from within `Button`, without passing down anything through our components.
+
+### Updating state in a consumer
+
+As well as consuming state, you can also update state from within your consumer components.
+
+Let's add a simple toggle for our theme state:
+
+```jsx {2,4-6,8}
+const Button = () => {
+  const { dark, setDark } = useContext(ThemeContext);
+
+  const handleClick = () => {
+    setDark((previousDark) => !previousDark);
+  };
+
+  return <button onClick={handleClick}>{dark ? "Dark" : "Light"}</button>;
+};
+```
+
+Let's step through this code:
+
+- We destructure our `setDark` state setter from our Context
+- We define a click handler which toggles the `dark` state
+- We add a click event to our button which invokes the click handler
+
+Now, when we click the button, we toggle our theme.
+
+Here's an example of our application:
+
+<iframe
+  src="https://codesandbox.io/embed/context-api-z7pmb?fontsize=14&hidenavigation=1&theme=dark&view=preview"
+  style="width:100%; height:500px; border:0; border-radius: 4px; overflow:hidden;"
+  title="Context API"
+  allow="accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking"
+  sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts"
+></iframe>
+
+## Conclusion
+
+It's worth noting that you can use multiple Contexts within a single React application, and even nest them too.
+
+The above example is very simple, but hopefully it demonstrates how powerful Context can be and how it can be an invaluable tool in many React applications.
+
+Hopefully you enjoyed this article and learnt a thing or two about the Context API.
