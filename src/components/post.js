@@ -7,7 +7,7 @@ import Author from "./author";
 
 const Post = ({ title, image, excerpt, link }) => {
   return (
-    <article>
+    <article className="max-w-xs mx-auto">
       <figure className="sm:mx-0 mb-5">
         <Link to={link}>
           <Image

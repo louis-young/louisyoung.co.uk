@@ -47,6 +47,12 @@
   background: #011627;
 }
 
+.markdown pre *::selection,
+.markdown code::selection {
+  background: #573ede;
+  color: white;
+}
+
 .markdown ol ol,
 .markdown ul ul {
   @apply my-2;

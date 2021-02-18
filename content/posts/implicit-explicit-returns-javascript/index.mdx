@@ -21,7 +21,7 @@ Today, we'll look at the difference between implicit and explicit <a href="https
 
 A basic example of a return is one used to stop function execution.
 
-```js
+```js {4}
 const greet = () => {
   console.log("Hello");
 
@@ -91,7 +91,7 @@ const greet = () => "Hello World";
 
 Now, let's look at how we can clean up our `map` callback using an implicit return:
 
-```js
+```js {3}
 const numbers = [1, 2, 3];
 
 const multipliedNumbers = numbers.map((number) => number * 2);
@@ -139,7 +139,7 @@ return (
 
 Or implicitly returned by replacing the curly braces with parenthesis:
 
-```jsx
+```jsx {3-5}
 return (
   <ul>
     {items.map((item) => (

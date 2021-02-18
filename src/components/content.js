@@ -6,7 +6,7 @@ import styles from "./content.module.css";
 
 const Content = ({ content }) => {
   return (
-    <div className="max-w-2xl mx-auto language-diff-javascript diff-highlight line-numbers">
+    <div className="max-w-2xl mx-auto">
       <div className={styles.markdown}>
         <MDXRenderer>{content}</MDXRenderer>
       </div>
