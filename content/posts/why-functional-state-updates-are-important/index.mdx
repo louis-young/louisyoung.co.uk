@@ -1,0 +1,133 @@
+---
+title: "Why functional state updates are important"
+date: "2021-02-19"
+description: "Today, we're going to look at why functional state updates are important in React, talk about when you should use one, and discuss some of the issues you may encounter if you don't."
+image: "./introduction.jpg"
+---
+
+Today, we're going to look at why functional state updates are important in React, talk about when you should use one, and discuss some of the issues you may encounter if you don't.
+
+## Table of contents
+
+- [What is a functional state update?](#what-is-the-context-api)
+- [When should I use one?](#when-should-i-use-it)
+- [What if I don't use one?](#what-problems-does-it-solve)
+- [Examples](#examples)
+- [Something to think about](#something-to-think-about)
+- [Conclusion](#conclusion)
+
+## What is a functional state update?
+
+A functional state update is one in which you use the callback from `setState` to retrieve the most up-to-date state value and looks something like this:
+
+```jsx
+setCount((previousCount) => previousCount + 1);
+```
+
+The setter function from the `useState` hook acts asynchronously, meaning that if you change a piece of state and immediately try to log it from within the same closure, you can get unwanted behaviour.
+
+You have probably come across this before and it looks something like this:
+
+```jsx
+const [count, setCount] = useState(0);
+
+const handleClick = () => {
+  setCount(count + 1);
+
+  console.log(count); // 0
+};
+```
+
+> Note: Functional state updates don't change the behavior in the example above. It is just a demonstration of how `setState` can act asynchronously.
+
+Note how by referencing `count` here, we get a stale value.
+
+This demonstrates how `setState` acts asynchronously and how it can be dangerous to access state values like this.
+
+The `setState` callback gives us a reliable, stable reference to the current (also known as previous) state.
+
+## When should I use one?
+
+You should consider using a functional state update when you rely on existing state to make an update.
+
+Let's look at an example where we _should_ use a functional state update.
+
+```jsx {4}
+const [count, setCount] = useState(0);
+
+const handleClick = () => {
+  setCount(count + 1); // We are relying on previous state.
+};
+```
+
+Note how we are computing our new state value based on the current/previous state value. This is an example of where we should use a functional state update to ensure a reliable reference to our `count` (more on this later).
+
+Now, here is an example where you do _not_ need to use a functional update as the previous state value is irrelevant.
+
+```jsx {4}
+const [name, setName] = useState("Louis");
+
+const handleClick = () => {
+  setName("John"); // We are not relying on previous state.
+};
+```
+
+## What if I don't use one?
+
+If you make updates to state when relying on previous state values without using a functional state update, you can introduce race conditions and silent bugs into your application.
+
+You can often run into issues when state is updated again before a render happens.
+
+This can result in stale state which we'll demonstrate below.
+
+## Examples
+
+Let's refer to the previous counter example and introduce a bug by not using a functional state update.
+
+```jsx
+const [count, setCount] = useState(0);
+
+const handleClick = () => {
+  setCount(count + 1);
+
+  setCount(count + 1);
+};
+```
+
+> Note: Please remember that this is a contrived example solely for the purposes of this article.
+
+Here you can see that we update state again before a render happens without using a functional update which results in a stale reference to `count` for our second update.
+
+When we click the button to increment our count, it only increments by one:
+
+import StaleCounter from "./components/StaleCounter.js";
+
+<StaleCounter />
+
+We could resolve this by using functional state updates:
+
+```jsx
+const [count, setCount] = useState(0);
+
+const handleClick = () => {
+  setCount((previousCount) => previousCount + 1);
+
+  setCount((previousCount) => previousCount + 1);
+};
+```
+
+Now, as we use the functional update, we refer to the up-to-date state value and our button increments the count by two:
+
+import Counter from "./components/Counter.js";
+
+<Counter />
+
+## Something to think about
+
+If you find yourself using multiple `setState` updates and have multiple pieces of state that rely on each other, consider combining them by using a <a href="https://reactjs.org/docs/hooks-reference.html#usereducer" target="_blank">reducer</a>.
+
+## Conclusion
+
+The examples I used are very low level and highly contrived, but hopefully they convey the concepts we covered clearly and make them easy to understand.
+
+Hopefully you enjoyed this article and you learnt a thing or two about state updates.

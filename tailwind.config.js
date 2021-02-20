@@ -1,5 +1,11 @@
 module.exports = {
-  purge: ["./src/components/**/*.js", "./src/components/*.css", "./src/pages/**/*.js", "./src/templates/**/*.js"],
+  purge: [
+    "./src/components/**/*.js",
+    "./src/components/*.css",
+    "./src/pages/**/*.js",
+    "./src/templates/**/*.js",
+    "./content/posts/**/*.js",
+  ],
   darkMode: "class",
   theme: {
     extend: {
