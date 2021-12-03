@@ -1,8 +1,8 @@
-# Blog
+Blog
 
 A statically generated personal blog website - built with Gatsby.
 
-![Personal Blog](documentation/personal-blog.jpg)
+![Blog](documentation/blog.jpg)
 
 ## Description
 
