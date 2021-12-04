@@ -6,7 +6,7 @@ A statically generated personal blog website.
 
 ## Description
 
-A personal blog website - built with Gatsby consuming articles written in markdown (MDX).
+A personal blog website that has interactive articles and sleek code snippets.
 
 ## Motivation
 
@@ -18,3 +18,4 @@ This project enables to me write and pulbish articles about software development
 - React
 - Prism
 - Tailwind
+- MDX
