@@ -20,4 +20,3 @@ This project enables to me write and pulbish articles about software development
 - Gatsby.
 - Prism.
 - MDX.
-- 
