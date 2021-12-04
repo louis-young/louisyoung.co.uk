@@ -1,6 +1,6 @@
 # Blog
 
-A statically generated personal blog website.
+A personal blog website.
 
 ![Blog](documentation/blog.jpg)
 
