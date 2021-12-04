@@ -14,8 +14,10 @@ This project enables to me write and pulbish articles about software development
 
 ## Technologies
 
-- Gatsby
-- React
-- Prism
-- Tailwind
-- MDX
+- JavaScript.
+- React.
+- Tailwind.
+- Gatsby.
+- Prism.
+- MDX.
+- 
