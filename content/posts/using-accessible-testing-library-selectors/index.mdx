@@ -1,0 +1,649 @@
+---
+title: "Using accessible Testing Library queries"
+date: "2021-12-15"
+description: "..."
+image: "./introduction.jpg"
+---
+
+So you're writing tests with <a href="https://testing-library.com/" target="_blank">Testing Library</a>. Awesome. You've probably already saved yourself a whole world of pain testing implementation details amongst other things. However, this doesn't always mean that you're getting it right.
+
+## Table of contents
+
+- [What is Testing Library?](#what-is-testing-library)
+- [Misusing Escape Hatches](#misusing-escape-hatches)
+- [Conclusion](#conclusion)
+
+## What is Testing Library?
+
+> Simple and complete testing utilities that encourage good testing practices
+
+Testing Library is an amazing library that make testing React applications a breeze. It's very well designed (thanks to <a href="https://kentcdodds.com/" target="_blank">Kent C. Dodds</a>), but this doesn't mean that you can't get it wrong.
+
+## Misusing Escape Hatches
+
+One of the most common problems I see when using Testing Library is the misuse of escape hatches like `ByTestId`.
+
+Before we look at some examples, let's talk about what this query is designed for and the problems it solves. The `ByTestId` query is an escape hatch (a last resort) that allows you to query an element when all other queries fail. It is **not** intended to be reached for every time you need to select an element.
+
+Take these tests for a simple heading component for example.
+
+```jsx
+describe("<Heading />", () => {
+  it("displays the heading", () => {
+    const text = "Hello World";
+
+    render(<Heading text={text} />);
+
+    const heading = screen.getByTestId("heading");
+
+    expect(heading).toHaveTextContent(text);
+  });
+});
+```
+
+This works, right? What's wrong with this you might ask?
+
+To answer this, put yourself in the position of whoever will be using your software. Would a user be open developer tools and search the DOM tree for an element with a `data-testid` of `heading`? No, a user will look at the page and expect to see the heading.
+
+Thanks to Testing Library, it's easy to adapt our test
+
+```jsx
+const Heading = ({ text }) => {
+  return <h1>{text}</h1>;
+};
+```
+
+```jsx
+describe("<Heading />", () => {
+  it("displays the heading", () => {
+    const text = "Hello World";
+
+    render(<Heading text={text} />);
+
+    const heading = screen.getByRole("heading", { name: text });
+
+    expect(heading).toBeInTheDocument();
+  });
+});
+```
+
+---
+
+Personally, testing is all about confidence. Having a suite of tests that interact with your software in the same way as your users allows you ship code that you're confident works as you intended.
+
+Writing tests that interact with your software in the same way as your users is extremely important. Avoiding testing implementation details is equally as important. Let's talk about why.
+
+Throughout this article we are going to be referring primarily to <a href="https://testing-library.com/docs/react-testing-library/intro/" target="_blank">React Testing Library</a>, however the concepts also apply to Cypress Testing Library amongst others. Testing Library (and its derivatives) is an amazing suite of tools that are incredibly useful for testing React applications. It was created by the one and only (https://kentcdodds.com/)[Kent C. Dodds].
+
+## What is Fetch?
+
+> The Fetch API provides an interface for fetching resources (including across the network). It will seem familiar to anyone who has used XMLHttpRequest, but the new API provides a more powerful and flexible feature set.
+
+Put simply, it's a newer, more flexible interface to make HTTP requests without the need for the ancient <a href="https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API" target="_blank">XMLHttpRequest API</a> (browser compatibility permitting).
+
+## Tutorial
+
+Here's a preview of what we're going to build today (the data is fetched from a mock API).
+
+<iframe
+  src="https://codesandbox.io/embed/fetch-api-9d09j?fontsize=14&hidenavigation=1&theme=dark&view=preview"
+  style="width:100%; height:500px; border:0; border-radius: 4px; overflow:hidden;"
+  title="Fetch API"
+  allow="accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking"
+  sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts"
+></iframe>
+
+### State
+
+Let's see how Fetch works in action and start by adding state to store our data that we are about to fetch. We are going to be interacting with a mock endpoint which returns tasks to complete (like a to do list), so let's call it `tasks`.
+
+```jsx {2}
+const App = () => {
+  const [tasks, setTasks] = useState([]);
+
+  return <h1>Fetch API</h1>;
+};
+```
+
+> Note: Remember to import `useState` if you haven't already.
+
+### Effects
+
+Now, we need to fetch the tasks. Let's create an effect in our `App` component with no dependencies:
+
+```jsx {4-6}
+const App = () => {
+  const [tasks, setTasks] = useState([]);
+
+  useEffect(() => {
+    // This code will run when the component mounts.
+  }, []);
+
+  return <h1>Fetch API</h1>;
+};
+```
+
+> Note: Remember to import `useEffect` if you haven't already.
+
+Now, we're going to be using the `async` `await` syntax in this article, but you can use the `.then` syntax if you prefer. As `fetch` is asynchronous and returns a <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise" target="_blank">promise</a>, we need to `await` it. Effect callbacks cannot be `async`, so we _cannot_ do this:
+
+```jsx {1}
+useEffect(async () => {
+  // We cannot do this.
+}, []);
+```
+
+Instead, my preferred method is to declare an asynchronous function within our effect, and invoke it below. Let's see what that looks like:
+
+```jsx
+useEffect(() => {
+  const fetchTasks = async () => {
+    // ...
+  };
+
+  fetchTasks();
+}, []);
+```
+
+### Requests
+
+Now, let's write our request and then step through it afterwards.
+
+```jsx {3,5}
+useEffect(() => {
+  const fetchTasks = async () => {
+    const response = await fetch("https://jsonplaceholder.typicode.com/todos");
+
+    const tasks = await response.json();
+
+    setTasks(tasks);
+  };
+
+  fetchTasks();
+}, []);
+```
+
+Let's step through this code:
+
+- First, we store the `fetch` response in a variable named `response`
+- Secondly, we parse the response as JSON by calling `.json()` on the `response`
+- Finally, we store these tasks in state.
+
+### Rendering
+
+Great, now let's render our tasks.
+
+The shape of the data returned by the API looks like this:
+
+```jsx
+{
+  id: 1,
+  title: "delectus aut autem",
+}
+```
+
+> Note: This example only shows the data we need for this article.
+
+Let's `map` over these tasks and render them:
+
+```jsx {16-27}
+const App = () => {
+  const [tasks, setTasks] = useState([]);
+
+  useEffect(() => {
+    const fetchTasks = async () => {
+      const response = await fetch(
+        "https://jsonplaceholder.typicode.com/todos"
+      );
+
+      const tasks = await response.json();
+
+      setTasks(tasks);
+    };
+
+    fetchTasks();
+  }, []);
+
+  return (
+    <section>
+      <h1>Fetch API</h1>
+
+      <ul>
+        {tasks.map((task) => (
+          <li key={task.id}>{task.title}</li>
+        ))}
+      </ul>
+    </section>
+  );
+};
+```
+
+### Throwing errors
+
+Fantastic, but what happens if our request isn't successful? Let's simulate this by making a request to an endpoint that doesn't exist.
+
+```jsx
+const response = await fetch(
+  "https://jsonplaceholder.typicode.com/nonexistantendpoint"
+);
+```
+
+Oops, we get an error. These types of operations should be wrapped in a `try catch` block to handle such cases.
+
+Let's see what that looks like:
+
+```jsx
+useEffect(() => {
+  const fetchTasks = async () => {
+    try {
+      const response = await fetch(
+        "https://jsonplaceholder.typicode.com/nonexistantendpoint"
+      );
+
+      const tasks = await response.json();
+
+      setTasks(tasks);
+    } catch (error) {
+      console.error("Something went wrong...");
+    }
+  };
+
+  fetchTasks();
+}, []);
+```
+
+Now, you may have noticed that our `catch` block is never executed, and our error message is never written to the console. This is because we need to manually throw an error if our request isn't `ok` (more on this next).
+
+```jsx {8-10}
+useEffect(() => {
+  const fetchTasks = async () => {
+    try {
+      const response = await fetch(
+        "https://jsonplaceholder.typicode.com/nonexistantendpoint"
+      );
+
+      const tasks = await response.json();
+
+      if (!response.ok) {
+        throw new Error();
+      }
+
+      setTasks(tasks);
+    } catch (error) {
+      console.error("Something went wrong...");
+    }
+  };
+
+  fetchTasks();
+}, []);
+```
+
+Now, if our request doesn't respond with `ok`, then we know our request wasn't successful. This is a boolean which allows us to easily check if our request was successful by checking a range of HTTP status codes (2\*\*).
+
+> The `ok` read-only property of the `Response` interface contains a Boolean stating whether the response was successful (status in the range 200-299) or not.
+
+### Additional state
+
+You may have noticed that our application has no loading or error states, so let's add those now:
+
+```jsx {1-2}
+const [loading, setLoading] = useState(false);
+const [error, setError] = useState(false);
+const [tasks, setTasks] = useState([]);
+```
+
+And let's set our `loading` state to true when we start our request, and `error` to true if we catch an error.
+
+```jsx {4,16}
+useEffect(() => {
+  const fetchTasks = async () => {
+    try {
+      setLoading(true);
+
+      const response = await fetch(
+        "https://jsonplaceholder.typicode.com/nonexistantendpoint"
+      );
+
+      const tasks = await response.json();
+
+      if (!response.ok) {
+        throw new Error();
+      }
+
+      setTasks(tasks);
+    } catch (error) {
+      setError(true);
+    }
+  };
+
+  fetchTasks();
+}, []);
+```
+
+A common pattern is to set `loading` to false after we've set our tasks, and again once we've set our error. We can improve on this by adding a `finally` block which will run once everything else above it has executed.
+
+```jsx {17-19}
+useEffect(() => {
+  const fetchTasks = async () => {
+    try {
+      setLoading(true);
+
+      const response = await fetch(
+        "https://jsonplaceholder.typicode.com/nonexistantendpoint"
+      );
+
+      const tasks = await response.json();
+
+      if (!response.ok) {
+        throw new Error();
+      }
+
+      setTasks(tasks);
+    } catch (error) {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchTasks();
+}, []);
+```
+
+### Loading and error handling
+
+Awesome. Now, let's add our actual endpoint back in and handle these states with early returns. Let's see what that looks like:
+
+```jsx {11,30-32,34-36}
+const App = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
+  const [tasks, setTasks] = useState([]);
+
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        setLoading(true);
+
+        const response = await fetch(
+          "https://jsonplaceholder.typicode.com/todos"
+        );
+
+        const tasks = await response.json();
+
+        if (!response.ok) {
+          throw new Error();
+        }
+
+        setTasks(tasks);
+      } catch (error) {
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTasks();
+  }, []);
+
+  if (loading) {
+    return <p>Loading...</p>;
+  }
+
+  if (error) {
+    return <p>Error.</p>;
+  }
+
+  return (
+    <section>
+      <h1>Fetch API</h1>
+
+      <ul>
+        {tasks.map((task) => (
+          <li key={task.id}>{task.title}</li>
+        ))}
+      </ul>
+    </section>
+  );
+};
+```
+
+Great, now you'll notice a quick loading state whilst we make our request which then disappears once the tasks have been fetched. Also, if you simulate an endpoint which doesn't exist again, our error message shows.
+
+## Abstracting logic out to a custom hook
+
+You may have noticed that we are beginning to pollute our component with a lot of code which could be kept elsewhere.
+
+This is an ideal use case for writing our own <a href="https://reactjs.org/docs/hooks-custom.html" target="_blank">custom hook</a>. Custom hooks are often easy to write and are often an ideal solution to reusing and sharing logic between components.
+
+### Writing the hook
+
+Let's create a new folder within `src` called `hooks` and create a file called `useRequest.js`.
+
+Your hook should look like this:
+
+```jsx
+import { useState, useEffect } from "react";
+
+const useRequest = () => {
+  // ...
+};
+
+export default useRequest;
+```
+
+Now, let's port over our state and logic in to our new hook.
+
+```jsx
+const useRequest = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
+  const [tasks, setTasks] = useState([]);
+
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        setLoading(true);
+
+        const response = await fetch(
+          "https://jsonplaceholder.typicode.com/todos"
+        );
+
+        const tasks = await response.json();
+
+        if (!response.ok) {
+          throw new Error();
+        }
+
+        setTasks(tasks);
+      } catch (error) {
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTasks();
+  }, []);
+};
+```
+
+As making GET requests to an endpoint is very common, let's make this hook generic and reusable.
+
+We can start by refactoring a few things to be more generic:
+
+```jsx {4,7,13,19,27}
+const useRequest = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+
+        const response = await fetch(
+          "https://jsonplaceholder.typicode.com/todos"
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error();
+        }
+
+        setData(data);
+      } catch (error) {
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+};
+```
+
+All we need to do now is make the endpoint (the URL) a parameter of our hook so we can pass in any endpoint and reuse our request hook throughout our application.
+
+We will also need to make this a dependency of our effect, as we want it to re-run if we change the URL.
+
+```jsx {1,11,28}
+const useRequest = (url) => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+
+        const response = await fetch(url);
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error();
+        }
+
+        setData(data);
+      } catch (error) {
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [url]);
+};
+```
+
+Now, we need to return our `loading`, `error` and `data` states from our hook so we can consume them from within our component.
+
+Your hook should now look like this:
+
+```jsx {32}
+import { useState, useEffect } from "react";
+
+const useRequest = (url) => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+
+        const response = await fetch(url);
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error();
+        }
+
+        setData(data);
+      } catch (error) {
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [url]);
+
+  return { loading, error, data };
+};
+
+export default useRequest;
+```
+
+### Using the hook
+
+Now, in our `App` component, let's import our hook and use it. If you're used to using hooks in React, this should look familiar.
+
+We'll pass in our endpoint to fetch from, and receive our loading, error, and data states. Here we're renaming `data` to `tasks` in our destructuring assignment to keep the naming consistent.
+
+```jsx {2}
+const App = () => {
+  const { loading, error, data: tasks } = useRequest(
+    "https://jsonplaceholder.typicode.com/todos"
+  );
+
+  if (loading) {
+    return <p>Loading...</p>;
+  }
+
+  if (error) {
+    return <p>Error.</p>;
+  }
+
+  return (
+    <section>
+      <h1>Fetch API</h1>
+
+      <ul>
+        {tasks.map((task) => (
+          <li key={task.id}>{task.title}</li>
+        ))}
+      </ul>
+    </section>
+  );
+};
+```
+
+> Note: Remember to import the `useRequest` hook if you haven't already.
+
+That's it. Now our `App` component is much cleaner.
+
+## Example
+
+Here's what we've built:
+
+<iframe
+  src="https://codesandbox.io/embed/fetch-api-9d09j?fontsize=14&hidenavigation=1&theme=dark"
+  style="width:100%; height:500px; border:0; border-radius: 4px; overflow:hidden;"
+  title="Fetch API"
+  allow="accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking"
+  sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts"
+></iframe>
+
+## React Query
+
+If you find you need a more advanced feature set including things such as caching and optimistic updates, I'd suggest taking a look at <a href="https://react-query.tanstack.com/" target="_blank">React Query</a>.
+
+> Fetch, cache and update data in your React and React Native applications all without touching any "global state".
+
+React Query is extremely powerful and can help to solve many problems when making requests in React. We've only covered making simple GET requests, but it can help you with much more than that.
+
+## Conclusion
+
+There are many different ways to approach this, and ways to improve the code in this article. I purposefully didn't cover every edge case or make every abstraction possible to make it easier to follow.
+
+Hopefully you learnt a thing or two about fetching data in React, and I hope you found this article insightful.
