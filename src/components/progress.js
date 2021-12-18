@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-import styles from "./progress.module.css";
+import * as styles from "./progress.module.css";
 
 const Progress = () => {
   const [progress, setProgress] = useState(0);
@@ -9,7 +9,9 @@ const Progress = () => {
     const calculatePercentage = () => {
       const scrolled = window.scrollY;
 
-      const total = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      const total =
+        document.documentElement.scrollHeight -
+        document.documentElement.clientHeight;
 
       const percentage = (scrolled / total) * 100;
 

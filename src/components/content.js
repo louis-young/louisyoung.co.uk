@@ -2,7 +2,7 @@ import React from "react";
 
 import { MDXRenderer } from "gatsby-plugin-mdx";
 
-import styles from "./content.module.css";
+import * as styles from "./content.module.css";
 
 const Content = ({ content }) => {
   return (

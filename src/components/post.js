@@ -1,7 +1,7 @@
 import React from "react";
 
 import { Link } from "gatsby";
-import Image from "gatsby-image";
+import { GatsbyImage, getImage } from "gatsby-plugin-image";
 
 import Author from "./author";
 
@@ -10,8 +10,8 @@ const Post = ({ title, image, excerpt, link }) => {
     <article className="max-w-xs mx-auto">
       <figure className="sm:mx-0 mb-5">
         <Link to={link}>
-          <Image
-            fluid={image.childImageSharp.sizes}
+          <GatsbyImage
+            image={getImage(image)}
             className="w-full h-52 object-cover rounded shadow-sm hover:shadow-md hover:opacity-80 transition duration-200"
             alt={title}
             loading="lazy"

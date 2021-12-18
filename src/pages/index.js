@@ -57,9 +57,11 @@ export const pageQuery = graphql`
           description
           image {
             childImageSharp {
-              sizes(maxWidth: 400) {
-                ...GatsbyImageSharpSizes
-              }
+              gatsbyImageData(
+                width: 500
+                placeholder: BLURRED
+                formats: [AUTO, WEBP, AVIF]
+              )
             }
           }
         }

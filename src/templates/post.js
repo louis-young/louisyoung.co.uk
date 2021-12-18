@@ -1,7 +1,7 @@
 import React from "react";
 
 import { graphql } from "gatsby";
-import Image from "gatsby-image";
+import { GatsbyImage, getImage } from "gatsby-plugin-image";
 
 import Author from "../components/author";
 import Meta from "../components/meta";
@@ -18,7 +18,7 @@ const Post = ({ data }) => {
       <Meta
         title={post.frontmatter.title}
         description={post.excerpt}
-        image={post.frontmatter.image.childImageSharp.sizes.src}
+        image={getImage(post.frontmatter.image)}
         slug={post.slug}
       />
 
@@ -34,8 +34,8 @@ const Post = ({ data }) => {
             <Author />
           </div>
 
-          <Image
-            fluid={post.frontmatter.image.childImageSharp.sizes}
+          <GatsbyImage
+            image={getImage(post.frontmatter.image)}
             alt={post.frontmatter.title}
             className="mb-8 md:mb-16 sm:mx-0 w-full h-full max-h-35 object-cover rounded"
           />
@@ -66,9 +66,11 @@ export const pageQuery = graphql`
         description
         image {
           childImageSharp {
-            sizes(maxWidth: 1056) {
-              ...GatsbyImageSharpSizes
-            }
+            gatsbyImageData(
+              width: 1024
+              placeholder: BLURRED
+              formats: [AUTO, WEBP, AVIF]
+            )
           }
         }
       }

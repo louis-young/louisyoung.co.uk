@@ -1,22 +1,24 @@
 import React from "react";
 
 import { useStaticQuery, graphql } from "gatsby";
-import Image from "gatsby-image";
+import { GatsbyImage, getImage } from "gatsby-plugin-image";
 
 const Author = () => {
   const data = useStaticQuery(graphql`
     query AuthorQuery {
       avatar: file(absolutePath: { regex: "/author/author.jpg/" }) {
         childImageSharp {
-          fixed(width: 50, height: 50, quality: 95) {
-            ...GatsbyImageSharpFixed
-          }
+          gatsbyImageData(
+            width: 50
+            placeholder: BLURRED
+            formats: [AUTO, WEBP, AVIF]
+          )
         }
       }
     }
   `);
 
-  const avatar = data?.avatar?.childImageSharp?.fixed;
+  const avatar = getImage(data?.avatar);
 
   return (
     <a
@@ -26,8 +28,8 @@ const Author = () => {
       className="block hover:opacity-80 transition duration-200"
     >
       <figure className="flex items-center">
-        <Image
-          fixed={avatar}
+        <GatsbyImage
+          image={avatar}
           className="w-12 h-12 rounded-full mr-4"
           alt="Louis Young"
         />
