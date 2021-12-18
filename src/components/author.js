@@ -26,7 +26,11 @@ const Author = () => {
       className="block hover:opacity-80 transition duration-200"
     >
       <figure className="flex items-center">
-        <Image fixed={avatar} className="w-12 h-12 rounded-full mr-4" alt="Louis Young" />
+        <Image
+          fixed={avatar}
+          className="w-12 h-12 rounded-full mr-4"
+          alt="Louis Young"
+        />
         <figcaption className="text-xl font-bold">Louis Young</figcaption>
       </figure>
     </a>
