@@ -5,7 +5,7 @@ import truncate from "../utilities/truncate";
 
 import Meta from "../components/meta";
 import Post from "../components/post";
-import Container from "../components/container";
+import { Container } from "../components/container";
 
 const Index = ({ data }) => {
   const posts = data.allMdx.nodes;

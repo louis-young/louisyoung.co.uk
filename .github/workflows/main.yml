@@ -1,0 +1,21 @@
+name: CI
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: CI
+        run: |
+          npm ci # Clean install dependencies.
+          npm run typecheck # Run type check.
+          npm run format # Run formatter.
+          npm run lint # Run code linter.
+          npm run lint:ls # Run file system linter.
+          npm run test # Run tests.
+          npm run build # Run build.

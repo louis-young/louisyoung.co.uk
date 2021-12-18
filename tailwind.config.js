@@ -1,10 +1,10 @@
 module.exports = {
   content: [
-    "./src/components/**/*.js",
+    "./src/components/**/*.{js,jsx,ts,tsx,css}",
     "./src/components/*.css",
-    "./src/pages/**/*.js",
-    "./src/templates/**/*.js",
-    "./content/posts/**/*.js",
+    "./src/pages/**/*.{js,jsx,ts,tsx,css}",
+    "./src/templates/**/*.{js,jsx,ts,tsx,css}",
+    "./content/posts/**/*.{js,jsx,ts,tsx,css,md,mdx}",
   ],
   darkMode: "class",
   theme: {

@@ -5,7 +5,7 @@ import { GatsbyImage, getImage } from "gatsby-plugin-image";
 
 import Author from "../components/author";
 import Meta from "../components/meta";
-import Container from "../components/container";
+import { Container } from "../components/container";
 import Progress from "../components/progress";
 import Content from "../components/content";
 import Date from "../components/date";

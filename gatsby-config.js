@@ -43,7 +43,7 @@ module.exports = {
     {
       resolve: "gatsby-plugin-layout",
       options: {
-        component: require.resolve("./src/components/layout.js"),
+        component: require.resolve("./src/components/layout.jsx"),
       },
     },
     "gatsby-plugin-image",
@@ -51,5 +51,6 @@ module.exports = {
     "gatsby-plugin-sharp",
     "gatsby-plugin-react-helmet",
     "gatsby-plugin-postcss",
+    "gatsby-plugin-typescript",
   ],
 };
