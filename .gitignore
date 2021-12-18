@@ -3,13 +3,12 @@ logs
 
 npm-debug.log*
 
-node_modules/
+node_modules
 
 .eslintcache
 
 .env*
 
-.cache/
-public
+.cache
 
-package-lock.json
+public
