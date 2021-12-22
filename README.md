@@ -8,11 +8,11 @@ A personal blog website.
 
 ## Description
 
-A personal blog website that has interactive articles and sleek code snippets.
+A personal blog website featuring interactive articles and embedded code snippets.
 
 ## Motivation
 
-This project enables to me write and publish articles about software development and learn a few (_a lot of_) things along the way.
+This was a project that me write and publish articles about software development and learn a a lot of things along the way.
 
 ## Technologies
 
@@ -20,6 +20,6 @@ This project enables to me write and publish articles about software development
 - React.
 - Tailwind.
 - Gatsby.
+- Remark.
 - Prism.
 - MDX.
-
