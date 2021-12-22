@@ -1,6 +1,6 @@
 {
-  "name": "personal-blog",
-  "description": "A statically generated personal blog website built in Gatsby.",
+  "name": "blog",
+  "description": "A personal blog website.",
   "version": "1.0.0",
   "author": "Louis Young",
   "scripts": {
@@ -17,11 +17,11 @@
     "format": "prettier --check \"./src/**/*.{ts,tsx}\"",
     "format:write": "prettier --write \"./src/**/*.{ts,tsx}\""
   },
-  "homepage": "https://github.com/louis-young/personal-blog#readme",
+  "homepage": "https://github.com/louis-young/blog#readme",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/louis-young/personal-blog.git"
+    "url": "git+https://github.com/louis-young/blog.git"
   },
   "dependencies": {
     "@mdx-js/loader": "^1.6.22",
