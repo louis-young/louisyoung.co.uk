@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  @apply font-light underline-offset-2;
+}
+
+p {
+  @apply text-xl leading-normal text-slate-600;
+}
