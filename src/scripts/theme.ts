@@ -51,15 +51,29 @@ export const cycleTheme = () => {
   applyPreference(next);
 };
 
-export const initTheme = () => {
+/** Wires up theme toggles. Pass a signal to remove the listeners again. */
+export const initTheme = (signal?: AbortSignal) => {
+  const options = { signal } as AddEventListenerOptions;
   applyPreference(parsePreference(readStored()));
-  media().addEventListener("change", () => {
-    applyPreference(parsePreference(readStored()));
-  });
-  document.addEventListener("click", (event) => {
-    if ((event.target as Element | null)?.closest("[data-theme-toggle]")) cycleTheme();
-  });
-  window.addEventListener("storage", (event) => {
-    if (event.key === STORAGE_KEY) applyPreference(parsePreference(event.newValue));
-  });
+  media().addEventListener(
+    "change",
+    () => {
+      applyPreference(parsePreference(readStored()));
+    },
+    options,
+  );
+  document.addEventListener(
+    "click",
+    (event) => {
+      if ((event.target as Element | null)?.closest("[data-theme-toggle]")) cycleTheme();
+    },
+    options,
+  );
+  window.addEventListener(
+    "storage",
+    (event) => {
+      if (event.key === STORAGE_KEY) applyPreference(parsePreference(event.newValue));
+    },
+    options,
+  );
 };

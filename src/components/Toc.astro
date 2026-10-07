@@ -41,6 +41,10 @@ const t = translatorFor(Astro);
 )}
 
 <script>
+  /**
+   * Scroll-spy: the current section is the last heading above 30% of the viewport. Computed
+   * once per frame while scrolling, so long sections still keep their entry highlighted.
+   */
   const links = new Map(
     [...document.querySelectorAll<HTMLAnchorElement>("[data-toc-link]")].map((link) => [
       link.dataset["tocLink"]!,
@@ -48,28 +52,22 @@ const t = translatorFor(Astro);
     ]),
   );
   const headings = [...links.keys()].flatMap((id) => document.getElementById(id) ?? []);
+  let current: string | undefined;
+  let frame = 0;
 
-  if (headings.length > 0 && "IntersectionObserver" in window) {
-    const visible = new Set<string>();
-    const update = () => {
-      const current = headings.find((heading) => visible.has(heading.id))?.id;
-      if (!current) return;
-      for (const [id, link] of links) {
-        if (id === current) link.setAttribute("aria-current", "location");
-        else link.removeAttribute("aria-current");
-      }
-    };
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) visible.add(entry.target.id);
-          else visible.delete(entry.target.id);
-        }
-        update();
-      },
-      { rootMargin: "-80px 0px -65% 0px" },
-    );
-    for (const heading of headings) observer.observe(heading);
+  const update = () => {
+    frame = 0;
+    const threshold = window.innerHeight * 0.3;
+    const active = headings.findLast((heading) => heading.getBoundingClientRect().top <= threshold)?.id;
+    if (active === current) return;
+    if (current) links.get(current)?.removeAttribute("aria-current");
+    if (active) links.get(active)?.setAttribute("aria-current", "location");
+    current = active;
+  };
+
+  if (headings.length > 0) {
+    update();
+    window.addEventListener("scroll", () => (frame ||= requestAnimationFrame(update)), { passive: true });
   }
 </script>
 

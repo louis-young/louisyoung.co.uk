@@ -11,25 +11,35 @@ export const shortcutFor = (event: Pick<KeyboardEvent, "key" | "metaKey" | "ctrl
   return undefined;
 };
 
-export const initShortcuts = () => {
+/** Wires up keyboard shortcuts. Pass a signal to remove the listeners again. */
+export const initShortcuts = (signal?: AbortSignal) => {
+  const options = { signal } as AddEventListenerOptions;
   const dialog = document.querySelector<HTMLDialogElement>("#shortcuts");
-  document.addEventListener("keydown", (event) => {
-    if (isTyping(event.target) || dialog?.open) return;
-    const shortcut = shortcutFor(event);
-    if (!shortcut) return;
-    event.preventDefault();
-    if (shortcut === "search") {
-      const input = document.querySelector<HTMLInputElement>(".pagefind-ui__search-input");
-      if (input) input.focus();
-      else window.location.assign("/search/");
-    }
-    if (shortcut === "theme") cycleTheme();
-    if (shortcut === "help") dialog?.showModal();
-  });
+  document.addEventListener(
+    "keydown",
+    (event) => {
+      if (isTyping(event.target) || dialog?.open) return;
+      const shortcut = shortcutFor(event);
+      if (!shortcut) return;
+      event.preventDefault();
+      if (shortcut === "search") {
+        const input = document.querySelector<HTMLInputElement>(".pagefind-ui__search-input");
+        if (input) input.focus();
+        else window.location.assign("/search/");
+      }
+      if (shortcut === "theme") cycleTheme();
+      if (shortcut === "help") dialog?.showModal();
+    },
+    options,
+  );
   for (const opener of document.querySelectorAll("[data-shortcuts-open]")) {
-    opener.addEventListener("click", () => dialog?.showModal());
+    opener.addEventListener("click", () => dialog?.showModal(), options);
   }
-  dialog?.addEventListener("click", (event) => {
-    if (event.target === dialog || (event.target as Element).closest("[data-shortcuts-close]")) dialog.close();
-  });
+  dialog?.addEventListener(
+    "click",
+    (event) => {
+      if (event.target === dialog || (event.target as Element).closest("[data-shortcuts-close]")) dialog.close();
+    },
+    options,
+  );
 };

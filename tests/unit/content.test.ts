@@ -77,6 +77,11 @@ describe("content", () => {
       for (const [, anchor] of body.matchAll(/\]\(#([^)]+)\)/gu)) expect(anchors, `#${anchor}`).toContain(anchor);
     });
 
+    it("has no leftover TODOs once published", () => {
+      if (/^draft: true$/mu.test(source)) return;
+      expect(source).not.toMatch(/\bTODO\b/u);
+    });
+
     it("uses https for external links", () => {
       expect(body).not.toMatch(/\]\(http:\/\//u);
     });

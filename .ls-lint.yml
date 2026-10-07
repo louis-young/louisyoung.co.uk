@@ -12,6 +12,8 @@ ls:
     .test.ts: kebab-case
   src/scripts:
     .ts: kebab-case
+  scripts:
+    .ts: kebab-case
   src/i18n:
     .ts: kebab-case | regex:en-GB
   content/articles:

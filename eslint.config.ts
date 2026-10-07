@@ -20,6 +20,8 @@ export default defineConfig(
       "@typescript-eslint/consistent-type-imports": ["error", { fixStyle: "inline-type-imports" }],
       "@typescript-eslint/no-non-null-assertion": "off",
       "@typescript-eslint/restrict-template-expressions": ["error", { allowNumber: true }],
+      // `noPropertyAccessFromIndexSignature` in tsconfig decides between `a.b` and `a["b"]`.
+      "@typescript-eslint/dot-notation": "off",
       eqeqeq: ["error", "always"],
       "no-console": ["error", { allow: ["warn", "error"] }],
     },
@@ -47,7 +49,7 @@ export default defineConfig(
     rules: { "@typescript-eslint/no-unsafe-argument": "off" },
   },
   {
-    files: ["**/*.{js,mjs}"],
+    files: ["**/*.{js,mjs,cjs}"],
     ...tseslint.configs.disableTypeChecked,
   },
 );

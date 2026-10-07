@@ -6,7 +6,14 @@ export const articleSlugs = readdirSync(new URL("../../content/articles/", impor
   .filter((entry) => entry.isDirectory())
   .map((entry) => entry.name);
 
-export const pages = ["/", "/tags/", "/tags/react/", "/search/", ...articleSlugs.map((slug) => `/${slug}/`)];
+export const pages = [
+  "/",
+  "/tags/",
+  "/tags/react/",
+  "/search/",
+  "/design/",
+  ...articleSlugs.map((slug) => `/${slug}/`),
+];
 
 /**
  * Fails any test whose page logs an error or violates the Content Security Policy, so a

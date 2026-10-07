@@ -8,6 +8,7 @@ const routes = {
   topic: "/tags/react/",
   search: "/search/",
   "not-found": "/404/",
+  design: "/design/",
 };
 const viewports = {
   mobile: { width: 390, height: 844 },

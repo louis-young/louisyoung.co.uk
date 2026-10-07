@@ -63,7 +63,7 @@ const editUrl = `${site.repository}/edit/main/content/articles/${article.id}/ind
   <ReadingProgress />
   <article class="article" data-pagefind-body>
     <header class="article__header container-text">
-      <ul class="article__tags" role="list" aria-label={t("article.tags")}>
+      <ul class="article__tags" role="list" aria-label={t("article.tags")} data-pagefind-ignore>
         {data.tags.map((tag) => (
           <li>
             <a class="tag" href={`/tags/${tag}/`} data-pagefind-filter="tag">
@@ -94,9 +94,9 @@ const editUrl = `${site.repository}/edit/main/content/articles/${article.id}/ind
     </figure>
 
     <div class="article__layout">
-      <aside class="article__toc" data-pagefind-ignore>
+      <div class="article__toc" data-pagefind-ignore>
         <Toc items={toc} />
-      </aside>
+      </div>
       <div class="article__body prose" data-code-label={t("article.codeLabel")}>
         <Content components={{ Callout, Demo, Sandbox }} />
       </div>

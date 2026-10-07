@@ -23,7 +23,9 @@ words:
   - destructure
   - destructured
   - destructuring
+  - dialogs
   - dist
+  - elem
   - expressive
   - fetchpriority
   - fontsource
@@ -36,16 +38,19 @@ words:
   - knip
   - lede
   - lefthook
+  - lighthouserc
   - lightningcss
   - linters
   - louisryoungg
   - louisyoung
   - newsreader
+  - nosniff
   - nums
   - oklch
   - opsz
   - ossf
   - pagefind
+  - pecr
   - pnpm-lock.yaml
   - popups
   - prefetch
@@ -60,6 +65,7 @@ words:
   - subsetting
   - sätteri
   - unauthorised
+  - unhighlighted
   - unist
   - utilising
   - vercel

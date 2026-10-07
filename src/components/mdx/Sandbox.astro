@@ -61,8 +61,8 @@ const href = `https://codesandbox.io/s/${id}`;
   .sandbox {
     display: block;
     overflow: hidden;
-    aspect-ratio: 16 / 10;
-    min-height: 22rem;
+    /* A fixed aspect ratio plus min-height would force a minimum width and overflow on phones. */
+    height: clamp(22rem, 55vw, 34rem);
     border: 1px solid var(--rule);
     border-radius: var(--radius-lg);
     background:

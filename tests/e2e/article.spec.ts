@@ -83,3 +83,30 @@ test.describe("copy link", () => {
     );
   });
 });
+
+test.describe("table of contents scroll-spy", () => {
+  test("highlights the section being read, even mid-way through a long one", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/how-to-fetch-data-from-backend-react/");
+    const toc = page.locator(".article__toc");
+    await expect(toc.locator('[aria-current="location"]')).toHaveCount(0);
+    await page.locator("#tutorial").scrollIntoViewIfNeeded();
+    await page.evaluate(() => {
+      window.scrollBy(0, 200);
+    });
+    await expect(toc.locator('[aria-current="location"]')).toHaveCount(1);
+  });
+});
+
+test.describe("layout", () => {
+  for (const width of [320, 390, 768]) {
+    test(`nothing overflows horizontally at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 800 });
+      for (const path of ["/", "/how-to-fetch-data-from-backend-react/", "/design/"]) {
+        await page.goto(path);
+        const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+        expect(overflow, path).toBeLessThanOrEqual(0);
+      }
+    });
+  }
+});

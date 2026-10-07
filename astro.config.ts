@@ -51,12 +51,12 @@ export default defineConfig({
       options: {
         variants: [
           {
-            src: [fontsource("newsreader", "newsreader-latin-standard-normal.woff2")],
+            src: [fontsource("newsreader", "newsreader-latin-wght-normal.woff2")],
             weight: "200 800",
             style: "normal",
           },
           {
-            src: [fontsource("newsreader", "newsreader-latin-standard-italic.woff2")],
+            src: [fontsource("newsreader", "newsreader-latin-wght-italic.woff2")],
             weight: "200 800",
             style: "italic",
           },
@@ -71,7 +71,7 @@ export default defineConfig({
       options: {
         variants: [
           {
-            src: [fontsource("instrument-sans", "instrument-sans-latin-standard-normal.woff2")],
+            src: [fontsource("instrument-sans", "instrument-sans-latin-wght-normal.woff2")],
             weight: "400 700",
             style: "normal",
           },
@@ -108,21 +108,7 @@ export default defineConfig({
     }),
   },
   integrations: [
-    expressiveCode({
-      themes: ["github-light-high-contrast", "github-dark-high-contrast"],
-      themeCssSelector: (theme) => (theme.type === "dark" ? "[data-theme='dark']" : "[data-theme='light']"),
-      useDarkModeMediaQuery: false,
-      styleOverrides: {
-        borderRadius: "0.625rem",
-        borderColor: "var(--rule)",
-        codeFontFamily: "var(--mono)",
-        uiFontFamily: "var(--sans)",
-        codeFontSize: "0.875rem",
-        codeLineHeight: "1.7",
-        frames: { shadowColor: "transparent" },
-      },
-      defaultProps: { wrap: false },
-    }),
+    expressiveCode(),
     mdx(),
     react({ include: ["**/demos/**", "content/**/components/**"] }),
     sitemap({ filter: (page) => !page.includes("/design/") }),
