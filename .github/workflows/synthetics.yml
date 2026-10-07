@@ -24,7 +24,8 @@ jobs:
   synthetics:
     name: Synthetic monitoring
     # Only monitor from the canonical repository, never from forks.
-    if: ${{ github.repository == 'louis-young/louisyoung.co.uk' }}
+    # Scheduled runs start once the site is live: set the repository variable SYNTHETICS_ENABLED=true.
+    if: ${{ github.repository == 'louis-young/louisyoung.co.uk' && (github.event_name == 'workflow_dispatch' || vars.SYNTHETICS_ENABLED == 'true') }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:

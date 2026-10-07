@@ -33,3 +33,4 @@ If your change alters how a page looks, the visual regression job will fail unti
 - Code security: dependency graph, Dependabot alerts and security updates, secret scanning with push protection, private vulnerability reporting.
 - Code scanning: use the advanced setup (the `codeql.yml` workflow), not default setup.
 - Vercel: connect the repository, enable Web Analytics, and point the `louisyoung.co.uk` domain at the project.
+- Once production is live on Vercel, set the repository variable `SYNTHETICS_ENABLED=true` to start the 30-minute production checks.
