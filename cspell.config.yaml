@@ -1,0 +1,69 @@
+version: "0.2"
+language: en-GB
+dictionaries: [en-gb, typescript, node, html, css, softwareTerms, companies, fullstack]
+ignorePaths:
+  - pnpm-lock.yaml
+  - dist
+  - src/i18n/pseudo.ts
+ignoreRegExpList:
+  - '/sha256-[A-Za-z0-9+\/=]+/g'
+  - '/codesandbox\.io\/[^\s"]+/g'
+  - '/\b[a-z0-9]+-[a-z0-9]{5}\b/g'
+words:
+  - astro
+  - astrojs
+  - autem
+  - autolink
+  - autolinks
+  - avif
+  - checkly
+  - codesandbox
+  - cookieless
+  - delectus
+  - destructure
+  - destructured
+  - destructuring
+  - dist
+  - expressive
+  - fetchpriority
+  - fontsource
+  - frontmatter
+  - geist
+  - gitleaks
+  - hidenavigation
+  - hreflang
+  - hsts
+  - knip
+  - lede
+  - lefthook
+  - lightningcss
+  - linters
+  - louisryoungg
+  - louisyoung
+  - newsreader
+  - nums
+  - oklch
+  - opsz
+  - ossf
+  - pagefind
+  - pnpm-lock.yaml
+  - popups
+  - prefetch
+  - prerender
+  - rehype
+  - resvg
+  - satori
+  - scrollspy
+  - shiki
+  - sidenotes
+  - src/i18n/pseudo.ts
+  - subsetting
+  - sätteri
+  - unauthorised
+  - unist
+  - utilising
+  - vercel
+  - vitest
+  - wght
+  - wordmark
+  - zizmor

@@ -1,0 +1,143 @@
+name: Update visual baselines
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [labeled]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.head.ref || github.ref }}
+  cancel-in-progress: true
+
+permissions: {}
+
+env:
+  ASTRO_TELEMETRY_DISABLED: 1
+  CI: true
+  LABEL: update-visual-baselines
+
+jobs:
+  generate:
+    name: Generate baselines
+    # Never run for forks: either a fork's own copy of this workflow, or a
+    # pull request opened from a fork.
+    if: >-
+      github.repository == 'louis-young/louisyoung.co.uk' &&
+      (
+        (github.event_name == 'workflow_dispatch' && github.ref_type == 'branch') ||
+        (
+          github.event_name == 'pull_request' &&
+          github.event.label.name == 'update-visual-baselines' &&
+          github.event.pull_request.head.repo.full_name == github.repository
+        )
+      )
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    # Must match the image used by the `visual` job in ci.yml.
+    container:
+      image: mcr.microsoft.com/playwright:v1.63.0-noble@sha256:eff16c30e6f3f4af0a03fa4b706120d5e9b0891c344a27d64559aff5900a4a27
+    env:
+      HOME: /root
+    outputs:
+      sha: ${{ steps.target.outputs.sha }}
+      branch: ${{ steps.target.outputs.branch }}
+    steps:
+      - name: Resolve target
+        id: target
+        env:
+          PR_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_BRANCH: ${{ github.event.pull_request.head.ref }}
+          REF_NAME: ${{ github.ref_name }}
+          SHA: ${{ github.sha }}
+        run: |
+          if [ -n "$PR_SHA" ]; then
+            echo "sha=$PR_SHA" >> "$GITHUB_OUTPUT"
+            echo "branch=$PR_BRANCH" >> "$GITHUB_OUTPUT"
+          else
+            echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+            echo "branch=$REF_NAME" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ steps.target.outputs.sha }}
+          persist-credentials: false
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Build
+        run: pnpm build
+
+      - name: Update snapshots
+        run: |
+          rm -rf tests/visual/__screenshots__
+          pnpm exec playwright test --project=visual --update-snapshots=all
+
+      - name: Upload baselines
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: visual-baselines
+          path: tests/visual/__screenshots__/
+          retention-days: 7
+          if-no-files-found: error
+
+  commit:
+    name: Commit baselines
+    needs: generate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.generate.outputs.sha }}
+          persist-credentials: false
+
+      - name: Replace baselines
+        run: rm -rf tests/visual/__screenshots__
+
+      - name: Download baselines
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: visual-baselines
+          path: tests/visual/__screenshots__/
+
+      - name: Commit and push
+        env:
+          # Commits pushed with GITHUB_TOKEN do not trigger new workflow runs.
+          # Set the optional VISUAL_BASELINES_TOKEN secret (fine-grained PAT
+          # with contents: write) so CI re-runs on the new commit.
+          GITHUB_TOKEN: ${{ secrets.VISUAL_BASELINES_TOKEN || github.token }}
+          REPOSITORY: ${{ github.repository }}
+          BRANCH: ${{ needs.generate.outputs.branch }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A tests/visual/__screenshots__
+          if git diff --cached --quiet; then
+            echo "Baselines are already up to date." | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          git commit -m "test(visual): update baselines"
+          # Fails (rather than overwriting) if the branch moved since generation.
+          git push "https://x-access-token:${GITHUB_TOKEN}@github.com/${REPOSITORY}.git" "HEAD:refs/heads/${BRANCH}"
+          {
+            echo "Committed updated visual baselines to \`${BRANCH}\`:"
+            echo
+            git show --stat --format= HEAD
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Remove trigger label
+        if: ${{ always() && github.event_name == 'pull_request' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPOSITORY: ${{ github.repository }}
+        run: gh pr edit "$PR_NUMBER" --repo "$REPOSITORY" --remove-label "$LABEL"

@@ -1,0 +1,11 @@
+# zizmor configuration (https://docs.zizmor.sh/configuration/)
+rules:
+  # Dependabot cooldown is intentionally 3 days (14 for majors) for npm.
+  dependabot-cooldown:
+    config:
+      days: 3
+  # GitHub's `uses: $/...` self-repository syntax is not yet understood by
+  # actionlint, so the local setup action is referenced as `./.github/...`.
+  # Revisit once actionlint supports it.
+  self-repository:
+    disable: true

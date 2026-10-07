@@ -1,3 +1,8 @@
-build
-node_modules
-.cache
+dist/
+.astro/
+coverage/
+playwright-report/
+test-results/
+pnpm-lock.yaml
+tests/visual/__screenshots__/
+.lighthouseci/

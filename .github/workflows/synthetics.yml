@@ -1,0 +1,129 @@
+name: Synthetics
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+    inputs:
+      base-url:
+        description: Base URL to test
+        required: false
+        default: https://louisyoung.co.uk
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+permissions: {}
+
+env:
+  ASTRO_TELEMETRY_DISABLED: 1
+  CI: true
+
+jobs:
+  synthetics:
+    name: Synthetic monitoring
+    # Only monitor from the canonical repository, never from forks.
+    if: ${{ github.repository == 'louis-young/louisyoung.co.uk' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Install Playwright browser
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run synthetic tests
+        env:
+          SYNTHETIC_BASE_URL: ${{ inputs.base-url || 'https://louisyoung.co.uk' }}
+        run: pnpm test:synthetic
+
+      - name: Upload Playwright report
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: synthetics-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: Open or update failure issue
+        if: ${{ failure() }}
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const title = 'Synthetic monitoring failing';
+            const label = 'synthetics';
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const { owner, repo } = context.repo;
+
+            try {
+              await github.rest.issues.getLabel({ owner, repo, name: label });
+            } catch (error) {
+              if (error.status !== 404) throw error;
+              await github.rest.issues.createLabel({
+                owner, repo, name: label, color: 'd73a4a',
+                description: 'Production synthetic monitoring',
+              });
+            }
+
+            const open = await github.paginate(github.rest.issues.listForRepo, {
+              owner, repo, state: 'open', labels: label, per_page: 100,
+            });
+            const existing = open.filter((issue) => !issue.pull_request && issue.title === title);
+
+            const body = `Synthetic checks against production failed at ${new Date().toISOString()}.\n\nRun: ${runUrl}`;
+
+            if (existing.length > 0) {
+              const [issue, ...duplicates] = existing.sort((a, b) => a.number - b.number);
+              await github.rest.issues.createComment({ owner, repo, issue_number: issue.number, body });
+              for (const duplicate of duplicates) {
+                await github.rest.issues.update({
+                  owner, repo, issue_number: duplicate.number,
+                  state: 'closed', state_reason: 'duplicate',
+                });
+              }
+              core.notice(`Updated issue #${issue.number}`);
+            } else {
+              const { data: issue } = await github.rest.issues.create({
+                owner, repo, title, labels: [label],
+                body: `${body}\n\nThis issue is managed by the Synthetics workflow and closes automatically when checks pass again.`,
+              });
+              core.notice(`Opened issue #${issue.number}`);
+            }
+
+      - name: Close failure issue
+        if: ${{ success() }}
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const title = 'Synthetic monitoring failing';
+            const label = 'synthetics';
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const { owner, repo } = context.repo;
+
+            const open = await github.paginate(github.rest.issues.listForRepo, {
+              owner, repo, state: 'open', labels: label, per_page: 100,
+            });
+            for (const issue of open.filter((i) => !i.pull_request && i.title === title)) {
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: issue.number,
+                body: `Synthetic checks are passing again as of ${new Date().toISOString()}.\n\nRun: ${runUrl}`,
+              });
+              await github.rest.issues.update({
+                owner, repo, issue_number: issue.number,
+                state: 'closed', state_reason: 'completed',
+              });
+              core.notice(`Closed issue #${issue.number}`);
+            }

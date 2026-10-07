@@ -1,0 +1,114 @@
+---
+import { formatDate, isoDate } from "../i18n";
+import { localeOf } from "../i18n/astro";
+import { articlePath, type Article } from "../lib/articles";
+import Icon from "./Icon.astro";
+
+interface Props {
+  article: Article;
+  headingLevel?: "h2" | "h3";
+}
+
+const { article, headingLevel: Heading = "h3" } = Astro.props;
+const locale = localeOf(Astro);
+---
+
+<article class="article-row">
+  <time class="meta article-row__date" datetime={isoDate(article.data.date)}>
+    {formatDate(article.data.date, locale)}
+  </time>
+  <div class="article-row__body">
+    <Heading class="article-row__title">
+      <a href={articlePath(article)} class="article-row__link">
+        {article.data.title}
+        <Icon name="arrow-right" size={18} class="article-row__arrow" />
+      </a>
+    </Heading>
+    <p class="article-row__description">{article.data.description}</p>
+  </div>
+</article>
+
+<style>
+  .article-row {
+    position: relative;
+    display: grid;
+    grid-template-columns: 9.5rem 1fr;
+    gap: 0.25rem 2rem;
+    padding-block: 1.5rem;
+    border-block-start: 1px solid var(--rule);
+  }
+
+  .article-row__date {
+    padding-block-start: 0.45rem;
+  }
+
+  .article-row__title {
+    font: 540 var(--text-step-2) / 1.18 var(--serif);
+    letter-spacing: -0.018em;
+  }
+
+  .article-row__link {
+    text-decoration: none;
+    transition: color var(--duration-fast) ease;
+  }
+
+  /* The whole row is the hit target, but only the title is the link's accessible name. */
+  .article-row__link::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+  }
+
+  .article-row__link:focus-visible {
+    outline: none;
+  }
+
+  .article-row:has(.article-row__link:focus-visible) {
+    outline: 2px solid var(--accent);
+    outline-offset: 4px;
+    border-radius: var(--radius-sm);
+  }
+
+  .article-row:hover .article-row__link {
+    color: var(--accent);
+  }
+
+  :global(.article-row__arrow) {
+    display: inline-block;
+    margin-inline-start: 0.2em;
+    vertical-align: -0.05em;
+    opacity: 0;
+    translate: -0.4rem 0;
+    transition:
+      opacity var(--duration-base) ease,
+      translate var(--duration-base) var(--ease-out-expo);
+  }
+
+  .article-row:hover :global(.article-row__arrow) {
+    opacity: 1;
+    translate: 0 0;
+  }
+
+  .article-row__description {
+    max-width: 62ch;
+    margin-block-start: 0.5rem;
+    color: var(--ink-muted);
+    font-size: var(--text-step--1);
+    line-height: 1.6;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    overflow: hidden;
+  }
+
+  @media (width < 44rem) {
+    .article-row {
+      grid-template-columns: 1fr;
+    }
+
+    .article-row__date {
+      padding-block-start: 0;
+    }
+  }
+</style>

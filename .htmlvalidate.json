@@ -1,0 +1,10 @@
+{
+  "extends": ["html-validate:recommended", "html-validate:a11y"],
+  "rules": {
+    "no-inline-style": "off",
+    "attribute-boolean-style": "off",
+    "void-style": "off",
+    "no-trailing-whitespace": "off",
+    "long-title": "off"
+  }
+}

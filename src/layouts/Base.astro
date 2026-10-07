@@ -1,0 +1,69 @@
+---
+import "../styles/global.css";
+
+import Footer from "../components/Footer.astro";
+import Head from "../components/Head.astro";
+import Header from "../components/Header.astro";
+import ShortcutsDialog from "../components/ShortcutsDialog.astro";
+import { localeOf } from "../i18n/astro";
+import { useTranslations } from "../i18n";
+
+type Props = Parameters<typeof Head>[0];
+
+const locale = localeOf(Astro);
+const t = useTranslations(locale);
+/** Vercel Web Analytics is cookieless and served first-party, so it only exists on Vercel. */
+const analytics = Boolean(process.env["VERCEL"]);
+---
+
+<!doctype html>
+<html lang={locale} dir="ltr">
+  <head>
+    <Head {...Astro.props} />
+    <slot name="head" />
+  </head>
+  <body>
+    <a href="#main" class="skip-link">
+      {t("nav.skip")}
+    </a>
+    <Header />
+    <main id="main" tabindex="-1">
+      <slot />
+    </main>
+    <Footer />
+    <ShortcutsDialog />
+    <script>
+      import { initShortcuts } from "../scripts/shortcuts";
+      import { initTheme } from "../scripts/theme";
+
+      initTheme();
+      initShortcuts();
+    </script>
+    {analytics && <script is:inline defer src="/_vercel/insights/script.js" />}
+  </body>
+</html>
+
+<style>
+  .skip-link {
+    position: fixed;
+    top: 0.75rem;
+    left: 0.75rem;
+    z-index: 50;
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-md);
+    background: var(--ink);
+    color: var(--paper);
+    font-weight: 600;
+    translate: 0 -200%;
+    transition: translate var(--duration-base) var(--ease-out-expo);
+  }
+
+  .skip-link:focus-visible {
+    translate: 0 0;
+  }
+
+  main {
+    flex: 1;
+    outline: none;
+  }
+</style>

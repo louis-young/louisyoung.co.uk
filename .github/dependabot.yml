@@ -1,7 +1,65 @@
 version: 2
+
 updates:
-  - package-ecosystem: "npm"
-    directory: "/"
+  - package-ecosystem: npm
+    directory: /
     schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 20
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/London
+    cooldown:
+      default-days: 3
+      semver-major-days: 14
+    open-pull-requests-limit: 10
+    versioning-strategy: increase
+    labels:
+      - dependencies
+    commit-message:
+      prefix: chore(deps)
+    groups:
+      astro:
+        patterns:
+          - "astro*"
+          - "@astrojs/*"
+        update-types: [minor, patch]
+      testing:
+        patterns:
+          - "vitest"
+          - "@vitest/*"
+          - "playwright"
+          - "@playwright/*"
+          - "@testing-library/*"
+          - "@axe-core/*"
+        update-types: [minor, patch]
+      lint:
+        patterns:
+          - "eslint*"
+          - "@eslint/*"
+          - "typescript-eslint"
+          - "prettier*"
+        update-types: [minor, patch]
+      minor-and-patch:
+        patterns:
+          - "*"
+        update-types: [minor, patch]
+    # Major updates are not grouped, so each one gets its own PR.
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/London
+    cooldown:
+      default-days: 3
+    labels:
+      - dependencies
+    commit-message:
+      prefix: chore(ci)
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+        update-types: [minor, patch]

@@ -1,0 +1,22 @@
+pre-commit:
+  parallel: true
+  jobs:
+    - name: format
+      glob: "*.{ts,tsx,astro,mjs,json,md,mdx,css,yml,yaml}"
+      run: pnpm exec prettier --check {staged_files}
+    - name: lint
+      glob: "*.{ts,tsx,astro}"
+      run: pnpm exec eslint --max-warnings 0 {staged_files}
+    - name: spelling
+      glob: "*.{mdx,md}"
+      run: pnpm exec cspell --no-progress --no-must-find-files {staged_files}
+
+commit-msg:
+  jobs:
+    - name: commitlint
+      run: pnpm exec commitlint --edit {1}
+
+pre-push:
+  jobs:
+    - name: check
+      run: pnpm check && pnpm test

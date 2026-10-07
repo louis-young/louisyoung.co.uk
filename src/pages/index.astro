@@ -1,0 +1,151 @@
+---
+import ArticleRow from "../components/ArticleRow.astro";
+import FeaturedArticle from "../components/FeaturedArticle.astro";
+import { useTranslations } from "../i18n";
+import { localeOf } from "../i18n/astro";
+import Base from "../layouts/Base.astro";
+import { getArticles, getTags, groupByYear } from "../lib/articles";
+import { estimateReadingTime } from "../lib/reading-time";
+import { websiteSchema } from "../lib/seo";
+import { emphasise } from "../lib/text";
+
+const t = useTranslations(localeOf(Astro));
+const articles = await getArticles();
+const [latest, ...rest] = articles;
+const tags = getTags(articles);
+---
+
+<Base schema={websiteSchema()}>
+  <section class="hero container-page" aria-labelledby="hero-title">
+    <p class="eyebrow hero__eyebrow">{t("home.eyebrow")}</p>
+    <h1 id="hero-title" class="hero__title" set:html={emphasise(t("home.title"))} />
+    <p class="hero__lede">{t("site.tagline")}</p>
+  </section>
+
+  {latest && (
+    <section class="container-page section" aria-label={t("home.latest")}>
+      <FeaturedArticle article={latest} minutes={estimateReadingTime(latest.body ?? "")} />
+    </section>
+  )}
+
+  <section class="container-page section archive" aria-labelledby="archive-title">
+    <div class="archive__header">
+      <h2 id="archive-title" class="eyebrow">
+        {t("home.archive")}
+      </h2>
+      <ul class="archive__tags" role="list" aria-label={t("tags.title")}>
+        {tags.map(({ tag }) => (
+          <li>
+            <a class="tag" href={`/tags/${tag}/`}>
+              {tag}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+    {groupByYear(rest).map(([year, group]) => (
+      <section class="archive__year" aria-labelledby={`year-${year}`}>
+        <h3 id={`year-${year}`} class="archive__year-label">
+          {year}
+        </h3>
+        <div>
+          {group.map((article) => (
+            <ArticleRow article={article} />
+          ))}
+        </div>
+      </section>
+    ))}
+  </section>
+</Base>
+
+<style>
+  .hero {
+    padding-block: clamp(3rem, 2rem + 6vw, 7.5rem) clamp(2.5rem, 2rem + 3vw, 4.5rem);
+  }
+
+  .hero__title {
+    max-width: 17ch;
+    margin-block-start: 1.25rem;
+    font: 480 var(--text-step-5) / 1.02 var(--serif);
+    letter-spacing: -0.035em;
+    font-optical-sizing: auto;
+  }
+
+  .hero__title em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .hero__lede {
+    max-width: 46ch;
+    margin-block-start: 1.5rem;
+    font-size: var(--text-step-1);
+    line-height: 1.45;
+    color: var(--ink-muted);
+  }
+
+  .hero > * {
+    animation: rise var(--duration-slow) var(--ease-out-expo) backwards;
+  }
+
+  .hero > :nth-child(2) {
+    animation-delay: 60ms;
+  }
+
+  .hero > :nth-child(3) {
+    animation-delay: 120ms;
+  }
+
+  .section {
+    padding-block-end: var(--spacing-section);
+  }
+
+  .archive__header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-block-end: 1.25rem;
+  }
+
+  .archive__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .archive__year {
+    display: grid;
+    grid-template-columns: 6rem 1fr;
+    gap: 0 1.5rem;
+  }
+
+  .archive__year-label {
+    position: sticky;
+    top: 5rem;
+    align-self: start;
+    padding-block-start: 1.85rem;
+    font: 500 var(--text-step--1) / 1 var(--mono);
+    color: var(--ink-muted);
+    border-block-start: 1px solid var(--ink);
+  }
+
+  @media (width < 44rem) {
+    .archive__year {
+      grid-template-columns: 1fr;
+    }
+
+    .archive__year-label {
+      position: static;
+      padding-block: 1rem 0;
+    }
+  }
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      translate: 0 0.75rem;
+    }
+  }
+</style>

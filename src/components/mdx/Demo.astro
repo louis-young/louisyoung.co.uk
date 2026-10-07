@@ -1,0 +1,86 @@
+---
+import { translatorFor } from "../../i18n/astro";
+import Icon from "../Icon.astro";
+
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+const t = translatorFor(Astro);
+---
+
+<figure class="demo">
+  <figcaption class="demo__bar">
+    <span class="demo__badge">
+      <Icon name="play" size={12} /> {t("demo.label")}
+    </span>
+    <span class="demo__title">{title}</span>
+  </figcaption>
+  <div class="demo__stage">
+    <slot />
+  </div>
+</figure>
+
+<style>
+  .demo {
+    overflow: hidden;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-lg);
+    background: var(--paper-raised);
+    box-shadow: var(--shadow-raised);
+  }
+
+  .demo__bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+    margin: 0;
+    padding: 0.7rem 1rem;
+    border-block-end: 1px solid var(--rule);
+    font: 500 var(--text-step--1) / 1.3 var(--sans);
+    color: var(--ink-muted);
+    text-align: start;
+  }
+
+  .demo__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font: 600 var(--text-step--2) / 1 var(--mono);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .demo__stage {
+    padding: clamp(1.25rem, 4vw, 2.25rem);
+    background:
+      radial-gradient(circle at 1px 1px, var(--rule) 1px, transparent 0) 0 0 / 1.25rem 1.25rem,
+      var(--paper);
+  }
+
+  .demo__stage :global(.demo-counter) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.25rem;
+  }
+
+  .demo__stage :global(.demo-counter__value) {
+    min-width: 3ch;
+    font: 500 var(--text-step-5) / 1 var(--mono);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.04em;
+  }
+
+  .demo__stage :global(.demo-counter__actions) {
+    display: flex;
+    gap: 0.5rem;
+  }
+</style>

@@ -33,7 +33,7 @@ Ask these together in one round, each with a recommended default:
 4. **Content.** Keep all 8 articles as they are (copy-edited, with bugs fixed). Or also refresh them for modern React: React 19, the `use` hook, Actions, the React Compiler. Mark updated posts with an "Updated" date.
 5. **Scope of the site.** Blog only, or blog plus home/about, projects, `/uses`, and `/now`.
 
-## 3. Target stack (verify each is current and stable *today* before adopting it)
+## 3. Target stack (verify each is current and stable _today_ before adopting it)
 
 Check npm, release notes and changelogs for current majors. Don't rely on memory. Prefer boring and stable over beta, unless the beta is clearly the future and is production-ready.
 
@@ -80,20 +80,20 @@ The current site is a generic Tailwind blog. The new one needs a clear point of 
 
 ## 5. Testing: every layer, all enforced in CI
 
-| Layer | Tool | What it covers |
-|---|---|---|
-| Unit | Vitest | utilities (slugs, reading time, date formatting per locale, feed builders, TOC builder, i18n lookup), with coverage thresholds of at least 90% on `src/lib` |
-| Component/integration | Vitest + Astro Container API; Testing Library for React islands | rendered HTML of layouts, components and MDX components; island behaviour (each article demo works) |
-| Content | Vitest over the content collection | frontmatter validates against Zod; every TOC/anchor/internal link resolves; every image has alt text; no duplicate slugs; dates are sane |
-| Type tests | `expectTypeOf` (Vitest typecheck) | public helper and content-schema types; `astro check` + `tsc --noEmit` with zero errors |
-| E2E | Playwright (Chromium, Firefox, WebKit, plus mobile viewports) | navigation, theme toggle persistence with no flash, search, keyboard-only flows, feeds, 404, **every legacy URL still resolves** |
-| Accessibility | `@axe-core/playwright` on every route in both themes; Playwright keyboard/focus-order tests; pa11y-ci as a second opinion | zero violations against WCAG 2.2 AA |
-| Visual regression | Playwright `toHaveScreenshot` inside the pinned official Playwright Docker image, so snapshots are deterministic | every page × light/dark × 3 viewports; fonts loaded, animations disabled; snapshots updated via a labelled workflow, never blindly |
-| Performance | Lighthouse CI with budgets; bundle-size budgets (size-limit) | 100/100/100/100 on key pages, JS per article page under 10 kB beyond islands, CLS = 0, LCP < 1.5s on simulated mobile |
-| Links | lychee | internal and external links, on PRs and weekly |
-| HTML/SEO | html-validate; structured-data checks | valid HTML, valid JSON-LD, OG/Twitter meta present on every page |
-| Synthetics | scheduled GitHub Actions workflow (every 30 min) running a Playwright smoke suite against **production** (or Checkly, if the user prefers) | homepage, a random article, feed, search, TLS/security headers; opens or updates an issue on failure |
-| i18n | Vitest + Playwright | catalogue keys match across locales (type-enforced), no hard-coded UI strings (lint rule), pseudo-locale build shows no truncation/overflow in screenshots, hreflang correct |
+| Layer                 | Tool                                                                                                                                       | What it covers                                                                                                                                                               |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Unit                  | Vitest                                                                                                                                     | utilities (slugs, reading time, date formatting per locale, feed builders, TOC builder, i18n lookup), with coverage thresholds of at least 90% on `src/lib`                  |
+| Component/integration | Vitest + Astro Container API; Testing Library for React islands                                                                            | rendered HTML of layouts, components and MDX components; island behaviour (each article demo works)                                                                          |
+| Content               | Vitest over the content collection                                                                                                         | frontmatter validates against Zod; every TOC/anchor/internal link resolves; every image has alt text; no duplicate slugs; dates are sane                                     |
+| Type tests            | `expectTypeOf` (Vitest typecheck)                                                                                                          | public helper and content-schema types; `astro check` + `tsc --noEmit` with zero errors                                                                                      |
+| E2E                   | Playwright (Chromium, Firefox, WebKit, plus mobile viewports)                                                                              | navigation, theme toggle persistence with no flash, search, keyboard-only flows, feeds, 404, **every legacy URL still resolves**                                             |
+| Accessibility         | `@axe-core/playwright` on every route in both themes; Playwright keyboard/focus-order tests; pa11y-ci as a second opinion                  | zero violations against WCAG 2.2 AA                                                                                                                                          |
+| Visual regression     | Playwright `toHaveScreenshot` inside the pinned official Playwright Docker image, so snapshots are deterministic                           | every page × light/dark × 3 viewports; fonts loaded, animations disabled; snapshots updated via a labelled workflow, never blindly                                           |
+| Performance           | Lighthouse CI with budgets; bundle-size budgets (size-limit)                                                                               | 100/100/100/100 on key pages, JS per article page under 10 kB beyond islands, CLS = 0, LCP < 1.5s on simulated mobile                                                        |
+| Links                 | lychee                                                                                                                                     | internal and external links, on PRs and weekly                                                                                                                               |
+| HTML/SEO              | html-validate; structured-data checks                                                                                                      | valid HTML, valid JSON-LD, OG/Twitter meta present on every page                                                                                                             |
+| Synthetics            | scheduled GitHub Actions workflow (every 30 min) running a Playwright smoke suite against **production** (or Checkly, if the user prefers) | homepage, a random article, feed, search, TLS/security headers; opens or updates an issue on failure                                                                         |
+| i18n                  | Vitest + Playwright                                                                                                                        | catalogue keys match across locales (type-enforced), no hard-coded UI strings (lint rule), pseudo-locale build shows no truncation/overflow in screenshots, hreflang correct |
 
 Tests must be fast, isolated and non-flaky. Don't add retries to hide flakes. Deterministic dates go through an injected clock.
 

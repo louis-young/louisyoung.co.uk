@@ -1,0 +1,47 @@
+name: Bug report
+description: Something on the site is broken or behaving unexpectedly.
+title: "Bug: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for taking the time to report a problem.
+  - type: input
+    id: url
+    attributes:
+      label: Page URL
+      description: The page where the problem happens.
+      placeholder: https://louisyoung.co.uk/...
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: What did you see, and what did you expect to see instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Go to ...
+        2. Click ...
+        3. See ...
+    validations:
+      required: false
+  - type: input
+    id: environment
+    attributes:
+      label: Browser and device
+      placeholder: e.g. Safari 26 on iPhone 17, Firefox 150 on Windows 11
+    validations:
+      required: false
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: Drag and drop images here if they help explain the problem.
+    validations:
+      required: false

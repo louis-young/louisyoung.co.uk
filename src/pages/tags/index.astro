@@ -1,0 +1,67 @@
+---
+import { useTranslations } from "../../i18n";
+import { localeOf } from "../../i18n/astro";
+import Base from "../../layouts/Base.astro";
+import { getArticles, getTags } from "../../lib/articles";
+
+const t = useTranslations(localeOf(Astro));
+const tags = getTags(await getArticles());
+---
+
+<Base title={t("tags.title")}>
+  <section class="container-page page">
+    <h1 class="page__title">{t("tags.title")}</h1>
+    <ul class="topics" role="list">
+      {tags.map(({ tag, count }) => (
+        <li>
+          <a class="topic" href={`/tags/${tag}/`}>
+            <span class="topic__name">{tag}</span>
+            <span class="meta">{t("tags.count", { count })}</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </section>
+</Base>
+
+<style>
+  .page {
+    padding-block: clamp(3rem, 2rem + 5vw, 6rem) var(--spacing-section);
+  }
+
+  .page__title {
+    font: 500 var(--text-step-5) / 1.05 var(--serif);
+    letter-spacing: -0.035em;
+  }
+
+  .topics {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
+    gap: 0.75rem;
+    margin-block-start: 3rem;
+  }
+
+  .topic {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.25rem 1.25rem 1.1rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-lg);
+    text-decoration: none;
+    transition:
+      border-color var(--duration-fast) ease,
+      background-color var(--duration-fast) ease;
+  }
+
+  .topic:hover {
+    border-color: var(--accent);
+    background: var(--paper-sunken);
+  }
+
+  .topic__name {
+    font: 540 var(--text-step-2) / 1.1 var(--serif);
+    letter-spacing: -0.02em;
+  }
+</style>

@@ -1,14 +1,34 @@
 ls:
-  .js: kebab-case
-  .jsx: kebab-case
-  .ts: kebab-case | camelCase
-  .tsx: kebab-case
-  .test.tsx: snake_case
-  .config.js: kebab-case
-  .d.ts: kebab-case
-  .json: kebab-case
-  .md: kebab-case
+  src/components:
+    .astro: PascalCase
+    .ts: kebab-case
+  src/layouts:
+    .astro: PascalCase
+  src/pages:
+    .astro: kebab-case | regex:\[[a-z]+\]
+    .ts: regex:[a-z0-9\-\.]+ | regex:\[[a-z]+\]\.png
+  src/lib:
+    .ts: kebab-case
+    .test.ts: kebab-case
+  src/scripts:
+    .ts: kebab-case
+  src/i18n:
+    .ts: kebab-case | regex:en-GB
+  content/articles:
+    .dir: kebab-case
+    .mdx: regex:index
+    .jpg: kebab-case
+    .tsx: kebab-case
+  tests:
+    .dir: kebab-case | regex:__screenshots__
+    .ts: kebab-case
+    .test.ts: kebab-case
+    .spec.ts: kebab-case
+    .test.tsx: kebab-case
+
 ignore:
   - node_modules
-  - README.md
-  - .cache
+  - dist
+  - .astro
+  - .git
+  - tests/visual/__screenshots__
