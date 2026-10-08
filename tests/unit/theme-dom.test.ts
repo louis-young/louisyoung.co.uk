@@ -243,8 +243,7 @@ describe("command palette (DOM)", () => {
   });
 
   it("opens from a button, highlights the first option and wraps with the arrow keys", async () => {
-    await init();
-    document.querySelector<HTMLButtonElement>("[data-palette-open]")!.click();
+    (await init())();
     expect(dialog().open).toBe(true);
     expect(selected()).toBe("o1");
     key("ArrowUp");

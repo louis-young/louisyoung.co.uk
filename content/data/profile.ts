@@ -18,4 +18,22 @@ export const profile = {
   bookingUrl: "[BOOKING URL]",
   email: "me@louisyoung.co.uk",
   github: "louis-young",
+  principles: [
+    {
+      title: "Ship small, ship often",
+      body: "Thin vertical slices behind flags, in production early, so feedback arrives while it's still cheap to act on.",
+    },
+    {
+      title: "Accessible by default",
+      body: "Semantic HTML, keyboard paths and contrast are part of done, checked in CI rather than left for an audit.",
+    },
+    {
+      title: "Performance is a feature",
+      body: "Budgets, measurement and less JavaScript. Fast on a mid-range phone on a train, not just on my laptop.",
+    },
+    {
+      title: "Leave it better",
+      body: "Clear docs, honest tests and decisions written down, so the team moves faster after I've gone.",
+    },
+  ],
 } satisfies Profile;

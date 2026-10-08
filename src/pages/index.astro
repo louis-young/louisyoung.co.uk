@@ -7,6 +7,8 @@ import { profile } from "../../content/data/profile";
 import ArticleRow from "../components/ArticleRow.astro";
 import Availability from "../components/sections/Availability.astro";
 import CvRoles from "../components/sections/CvRoles.astro";
+import FeaturedArticle from "../components/sections/FeaturedArticle.astro";
+import Principles from "../components/sections/Principles.astro";
 import Repositories from "../components/sections/Repositories.astro";
 import SectionHeading from "../components/sections/SectionHeading.astro";
 import Toolbox from "../components/sections/Toolbox.astro";
@@ -25,7 +27,8 @@ const locale = localeOf(Astro);
 const t = useTranslations(locale);
 const work = await getWork();
 const allArticles = await getArticles();
-const articles = allArticles.slice(0, 6);
+const [featured, ...rest] = allArticles;
+const articles = rest.slice(0, 6);
 const topics = getTags(allArticles);
 const repositories = await getRepositories(profile.github);
 const nowEntry = await getEntry("pages", "now");
@@ -35,6 +38,9 @@ const stars = repositories.reduce((total, repository) => total + repository.star
 const stats = [
   { value: allArticles.length, label: t("home.statArticles", { count: allArticles.length }) },
   { value: topics.length, label: t("home.statTopics", { count: topics.length }) },
+  ...(allArticles.length > 0
+    ? [{ value: allArticles.at(-1)!.data.date.getFullYear(), label: t("home.statSince"), raw: true }]
+    : []),
   ...(repositories.length > 0
     ? [
         { value: repositories.length, label: t("home.statRepos", { count: repositories.length }) },
@@ -72,18 +78,24 @@ const stats = [
       {stats.map((stat) => (
         <div class="stats__item">
           <dt class="stats__label">{stat.label}</dt>
-          <dd class="stats__value">{stat.value.toLocaleString(locale)}</dd>
+          <dd class="stats__value">{"raw" in stat ? String(stat.value) : stat.value.toLocaleString(locale)}</dd>
         </div>
       ))}
     </dl>
   </section>
+
+  {featured && (
+    <section class="container-page section section--tight" aria-label={t("home.featured")}>
+      <FeaturedArticle article={featured} />
+    </section>
+  )}
 
   <section class="container-page section bento" aria-label={t("home.overview")}>
     <article class="card bento__writing" aria-labelledby="writing-title">
       <SectionHeading
         id="writing-title"
         number={t("nav.writing")}
-        title={t("home.latestWriting")}
+        title={t("home.moreWriting")}
         link={{ href: "/writing/", label: t("home.allWriting") }}
       />
       <p class="bento__lede">{t("home.writingIntro")}</p>
@@ -148,6 +160,11 @@ const stats = [
         </p>
       </article>
     )}
+  </section>
+
+  <section class="container-page section" aria-labelledby="principles-title">
+    <SectionHeading id="principles-title" number={t("home.approach")} title={t("home.principles")} />
+    <Principles />
   </section>
 
   {work.length > 0 && (
@@ -253,6 +270,10 @@ const stats = [
 
   .section {
     padding-block: clamp(2rem, 1rem + 3vw, 3.5rem);
+  }
+
+  .section--tight {
+    padding-block-end: 0;
   }
 
   .bento {

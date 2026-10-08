@@ -73,4 +73,19 @@ test.describe("keyboard", () => {
     await expect(input.first()).toHaveValue("t");
     await expect(page.locator("[data-theme-toggle]")).toHaveAttribute("aria-label", "Colour theme: System");
   });
+
+  test("the terminal opens with ` and runs commands", async ({ page }) => {
+    await page.goto("/");
+    await page.keyboard.press("`");
+    const terminal = page.getByRole("dialog", { name: "Terminal" });
+    await expect(terminal).toBeVisible();
+    const prompt = terminal.getByRole("textbox", { name: "Command" });
+    await expect(prompt).toBeFocused();
+    await prompt.fill("ls writing");
+    await prompt.press("Enter");
+    await expect(terminal.getByRole("log")).toContainText("1  ");
+    await prompt.fill("open 1");
+    await prompt.press("Enter");
+    await expect.poll(() => new URL(page.url()).pathname).toMatch(/^\/[a-z0-9-]+\/$/u);
+  });
 });

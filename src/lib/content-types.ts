@@ -20,6 +20,8 @@ export interface Profile {
   bookingUrl: string;
   email: string;
   github: string;
+  /** "How I work": three or four short principles shown on the home page. */
+  principles: { title: string; body: string }[];
 }
 
 export interface Role {
