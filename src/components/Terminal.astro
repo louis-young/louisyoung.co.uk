@@ -91,6 +91,9 @@ const context: Omit<TerminalContext, "now"> = {
         spellcheck="false"
         enterkeyhint="send"
       />
+      <button type="submit" class="visually-hidden">
+        {t("terminal.run")}
+      </button>
     </form>
   </div>
 </dialog>

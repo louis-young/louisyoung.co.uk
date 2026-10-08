@@ -145,6 +145,7 @@ export const enGB = {
   "palette.terminal": "Open the terminal",
   "terminal.title": "Terminal",
   "terminal.input": "Command",
+  "terminal.run": "Run command",
   "terminal.close": "Close the terminal",
   "terminal.welcome": "Welcome. Type help to see what this can do, or Tab to complete.",
   "terminal.help": "Available commands:",
