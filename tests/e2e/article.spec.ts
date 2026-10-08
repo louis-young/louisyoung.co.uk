@@ -70,10 +70,14 @@ test.describe("live demo", () => {
   test("shows the stale-closure bug, then the fix", async ({ page }) => {
     await page.goto("/why-functional-state-updates-are-important/");
     const [stale, functional] = await page.locator(".demo").all();
+    // The demos hydrate when scrolled into view; clicking before that does nothing.
+    const hydrated = (demo: typeof stale) => expect(demo!.locator("astro-island")).not.toHaveAttribute("ssr");
     await stale!.scrollIntoViewIfNeeded();
+    await hydrated(stale);
     await stale!.getByRole("button", { name: "Increment" }).click();
     await expect(stale!.getByRole("status")).toHaveText("1");
     await functional!.scrollIntoViewIfNeeded();
+    await hydrated(functional);
     await functional!.getByRole("button", { name: "Increment" }).click();
     await expect(functional!.getByRole("status")).toHaveText("2");
     await functional!.getByRole("button", { name: "Reset" }).click();
@@ -119,16 +123,32 @@ test.describe("layout", () => {
         await page.goto(path);
         const { overflow, culprits } = await page.evaluate(() => {
           const width = document.documentElement.clientWidth;
-          // Name the widest offenders so a failure says what to fix, not just that something is wrong.
-          const offenders = [...document.querySelectorAll("body *")]
-            .map((element) => ({ element, right: element.getBoundingClientRect().right }))
-            .filter(({ element, right }) => right > width + 0.5 && !element.closest("nav, dialog, .ticker"))
+          // Name the widest offenders (elements and text runs) so a failure says what to fix.
+          const right = (rects: DOMRectList | DOMRect[]) => Math.max(0, ...[...rects].map((rect) => rect.right));
+          const elements = [...document.querySelectorAll("body *")].map((element) => ({
+            label: `${element.tagName.toLowerCase()}.${element.className}`,
+            right: right([element.getBoundingClientRect()]),
+          }));
+          const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+          const texts: { label: string; right: number }[] = [];
+          while (walker.nextNode()) {
+            const range = document.createRange();
+            range.selectNodeContents(walker.currentNode);
+            texts.push({
+              label: `"${walker.currentNode.textContent?.trim().slice(0, 30)}"`,
+              right: right(range.getClientRects()),
+            });
+          }
+          const offenders = [...elements, ...texts]
+            .filter((item) => item.right > width + 0.5)
             .sort((a, b) => b.right - a.right)
-            .slice(0, 3)
-            .map(
-              ({ element, right }) => `${element.tagName.toLowerCase()}.${element.className} → ${Math.round(right)}px`,
-            );
-          return { overflow: document.documentElement.scrollWidth - window.innerWidth, culprits: offenders };
+            .slice(0, 4)
+            .map((item) => `${item.label} → ${Math.round(item.right)}px`);
+          const sizes = `scroll ${document.documentElement.scrollWidth}, client ${width}, inner ${window.innerWidth}`;
+          return {
+            overflow: document.documentElement.scrollWidth - window.innerWidth,
+            culprits: [sizes, ...offenders],
+          };
         });
         expect(overflow, `${path}: ${culprits.join(", ")}`).toBeLessThanOrEqual(0);
       }
