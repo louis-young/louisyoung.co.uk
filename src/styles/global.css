@@ -460,4 +460,63 @@
   }
 }
 
+/* Windows High Contrast and other forced-colour modes: keep every boundary that colour alone drew. */
+@media (forced-colors: active) {
+  .chip,
+  .button,
+  .tag,
+  .hire-band,
+  .band,
+  .outcomes,
+  .ticker {
+    border: 2px solid CanvasText;
+  }
+
+  .chip__dot,
+  .site-header__mark,
+  .reading-progress {
+    forced-color-adjust: none;
+    background: CanvasText;
+  }
+
+  :focus-visible {
+    outline-color: Highlight;
+  }
+}
+
+/* Print: the content, not the chrome. Links show where they go. */
+@media print {
+  .site-header,
+  .site-footer,
+  .skip-link,
+  .grid-overlay,
+  .reading-progress,
+  .ticker,
+  .article__toc,
+  .article__actions,
+  .pager,
+  .related,
+  #palette {
+    display: none !important;
+  }
+
+  html,
+  body {
+    background: white;
+    color: black;
+  }
+
+  .prose a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.85em;
+    overflow-wrap: anywhere;
+  }
+
+  .prose pre,
+  .prose figure,
+  .expressive-code {
+    break-inside: avoid;
+  }
+}
+
 @import "./prose.css";
