@@ -350,6 +350,7 @@ const fields = {
   .field {
     display: grid;
     gap: 0.45rem;
+    min-width: 0;
   }
 
   .field--wide {
@@ -370,6 +371,8 @@ const fields = {
   .field input,
   .field select,
   .field textarea {
+    width: 100%;
+    min-width: 0;
     min-height: 2.75rem;
     padding: 0.55rem 0.8rem;
     border: 1px solid var(--rule-strong);
@@ -399,7 +402,7 @@ const fields = {
     gap: 1rem 1.5rem;
   }
 
-  @media (width < 48rem) {
+  @media (width < 56rem) {
     .enquiry,
     .enquiry__form {
       grid-template-columns: 1fr;
