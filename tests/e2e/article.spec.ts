@@ -114,8 +114,20 @@ test.describe("layout", () => {
       await page.setViewportSize({ width, height: 800 });
       for (const path of pages) {
         await page.goto(path);
-        const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
-        expect(overflow, path).toBeLessThanOrEqual(0);
+        const { overflow, culprits } = await page.evaluate(() => {
+          const width = document.documentElement.clientWidth;
+          // Name the widest offenders so a failure says what to fix, not just that something is wrong.
+          const offenders = [...document.querySelectorAll("body *")]
+            .map((element) => ({ element, right: element.getBoundingClientRect().right }))
+            .filter(({ element, right }) => right > width + 0.5 && !element.closest("nav, dialog, .ticker"))
+            .sort((a, b) => b.right - a.right)
+            .slice(0, 3)
+            .map(
+              ({ element, right }) => `${element.tagName.toLowerCase()}.${element.className} → ${Math.round(right)}px`,
+            );
+          return { overflow: document.documentElement.scrollWidth - window.innerWidth, culprits: offenders };
+        });
+        expect(overflow, `${path}: ${culprits.join(", ")}`).toBeLessThanOrEqual(0);
       }
     });
   }
