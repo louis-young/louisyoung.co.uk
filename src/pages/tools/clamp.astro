@@ -1,0 +1,141 @@
+---
+import PageHero from "../../components/sections/PageHero.astro";
+import { useTranslations } from "../../i18n";
+import { localeOf } from "../../i18n/astro";
+import Base from "../../layouts/Base.astro";
+
+const t = useTranslations(localeOf(Astro));
+const fields = [
+  { name: "minSize", label: t("tools.clamp.minSize"), value: 18 },
+  { name: "maxSize", label: t("tools.clamp.maxSize"), value: 28 },
+  { name: "minViewport", label: t("tools.clamp.minViewport"), value: 360 },
+  { name: "maxViewport", label: t("tools.clamp.maxViewport"), value: 1280 },
+  { name: "root", label: t("tools.clamp.root"), value: 16 },
+];
+---
+
+<Base title={t("tools.clamp.title")} description={t("tools.clamp.summary")} image="/og/tools.png">
+  <PageHero label={t("nav.tools")} title={t("tools.clamp.title")} lede={t("tools.clamp.summary")} />
+  <div
+    class="container-page clamp"
+    data-clamp
+    data-error-positive={t("tools.clamp.errorPositive")}
+    data-error-viewports={t("tools.clamp.errorViewports")}
+    data-copied={t("tools.copied")}
+  >
+    <div class="clamp__fields card">
+      {fields.map((field) => (
+        <label class="clamp__field">
+          <span class="clamp__label">{field.label}</span>
+          <input type="number" name={field.name} value={field.value} min="1" step="any" inputmode="decimal" />
+        </label>
+      ))}
+    </div>
+    <div class="clamp__result card">
+      <p class="label">{t("tools.clamp.result")}</p>
+      <div class="clamp__code">
+        <output for="minSize maxSize minViewport maxViewport root" aria-live="polite"></output>
+        <button type="button" class="button button--small" data-copy>
+          {t("tools.copy")}
+        </button>
+      </div>
+      <p class="clamp__error" data-error role="alert" hidden></p>
+      <p class="clamp__preview" data-clamp-preview>
+        {t("tools.clamp.preview")}
+      </p>
+    </div>
+  </div>
+</Base>
+
+<script>
+  import { initClamp } from "../../scripts/tools";
+
+  initClamp();
+</script>
+
+<style>
+  .clamp {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+    gap: 1rem;
+    align-items: start;
+    padding-block-end: var(--spacing-section);
+  }
+
+  .clamp > .card {
+    padding: clamp(1.25rem, 1rem + 1vw, 2rem);
+  }
+
+  .clamp__fields {
+    display: grid;
+    gap: 1rem;
+    border: 1px solid var(--rule);
+  }
+
+  .clamp__field {
+    display: grid;
+    gap: 0.4rem;
+  }
+
+  .clamp__label {
+    font-weight: 500;
+    font-size: var(--text-step--1);
+  }
+
+  .clamp__field input {
+    min-height: 2.75rem;
+    padding: 0.5rem 0.8rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+    color: var(--ink);
+    font: 500 var(--text-step--1) / 1 var(--mono);
+  }
+
+  .clamp__field input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .clamp__result {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .clamp__code {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-md);
+    background: var(--paper-sunken);
+  }
+
+  .clamp__code output {
+    flex: 1;
+    min-width: 0;
+    font: 500 var(--text-step--1) / 1.5 var(--mono);
+    overflow-wrap: anywhere;
+  }
+
+  .clamp__error {
+    color: var(--ink);
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-sm);
+    background: var(--warning-soft);
+  }
+
+  .clamp__preview {
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+  }
+
+  @media (width < 56rem) {
+    .clamp {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

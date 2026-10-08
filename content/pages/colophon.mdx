@@ -1,0 +1,39 @@
+---
+title: Colophon
+description: How this site is built and run, from the stack, typography and design tokens to accessibility, performance, privacy and testing.
+updated: 2026-10-08
+summary: "How this site is made, and the standards it holds itself to."
+---
+
+## Stack
+
+- **[Astro](https://astro.build)** renders every page to static HTML at build time. React only loads for an article's live demo, and only when it scrolls into view.
+- **TypeScript** in strict mode throughout, with content collections for articles, case studies and pages, and typed data files for the CV, services and profile.
+- **Tailwind CSS 4** for the reset, with component-scoped CSS on top of a small set of design tokens.
+- **[Vercel](https://vercel.com)** hosts it. Every pull request gets a preview deployment.
+
+## Design
+
+- Set in **Geist** and **Geist Mono**, self-hosted and preloaded, with metric-matched fallbacks so nothing jumps while fonts load.
+- Colours are **OKLCH tokens** with light, dark and high-contrast variants. A unit test converts every token to sRGB and checks each text and background pair against WCAG contrast thresholds.
+- Motion is short, eased and switched off entirely when you ask for reduced motion.
+
+## Accessibility
+
+- Aims for **WCAG 2.2 AA**. Every page is checked with axe in both themes on every change, alongside keyboard, focus-visibility and reduced-motion tests.
+- Everything works with a keyboard: <kbd>⌘K</kbd> for the command palette, <kbd>/</kbd> to search, <kbd>J</kbd> and <kbd>K</kbd> to move through lists, <kbd>T</kbd> to change theme and <kbd>`</kbd> for the terminal.
+- Supports forced colours (Windows high contrast), print, and zoom up to 400% without horizontal scrolling.
+
+## Performance
+
+- Pages ship almost no JavaScript; a test fails the build if the home page goes over 4 kB (gzipped). The command palette and terminal load the first time you open them.
+- Images are responsive AVIF and WebP. Lighthouse runs on every pull request with performance budgets.
+
+## Privacy and security
+
+- No cookies, no third-party trackers. Vercel Web Analytics counts page views without identifying anyone.
+- A strict, hash-based Content Security Policy, and third-party embeds only load when you click them.
+
+## Testing
+
+Unit, integration, type and content tests with Vitest; end-to-end tests in Chromium, Firefox, WebKit and a mobile viewport with Playwright; visual regression screenshots; link checking; and synthetic checks against production. The [source is on GitHub](https://github.com/louis-young/louisyoung.co.uk).

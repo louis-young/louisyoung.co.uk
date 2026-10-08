@@ -19,6 +19,8 @@ export const getStaticPaths = (async () => {
     ["writing", { title: t("writing.title"), eyebrow: t("nav.writing") }],
     ["hire", { title: t("hire.heading"), eyebrow: t("nav.hire") }],
     ["cv", { title: t("cv.heading"), eyebrow: t("nav.cv") }],
+    ["tools", { title: t("tools.heading"), eyebrow: t("nav.tools") }],
+    ["stats", { title: t("stats.heading"), eyebrow: t("nav.stats") }],
     ...(await getCollection("pages", isPagePublished)).map((page): [string, Card] => [
       page.id,
       { title: page.data.title, eyebrow: formatDate(page.data.updated) },

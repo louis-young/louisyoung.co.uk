@@ -1,0 +1,271 @@
+---
+import PageHero from "../components/sections/PageHero.astro";
+import { useTranslations } from "../i18n";
+import { localeOf } from "../i18n/astro";
+import Base from "../layouts/Base.astro";
+import { articlePath, getArticles, getTags } from "../lib/articles";
+import { readingStats } from "../lib/reading-time";
+
+const locale = localeOf(Astro);
+const t = useTranslations(locale);
+const articles = (await getArticles()).map((article) => ({ article, ...readingStats(article.body ?? "") }));
+const total = (key: "words" | "minutes" | "codeBlocks") => articles.reduce((sum, item) => sum + item[key], 0);
+const number = new Intl.NumberFormat(locale);
+const headline = [
+  { label: t("stats.articles"), value: articles.length },
+  { label: t("stats.words"), value: total("words") },
+  { label: t("stats.minutes"), value: total("minutes") },
+  { label: t("stats.codeBlocks"), value: total("codeBlocks") },
+];
+const years = Object.entries(Object.groupBy(articles, (item) => String(item.article.data.date.getFullYear()))).map(
+  ([year, items]) => ({ year, count: items?.length ?? 0 }),
+);
+const maxYear = Math.max(1, ...years.map((item) => item.count));
+const topics = getTags(articles.map((item) => item.article)).slice(0, 8);
+const maxTopic = Math.max(1, ...topics.map((item) => item.count));
+const longest = [...articles].sort((a, b) => b.words - a.words).slice(0, 3);
+const average = articles.length
+  ? { words: Math.round(total("words") / articles.length), minutes: Math.round(total("minutes") / articles.length) }
+  : { words: 0, minutes: 0 };
+---
+
+<Base title={t("stats.title")} description={t("stats.description")} image="/og/stats.png">
+  <PageHero label={t("nav.stats")} title={t("stats.heading")} lede={t("stats.lede")} />
+  <div class="container-page stats-page">
+    <dl class="totals">
+      {headline.map((item) => (
+        <div class="total card">
+          <dt>{item.label}</dt>
+          <dd>{number.format(item.value)}</dd>
+        </div>
+      ))}
+    </dl>
+
+    <section class="card panel" aria-labelledby="by-topic">
+      <h2 id="by-topic" class="panel__title">
+        {t("stats.byTopic")}
+      </h2>
+      <ul class="bars" role="list">
+        {topics.map(({ tag, count }) => (
+          <li class="bar">
+            <a href={`/tags/${tag}/`} class="bar__label">
+              {tag}
+            </a>
+            <span class="bar__track" aria-hidden="true">
+              <span class="bar__fill" style={`--value: ${count / maxTopic}`} />
+            </span>
+            <span class="bar__value">{t("tags.count", { count })}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section class="card panel" aria-labelledby="by-year">
+      <h2 id="by-year" class="panel__title">
+        {t("stats.byYear")}
+      </h2>
+      <ul class="bars" role="list">
+        {years.map(({ year, count }) => (
+          <li class="bar">
+            <span class="bar__label">{year}</span>
+            <span class="bar__track" aria-hidden="true">
+              <span class="bar__fill" style={`--value: ${count / maxYear}`} />
+            </span>
+            <span class="bar__value">{t("tags.count", { count })}</span>
+          </li>
+        ))}
+      </ul>
+      <p class="panel__note">
+        <span class="label">{t("stats.average")}</span>
+        {t("stats.averageValue", { words: number.format(average.words), minutes: average.minutes })}
+      </p>
+    </section>
+
+    <section class="card panel panel--wide" aria-labelledby="longest">
+      <h2 id="longest" class="panel__title">
+        {t("stats.longest")}
+      </h2>
+      <ol class="longest" role="list">
+        {longest.map((item, index) => (
+          <li class="longest__item">
+            <span class="longest__rank" aria-hidden="true">
+              {index + 1}
+            </span>
+            <a href={articlePath(item.article)} class="longest__title">
+              {item.article.data.title}
+            </a>
+            <span class="meta">
+              {t("stats.averageValue", { words: number.format(item.words), minutes: item.minutes })}
+            </span>
+          </li>
+        ))}
+      </ol>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .stats-page {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    padding-block-end: var(--spacing-section);
+  }
+
+  .totals {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+    gap: 1rem;
+  }
+
+  .total {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 0.35rem;
+    padding: 1.5rem;
+  }
+
+  .total dt {
+    font-size: var(--text-step--1);
+    color: var(--ink-muted);
+  }
+
+  .total dd {
+    font-weight: 600;
+    font-size: var(--text-step-4);
+    line-height: 1;
+    letter-spacing: -0.04em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .panel {
+    display: grid;
+    align-content: start;
+    gap: 1.25rem;
+    padding: clamp(1.25rem, 1rem + 1vw, 2rem);
+  }
+
+  .panel--wide {
+    grid-column: 1 / -1;
+  }
+
+  .panel__title {
+    font-weight: 600;
+    font-size: var(--text-step-1);
+    letter-spacing: -0.02em;
+  }
+
+  .panel__note {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.75rem;
+    color: var(--ink-muted);
+    font-size: var(--text-step--1);
+  }
+
+  .bars {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .bar {
+    display: grid;
+    grid-template-columns: 8rem minmax(0, 1fr) 6rem;
+    align-items: center;
+    gap: 1rem;
+    font-size: var(--text-step--1);
+  }
+
+  .bar__label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: var(--mono);
+    text-decoration: none;
+  }
+
+  a.bar__label:hover {
+    color: var(--accent);
+  }
+
+  .bar__track {
+    height: 0.6rem;
+    border-radius: 999px;
+    background: var(--paper-sunken);
+    overflow: hidden;
+  }
+
+  .bar__fill {
+    display: block;
+    width: calc(var(--value) * 100%);
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--accent), oklch(72% 0.13 235));
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .bar__fill {
+      animation: grow 900ms var(--ease-out-expo) backwards;
+    }
+  }
+
+  .bar__value {
+    color: var(--ink-muted);
+    text-align: end;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .longest {
+    display: grid;
+  }
+
+  .longest__item {
+    display: grid;
+    grid-template-columns: 2rem minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: 1rem;
+    padding-block: 0.85rem;
+    border-block-start: 1px solid var(--rule);
+  }
+
+  .longest__rank {
+    font: 500 var(--text-step--1) / 1 var(--mono);
+    color: var(--accent);
+  }
+
+  .longest__title {
+    font-weight: 550;
+    text-decoration: none;
+  }
+
+  .longest__title:hover {
+    color: var(--accent);
+  }
+
+  @media (width < 48rem) {
+    .stats-page {
+      grid-template-columns: 1fr;
+    }
+
+    .bar {
+      grid-template-columns: 5.5rem minmax(0, 1fr) auto;
+      gap: 0.75rem;
+    }
+
+    .longest__item {
+      grid-template-columns: 2rem minmax(0, 1fr);
+    }
+
+    .longest__item .meta {
+      grid-column: 2;
+    }
+  }
+
+  @keyframes grow {
+    from {
+      width: 0;
+    }
+  }
+</style>

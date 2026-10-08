@@ -75,6 +75,9 @@ const paletteArticles = (await getArticles()).map((article) => ({
         ...(sections.cv ? ["cv"] : []),
         ...(sections.now ? ["now"] : []),
         ...(showUses ? ["uses"] : []),
+        "tools",
+        "stats",
+        "colophon",
         "tags",
         "search",
       ]}

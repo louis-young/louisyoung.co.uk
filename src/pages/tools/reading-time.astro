@@ -1,0 +1,108 @@
+---
+import PageHero from "../../components/sections/PageHero.astro";
+import { useTranslations } from "../../i18n";
+import { localeOf } from "../../i18n/astro";
+import Base from "../../layouts/Base.astro";
+
+const t = useTranslations(localeOf(Astro));
+const stats = [
+  { name: "minutes", label: t("tools.reading.minutes") },
+  { name: "words", label: t("tools.reading.words") },
+  { name: "codeLines", label: t("tools.reading.codeLines") },
+];
+---
+
+<Base title={t("tools.reading.title")} description={t("tools.reading.summary")} image="/og/tools.png">
+  <PageHero label={t("nav.tools")} title={t("tools.reading.title")} lede={t("tools.reading.summary")} />
+  <div class="container-page reading" data-reading>
+    <label class="reading__field card">
+      <span class="reading__label">{t("tools.reading.input")}</span>
+      <textarea rows="14" spellcheck="true"></textarea>
+    </label>
+    <dl class="reading__stats card" aria-live="polite">
+      {stats.map((stat) => (
+        <div class="reading__stat">
+          <dt>{stat.label}</dt>
+          <dd data-stat={stat.name}>0</dd>
+        </div>
+      ))}
+    </dl>
+  </div>
+</Base>
+
+<script>
+  import { initReadingTime } from "../../scripts/tools";
+
+  initReadingTime();
+</script>
+
+<style>
+  .reading {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    gap: 1rem;
+    align-items: start;
+    padding-block-end: var(--spacing-section);
+  }
+
+  .reading > .card {
+    padding: clamp(1.25rem, 1rem + 1vw, 2rem);
+  }
+
+  .reading__field {
+    display: grid;
+    gap: 0.6rem;
+  }
+
+  .reading__label {
+    font-weight: 500;
+    font-size: var(--text-step--1);
+  }
+
+  .reading__field textarea {
+    min-height: 16rem;
+    padding: 0.8rem 1rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+    color: var(--ink);
+    font: inherit;
+    line-height: 1.6;
+    resize: vertical;
+  }
+
+  .reading__field textarea:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .reading__stats {
+    display: grid;
+    gap: 1.25rem;
+  }
+
+  .reading__stat {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 0.25rem;
+  }
+
+  .reading__stat dt {
+    font-size: var(--text-step--1);
+    color: var(--ink-muted);
+  }
+
+  .reading__stat dd {
+    font-weight: 600;
+    font-size: var(--text-step-4);
+    line-height: 1;
+    letter-spacing: -0.04em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (width < 56rem) {
+    .reading {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

@@ -41,6 +41,12 @@ const groups: { id: string; label: string; options: Option[] }[] = [
       { title: t("nav.now"), href: "/now/", hint: "/now" },
       { title: t("nav.uses"), href: "/uses/", hint: "/uses" },
       { title: t("tags.title"), href: "/tags/", hint: "/tags" },
+      { title: t("nav.tools"), href: "/tools/", hint: "/tools" },
+      { title: t("tools.contrast.title"), href: "/tools/contrast/", keywords: "wcag colour color a11y" },
+      { title: t("tools.clamp.title"), href: "/tools/clamp/", keywords: "fluid type css" },
+      { title: t("tools.reading.title"), href: "/tools/reading-time/", keywords: "words" },
+      { title: t("nav.stats"), href: "/stats/", hint: "/stats" },
+      { title: t("nav.colophon"), href: "/colophon/", hint: "/colophon" },
     ].filter((option) => !hidden.includes(option.href)),
   },
   {
