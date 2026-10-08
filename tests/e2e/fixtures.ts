@@ -42,7 +42,11 @@ export const test = base.extend<{ consoleErrors: string[] }>({
       const errors: string[] = [];
       // Chromium rejects a cross-document view transition's promises when a test ends (and the
       // page is torn down) mid-transition. That is teardown noise, not a page error.
-      const isTeardownNoise = (text: string) => text.startsWith("Transition was aborted because of invalid state");
+      // WebKit also logs a same-origin hover prefetch as an "access control" failure when a click
+      // navigates before the prefetch finishes. The navigation itself is unaffected.
+      const isTeardownNoise = (text: string) =>
+        text.startsWith("Transition was aborted because of invalid state") ||
+        /\/\/localhost:\d+\/\S* due to access control checks\.$/u.test(text);
       page.on("console", (message) => {
         if (message.type() === "error" && !isTeardownNoise(message.text())) errors.push(message.text());
       });
