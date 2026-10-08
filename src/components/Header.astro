@@ -82,8 +82,8 @@ const links = [
     top: 0;
     z-index: 20;
     border-block-end: 1px solid color-mix(in oklch, var(--rule) 70%, transparent);
-    background: color-mix(in oklch, var(--paper) 72%, transparent);
-    backdrop-filter: saturate(1.6) blur(16px);
+    /* Nearly opaque rather than a live backdrop blur, which re-renders on every scroll frame. */
+    background: color-mix(in oklch, var(--paper) 92%, transparent);
   }
 
   .site-header__inner {

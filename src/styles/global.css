@@ -489,11 +489,10 @@
     padding: 0 0.8rem 0 0.65rem;
     border: 1px solid var(--rule);
     border-radius: 999px;
-    background: color-mix(in oklch, var(--paper-raised) 70%, transparent);
+    background: color-mix(in oklch, var(--paper-raised) 85%, transparent);
     color: var(--ink-muted);
     font: 500 var(--text-step--1) / 1 var(--sans);
     text-decoration: none;
-    backdrop-filter: blur(8px);
   }
 
   .chip__dot {
@@ -512,7 +511,8 @@
       inset: 0;
       border-radius: inherit;
       background: var(--success);
-      animation: ping 2s var(--ease-out-expo) infinite;
+      /* A few pulses on load, then still: endless motion would need a pause control (WCAG 2.2.2). */
+      animation: ping 2s var(--ease-out-expo) 3;
     }
 
     .reveal {
