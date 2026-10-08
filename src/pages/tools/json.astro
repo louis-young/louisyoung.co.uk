@@ -1,0 +1,202 @@
+---
+import PageHero from "../../components/sections/PageHero.astro";
+import { useTranslations } from "../../i18n";
+import { localeOf } from "../../i18n/astro";
+import Base from "../../layouts/Base.astro";
+
+const t = useTranslations(localeOf(Astro));
+const indents = [
+  { value: "2", label: t("tools.json.indentTwo") },
+  { value: "4", label: t("tools.json.indentFour") },
+  { value: "tab", label: t("tools.json.indentTab") },
+  { value: "minify", label: t("tools.json.minify") },
+];
+const sample =
+  '{"name":"Louis Young","site":"louisyoung.co.uk","tools":["json","regex","encode"],"open":true,"since":2012}';
+---
+
+<Base title={t("tools.json.title")} description={t("tools.json.summary")} image="/og/tools.png">
+  <PageHero label={t("nav.tools")} title={t("tools.json.title")} lede={t("tools.json.summary")} />
+  <div
+    class="container-page json"
+    data-json
+    data-empty={t("tools.json.empty")}
+    data-valid-one={t("tools.json.validOne")}
+    data-valid-other={t("tools.json.validOther")}
+    data-error-at={t("tools.json.errorAt")}
+    data-error-token={t("tools.json.errorToken")}
+    data-error-end={t("tools.json.errorEnd")}
+    data-error-depth={t("tools.json.errorDepth")}
+    data-copy-text={t("tools.copy")}
+    data-copied={t("tools.copied")}
+  >
+    <div class="json__input card">
+      <label class="json__label" for="json-input">
+        {t("tools.json.input")}
+      </label>
+      <textarea
+        id="json-input"
+        class="json__area"
+        rows="14"
+        spellcheck="false"
+        autocomplete="off"
+        aria-describedby="json-status"
+        data-input
+      >{sample}</textarea>
+      <div class="json__options">
+        <label class="json__option">
+          <span class="json__label">{t("tools.json.indent")}</span>
+          <select class="json__select" data-indent>
+            {indents.map((indent) => (
+              <option value={indent.value}>{indent.label}</option>
+            ))}
+          </select>
+        </label>
+        <label class="json__check">
+          <input type="checkbox" data-sort />
+          <span>{t("tools.json.sort")}</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="json__result card">
+      <div class="json__head">
+        <label class="label" for="json-output">
+          {t("tools.json.output")}
+        </label>
+        <button type="button" class="button button--small" data-copy>
+          {t("tools.copy")}
+        </button>
+      </div>
+      <p id="json-status" class="json__status" role="status" data-status></p>
+      <textarea
+        id="json-output"
+        class="json__area json__area--output"
+        rows="14"
+        readonly
+        spellcheck="false"
+        data-output
+      ></textarea>
+    </div>
+  </div>
+</Base>
+
+<script>
+  import { initJson } from "../../scripts/tool-json";
+
+  initJson();
+</script>
+
+<style>
+  .json {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 1rem;
+    align-items: start;
+    padding-block-end: var(--spacing-section);
+  }
+
+  .json > .card {
+    display: grid;
+    gap: 0.75rem;
+    min-width: 0;
+    padding: clamp(1.25rem, 1rem + 1vw, 2rem);
+  }
+
+  .json__label {
+    font-weight: 500;
+    font-size: var(--text-step--1);
+  }
+
+  .json__area {
+    width: 100%;
+    min-width: 0;
+    min-height: 20rem;
+    padding: 0.8rem 1rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+    color: var(--ink);
+    font: 400 var(--text-step--1) / 1.6 var(--mono);
+    tab-size: 2;
+    white-space: pre;
+    overflow-wrap: normal;
+    overflow-x: auto;
+    resize: vertical;
+  }
+
+  .json__area[aria-invalid="true"] {
+    border-color: var(--warning);
+  }
+
+  .json__options {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: 0.75rem 1.5rem;
+  }
+
+  .json__option {
+    display: grid;
+    gap: 0.4rem;
+  }
+
+  .json__select {
+    min-height: 2.75rem;
+    padding: 0.5rem 0.8rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+    color: var(--ink);
+    font: inherit;
+    font-size: var(--text-step--1);
+  }
+
+  .json__check {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-height: 2.75rem;
+    font-size: var(--text-step--1);
+    cursor: pointer;
+  }
+
+  .json__check input {
+    width: 1.1rem;
+    height: 1.1rem;
+    accent-color: var(--accent);
+  }
+
+  .json__area:focus-visible,
+  .json__select:focus-visible,
+  .json__check input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .json__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .json__status {
+    padding: 0.6rem 0.9rem;
+    border-radius: var(--radius-sm);
+    background: color-mix(in oklch, var(--success) 14%, transparent);
+    color: var(--ink);
+    font-size: var(--text-step--1);
+    overflow-wrap: anywhere;
+  }
+
+  .json__status[data-invalid] {
+    background: var(--warning-soft);
+  }
+
+  @media (width < 56rem) {
+    .json {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

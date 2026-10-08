@@ -1,6 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const port = 4321;
+const port = Number(process.env["PW_PORT"] ?? 4321);
 const ci = Boolean(process.env.CI);
 /** Lets local runs reuse a preinstalled Chromium (e.g. in cloud sandboxes) instead of downloading one. */
 const executablePath = process.env.CHROMIUM_PATH;
