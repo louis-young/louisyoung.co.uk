@@ -2,6 +2,7 @@
 import { cv } from "../../../content/data/cv";
 import { translatorFor } from "../../i18n/astro";
 import { formatPeriod } from "../../lib/cv";
+import { filled, withoutPlaceholders } from "../../lib/placeholders";
 
 interface Props {
   /** Show highlights and stack, as on `/cv/`. */
@@ -11,57 +12,68 @@ interface Props {
 
 const t = translatorFor(Astro);
 const { detailed = false, limit } = Astro.props;
-const roles = cv.roles.slice(0, limit);
+const roles = cv.roles.filter((role) => filled(role.company) && filled(role.role)).slice(0, limit);
 ---
 
-<ol class="roles" role="list">
-  {roles.map((role) => (
-    <li class="role">
-      <p class="role__period">{formatPeriod(role, t("cv.present"))}</p>
-      <div>
-        <h3 class="role__title">
-          {role.role}, {role.company}
-        </h3>
-        {detailed && <p class="role__location label">{role.location}</p>}
-        <p class="role__summary">{role.summary}</p>
-        {detailed && (
-          <>
-            <ul class="role__highlights" role="list">
-              {role.highlights.map((highlight) => (
-                <li>{highlight}</li>
-              ))}
-            </ul>
-            <p class="role__stack label">{role.stack.join(" · ")}</p>
-          </>
-        )}
-      </div>
-    </li>
-  ))}
-</ol>
+{roles.length > 0 && (
+  <ol class="roles" role="list">
+    {roles.map((role) => (
+      <li class="role">
+        <p class="role__period">{formatPeriod(role, t("cv.present"))}</p>
+        <div>
+          <h3 class="role__title">
+            {role.role} <span class="role__company">· {role.company}</span>
+          </h3>
+          {detailed && filled(role.location) && <p class="role__location label">{role.location}</p>}
+          {filled(role.summary) && <p class="role__summary">{role.summary}</p>}
+          {detailed && (
+            <>
+              <ul class="role__highlights" role="list">
+                {withoutPlaceholders(role.highlights).map((highlight) => (
+                  <li>{highlight}</li>
+                ))}
+              </ul>
+              <ul class="role__stack" role="list">
+                {withoutPlaceholders(role.stack).map((item) => (
+                  <li class="tag">{item}</li>
+                ))}
+              </ul>
+            </>
+          )}
+        </div>
+      </li>
+    ))}
+  </ol>
+)}
 
 <style>
-  .roles {
-    border-block-end: 1px solid var(--rule-strong);
-  }
-
   .role {
     display: grid;
-    grid-template-columns: 10rem minmax(0, 1fr);
+    grid-template-columns: 9rem minmax(0, 1fr);
     gap: 0.5rem 1.5rem;
-    padding-block: 1.4rem;
-    border-block-start: 1px solid var(--rule-strong);
+    padding-block: 1.25rem;
+    border-block-start: 1px solid var(--rule);
+  }
+
+  .role:first-child {
+    border-block-start: 0;
   }
 
   .role__period {
-    padding-block-start: 0.4rem;
-    font: 500 var(--text-step--1) / 1.2 var(--mono);
+    padding-block-start: 0.2rem;
+    font: 500 var(--text-step--1) / 1.4 var(--mono);
+    color: var(--ink-faint);
   }
 
   .role__title {
-    font-weight: 700;
     font-size: var(--text-step-1);
-    line-height: 1.2;
-    letter-spacing: -0.025em;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  .role__company {
+    color: var(--ink-muted);
+    font-weight: 500;
   }
 
   .role__location {
@@ -69,7 +81,7 @@ const roles = cv.roles.slice(0, limit);
   }
 
   .role__summary {
-    margin-block-start: 0.4rem;
+    margin-block-start: 0.35rem;
     max-width: 62ch;
     color: var(--ink-muted);
   }
@@ -89,14 +101,18 @@ const roles = cv.roles.slice(0, limit);
   .role__highlights li::before {
     content: "";
     position: absolute;
-    top: 0.62em;
+    top: 0.65em;
     left: 0;
-    width: 0.4rem;
-    height: 0.4rem;
-    background: var(--signal);
+    width: 0.35rem;
+    height: 0.35rem;
+    border-radius: 50%;
+    background: var(--accent);
   }
 
   .role__stack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
     margin-block-start: 0.9rem;
   }
 

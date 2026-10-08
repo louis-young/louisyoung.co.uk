@@ -49,8 +49,11 @@ jobs:
           # This job runs a pull request's code, so it must never write a shared cache.
           cache: "false"
 
+      # Drafts (case studies, /now, /uses) are built here so the browser tests cover them.
       - name: Build
         run: pnpm build
+        env:
+          SHOW_DRAFTS: "true"
 
       - name: Update snapshots
         run: |

@@ -9,141 +9,168 @@ import Availability from "../components/sections/Availability.astro";
 import CvRoles from "../components/sections/CvRoles.astro";
 import Repositories from "../components/sections/Repositories.astro";
 import SectionHeading from "../components/sections/SectionHeading.astro";
-import Services from "../components/sections/Services.astro";
 import Toolbox from "../components/sections/Toolbox.astro";
 import WorkTable from "../components/sections/WorkTable.astro";
 import { formatDate, useTranslations } from "../i18n";
 import { localeOf } from "../i18n/astro";
 import Base from "../layouts/Base.astro";
-import { getArticles } from "../lib/articles";
+import { getArticles, getTags } from "../lib/articles";
 import { getRepositories } from "../lib/github";
 import { bookingHref } from "../lib/hire";
+import { filled } from "../lib/placeholders";
 import { websiteSchema } from "../lib/seo";
-import { getWork } from "../lib/work";
+import { getWork, isPagePublished } from "../lib/work";
 
 const locale = localeOf(Astro);
 const t = useTranslations(locale);
 const work = await getWork();
-const articles = (await getArticles()).slice(0, 6);
+const allArticles = await getArticles();
+const articles = allArticles.slice(0, 6);
+const topics = getTags(allArticles);
 const repositories = await getRepositories(profile.github);
-const now = await getEntry("pages", "now");
-const [first, last] = profile.name.toUpperCase().split(" ");
-const ticker = [
-  t("availability.available", { date: profile.availability.from }),
-  ...hire.services.map((service) => service.name),
-  ...cv.skills.flatMap((group) => group.items).slice(0, 6),
+const nowEntry = await getEntry("pages", "now");
+const now = nowEntry && isPagePublished(nowEntry) ? nowEntry : undefined;
+const hasRoles = cv.roles.some((role) => filled(role.company) && filled(role.role));
+const stars = repositories.reduce((total, repository) => total + repository.stars, 0);
+const stats = [
+  { value: allArticles.length, label: t("home.statArticles", { count: allArticles.length }) },
+  { value: topics.length, label: t("home.statTopics", { count: topics.length }) },
+  ...(repositories.length > 0
+    ? [
+        { value: repositories.length, label: t("home.statRepos", { count: repositories.length }) },
+        { value: stars, label: t("home.statStars", { count: stars }) },
+      ]
+    : []),
 ];
 ---
 
 <Base schema={websiteSchema()}>
   <section class="hero container-page" aria-labelledby="hero-title">
-    <h1 id="hero-title" class="display hero__name">
-      <span class="visually-hidden">{profile.name}</span>
-      {[first, last].map((word) => (
-        <span class="hero__line" aria-hidden="true">
-          {[...(word ?? "")].map((letter) => (
-            <span class="hero__letter">{letter}</span>
-          ))}
-        </span>
-      ))}
+    <div class="reveal">
+      <Availability />
+    </div>
+    <h1 id="hero-title" class="display hero__title reveal" style="--reveal-index: 1">
+      <span class="gradient-text">{profile.name}</span>
+      <span class="hero__headline">{profile.headline}</span>
     </h1>
-    <div class="hero__grid">
-      <p class="label hero__index">00 — {t("home.index")}</p>
-      <p class="hero__intro">{profile.intro}</p>
-      <div class="hero__availability">
-        <Availability />
-        <p class="label">{profile.availability.note}</p>
-      </div>
-    </div>
-  </section>
-
-  <div class="ticker" aria-hidden="true">
-    <div class="ticker__track">
-      {[0, 1].map(() => (
-        <p class="ticker__group">
-          {ticker.map((item) => (
-            <span class="ticker__item">{item}</span>
-          ))}
-        </p>
-      ))}
-    </div>
-  </div>
-
-  <section class="container-page section" aria-labelledby="work-title">
-    <SectionHeading
-      id="work-title"
-      number="01"
-      title={t("home.selectedWork")}
-      link={{ href: "/work/", label: t("home.allWork") }}
-    />
-    <WorkTable work={work} />
-  </section>
-
-  <section class="container-page section writing" aria-labelledby="writing-title">
-    <div class="writing__intro">
-      <SectionHeading id="writing-title" number="02" title={t("nav.writing")} />
-      <p class="writing__lede">{t("home.writingIntro")}</p>
-      <a href="/writing/" class="button button--small">
-        {t("home.allWriting")} <span aria-hidden="true">→</span>
+    <p class="hero__intro reveal" style="--reveal-index: 2">
+      {profile.intro}
+    </p>
+    <div class="hero__actions reveal" style="--reveal-index: 3">
+      <a href={`mailto:${profile.email}`} class="button button--signal">
+        {t("hire.email")} <span aria-hidden="true">→</span>
+      </a>
+      <a href={bookingHref(profile.bookingUrl, profile.email, t("hire.bookingSubject"))} class="button">
+        {t("hire.book")}
       </a>
     </div>
-    <div class="writing__list">
-      {articles.map((article) => (
-        <ArticleRow article={article} compact />
+    <p class="label hero__note reveal" style="--reveal-index: 4">
+      {profile.availability.note}
+    </p>
+
+    <dl class="stats card reveal" style="--reveal-index: 5">
+      {stats.map((stat) => (
+        <div class="stats__item">
+          <dt class="stats__label">{stat.label}</dt>
+          <dd class="stats__value">{stat.value.toLocaleString(locale)}</dd>
+        </div>
       ))}
-    </div>
+    </dl>
   </section>
 
-  <section class="hire-band" aria-labelledby="hire-title">
-    <div class="container-page">
-      <h2 id="hire-title" class="hire-band__title">
-        <span class="hire-band__number">03</span>
+  <section class="container-page section bento" aria-label={t("home.overview")}>
+    <article class="card bento__writing" aria-labelledby="writing-title">
+      <SectionHeading
+        id="writing-title"
+        number={t("nav.writing")}
+        title={t("home.latestWriting")}
+        link={{ href: "/writing/", label: t("home.allWriting") }}
+      />
+      <p class="bento__lede">{t("home.writingIntro")}</p>
+      <div class="bento__list">
+        {articles.map((article) => (
+          <ArticleRow article={article} compact />
+        ))}
+      </div>
+      <nav class="bento__topics" aria-label={t("tags.title")}>
+        <ul role="list">
+          {topics.map(({ tag }) => (
+            <li>
+              <a class="tag" href={`/tags/${tag}/`}>
+                #{tag}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    </article>
+
+    <article class="card bento__hire" aria-labelledby="hire-title">
+      <div class="bento__glow" aria-hidden="true"></div>
+      <p class="label bento__eyebrow">{t("nav.hire")}</p>
+      <h2 id="hire-title" class="section-title">
         {t("home.hireTitle")}
       </h2>
-      <Services />
-      <div class="hire-band__actions">
-        <a href={`mailto:${profile.email}`} class="button button--primary hire-band__cta">
-          {t("hire.email")}
-        </a>
-        <a
-          href={bookingHref(profile.bookingUrl, profile.email, t("hire.bookingSubject"))}
-          class="button hire-band__cta"
-        >
-          {t("hire.book")}
-        </a>
-        <a href="/hire/" class="hire-band__more label">
-          {t("home.hireDetails")} →
-        </a>
-      </div>
-    </div>
-  </section>
+      <ul class="bento__services" role="list">
+        {hire.services.map((service) => (
+          <li>
+            <a href={`/hire/#service-${service.id}`} class="bento__service">
+              <span>{service.name}</span>
+              <span class="bento__service-summary">{service.summary}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+      <a href="/hire/" class="button button--primary button--small">
+        {t("home.hireDetails")} <span aria-hidden="true">→</span>
+      </a>
+    </article>
 
-  <section class="container-page section" aria-labelledby="cv-title">
-    <SectionHeading
-      id="cv-title"
-      number="04"
-      title={t("cv.heading")}
-      link={{ href: "/cv.pdf", label: t("cv.download"), download: true }}
-    />
-    <div class="cv-snapshot">
-      <CvRoles limit={3} />
-      <div>
-        <p class="label cv-snapshot__label">{t("cv.toolbox")}</p>
-        <Toolbox />
-      </div>
-    </div>
-  </section>
+    <article class="card bento__toolbox" aria-labelledby="toolbox-title">
+      <p class="label bento__eyebrow">{t("cv.skills")}</p>
+      <h2 id="toolbox-title" class="bento__title">
+        {t("cv.toolbox")}
+      </h2>
+      <Toolbox />
+    </article>
 
-  {now && (
-    <section class="container-page section now" aria-labelledby="now-title">
-      <SectionHeading id="now-title" number="05" title={t("nav.now")} />
-      <div class="now__body">
-        <p class="now__summary">{now.data.summary}</p>
-        <p class="label now__meta">
-          {t("page.updated", { date: formatDate(now.data.updated, locale) })} · <a href="/now/">{t("home.nowMore")}</a>{" "}
-          · <a href="/uses/">/uses</a>
+    {now && (
+      <article class="card bento__now" aria-labelledby="now-title">
+        <p class="label bento__eyebrow">{t("nav.now")}</p>
+        <h2 id="now-title" class="bento__title">
+          {now.data.summary}
+        </h2>
+        <p class="meta">
+          {t("page.updated", { date: formatDate(now.data.updated, locale) })} ·{" "}
+          <a href="/now/" class="link">
+            {t("home.nowMore")}
+          </a>
         </p>
-      </div>
+      </article>
+    )}
+  </section>
+
+  {work.length > 0 && (
+    <section class="container-page section" aria-labelledby="work-title">
+      <SectionHeading
+        id="work-title"
+        number={t("nav.work")}
+        title={t("home.selectedWork")}
+        link={{ href: "/work/", label: t("home.allWork") }}
+      />
+      <WorkTable work={work} />
+    </section>
+  )}
+
+  {hasRoles && (
+    <section class="container-page section" aria-labelledby="cv-title">
+      <SectionHeading
+        id="cv-title"
+        number={t("nav.cv")}
+        title={t("cv.experience")}
+        link={{ href: "/cv/", label: t("cv.heading") }}
+      />
+      <CvRoles limit={3} />
     </section>
   )}
 
@@ -151,7 +178,7 @@ const ticker = [
     <section class="container-page section" aria-labelledby="oss-title">
       <SectionHeading
         id="oss-title"
-        number="06"
+        number="GitHub"
         title={t("oss.title")}
         link={{ href: `https://github.com/${profile.github}`, label: t("oss.all") }}
       />
@@ -162,322 +189,188 @@ const ticker = [
 
 <style>
   .hero {
-    padding-block: clamp(2.5rem, 1rem + 6vw, 6rem) clamp(2rem, 1rem + 4vw, 4rem);
-  }
-
-  .hero__name {
     display: grid;
-    margin-inline-start: -0.06em;
+    justify-items: start;
+    padding-block: clamp(3.5rem, 2rem + 7vw, 8rem) clamp(2rem, 1rem + 3vw, 3.5rem);
   }
 
-  .hero__line {
-    display: block;
-  }
-
-  /* Variable-weight letters that thin out under the pointer, and their neighbours a little less. */
-  .hero__letter {
-    display: inline-block;
-    transition:
-      font-weight 600ms var(--ease-out-expo),
-      color var(--duration-base) ease;
-  }
-
-  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
-    .hero__letter:hover {
-      font-weight: 400;
-      color: var(--signal-text);
-    }
-
-    .hero__letter:has(+ .hero__letter:hover),
-    .hero__letter:hover + .hero__letter {
-      font-weight: 620;
-    }
-  }
-
-  @media (prefers-reduced-motion: no-preference) {
-    .hero__line {
-      animation: hero-rise 900ms var(--ease-out-expo) backwards;
-      clip-path: inset(0 0 -0.1em 0);
-    }
-
-    .hero__line:nth-child(2) {
-      animation-delay: 90ms;
-    }
-
-    .hero__grid > * {
-      animation: fade-up 700ms var(--ease-out-expo) backwards;
-      animation-delay: 300ms;
-    }
-
-    .hero__grid > :nth-child(2) {
-      animation-delay: 380ms;
-    }
-
-    .hero__grid > :nth-child(3) {
-      animation-delay: 460ms;
-    }
-  }
-
-  .hero__grid {
+  .hero__title {
     display: grid;
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-    gap: 1.5rem;
-    align-items: end;
-    margin-block-start: clamp(2rem, 1rem + 4vw, 4rem);
+    margin-block: 1.75rem 1.5rem;
   }
 
-  .hero__index {
-    grid-column: span 3;
+  .hero__headline {
+    color: var(--ink-faint);
   }
 
   .hero__intro {
-    grid-column: span 6;
-    max-width: 34ch;
-    font-weight: 500;
-    font-size: var(--text-step-2);
-    line-height: 1.18;
-    letter-spacing: -0.02em;
-  }
-
-  .hero__availability {
-    grid-column: span 3;
-    display: grid;
-    justify-items: start;
-    gap: 0.6rem;
-  }
-
-  @media (width < 64rem) {
-    .hero__index {
-      grid-column: 1 / -1;
-    }
-
-    .hero__intro {
-      grid-column: span 7;
-    }
-
-    .hero__availability {
-      grid-column: span 5;
-    }
-  }
-
-  @media (width < 44rem) {
-    .hero__intro,
-    .hero__availability {
-      grid-column: 1 / -1;
-    }
-  }
-
-  .ticker {
-    overflow: hidden;
-    border-block: 2px solid var(--rule-strong);
-    background: var(--ink);
-    color: var(--paper);
-  }
-
-  .ticker__track {
-    display: flex;
-    width: max-content;
-  }
-
-  @media (prefers-reduced-motion: no-preference) {
-    .ticker__track {
-      animation: ticker 40s linear infinite;
-    }
-
-    .ticker:hover .ticker__track {
-      animation-play-state: paused;
-    }
-  }
-
-  .ticker__group {
-    display: flex;
-    flex-shrink: 0;
-  }
-
-  .ticker__item {
-    display: inline-flex;
-    align-items: center;
-    gap: 1.5rem;
-    padding: 0.9rem 0 0.9rem 1.5rem;
-    font: 500 var(--text-step--1) / 1 var(--mono);
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    white-space: nowrap;
-  }
-
-  .ticker__item::after {
-    content: "";
-    width: 0.55rem;
-    height: 0.55rem;
-    background: var(--signal);
-  }
-
-  .section {
-    padding-block: var(--spacing-section);
-  }
-
-  .section + .section {
-    border-block-start: 2px solid var(--rule-strong);
-  }
-
-  .writing {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
-    gap: 2.5rem;
-  }
-
-  .writing__intro {
-    display: grid;
-    align-content: start;
-    justify-items: start;
-    gap: 1.25rem;
-  }
-
-  .writing__intro :global(.section-heading) {
-    margin: 0;
-  }
-
-  .writing__lede {
-    max-width: 32ch;
+    max-width: 40ch;
+    font-size: var(--text-step-1);
+    line-height: 1.5;
     color: var(--ink-muted);
   }
 
-  .writing__list {
-    border-block-end: 1px solid var(--rule-strong);
-  }
-
-  @media (width < 60rem) {
-    .writing {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  .hire-band {
-    padding-block: var(--spacing-section);
-    background: var(--signal);
-    color: var(--on-accent);
-  }
-
-  .hire-band__title {
-    max-width: 10ch;
-    margin-block-end: clamp(2rem, 4vw, 3.5rem);
-    font-weight: 900;
-    font-size: var(--text-step-5);
-    line-height: 0.86;
-    letter-spacing: -0.06em;
-    text-transform: uppercase;
-  }
-
-  .hire-band__number {
-    display: block;
-    margin-block-end: 0.75rem;
-    font: 500 var(--text-step--1) / 1 var(--mono);
-    letter-spacing: 0.04em;
-  }
-
-  .hire-band__actions {
+  .hero__actions {
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
-    gap: 1rem 1.5rem;
-    margin-block-start: 2.5rem;
+    gap: 0.75rem;
+    margin-block-start: 2rem;
   }
 
-  .hire-band .button {
-    color: var(--on-accent);
-    border-color: var(--on-accent);
-  }
-
-  .hire-band .button--primary {
-    background: var(--on-accent);
-    color: var(--signal);
-  }
-
-  .hire-band .button:hover {
-    box-shadow: 3px 3px 0 var(--on-accent);
-  }
-
-  .hire-band__cta {
-    min-height: 3.5rem;
-    padding-inline: 1.6rem;
-    font-size: var(--text-step-1);
-  }
-
-  .hire-band__more {
-    color: inherit;
-    text-decoration: underline;
-    text-underline-offset: 0.3em;
-  }
-
-  .cv-snapshot {
-    display: grid;
-    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-    gap: 2.5rem;
-  }
-
-  .cv-snapshot__label {
-    margin-block-end: 1rem;
-  }
-
-  @media (width < 60rem) {
-    .cv-snapshot {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  .now {
-    display: grid;
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-    gap: 1.5rem;
-  }
-
-  .now > :global(.section-heading) {
-    grid-column: span 4;
-  }
-
-  .now__body {
-    grid-column: span 8;
-  }
-
-  .now__summary {
-    max-width: 36ch;
-    font-weight: 500;
-    font-size: var(--text-step-2);
-    line-height: 1.25;
-    letter-spacing: -0.02em;
-  }
-
-  .now__meta {
+  .hero__note {
     margin-block-start: 1.25rem;
   }
 
-  .now__meta a {
-    color: var(--ink);
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
+    width: 100%;
+    margin-block-start: clamp(3rem, 2rem + 4vw, 5rem);
+    overflow: hidden;
   }
 
-  @media (width < 52rem) {
-    .now > :global(.section-heading),
-    .now__body {
+  .stats__item {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 0.35rem;
+    padding: 1.25rem 1.5rem;
+    border-inline-start: 1px solid var(--rule);
+    margin-inline-start: -1px;
+  }
+
+  .stats__value {
+    font-weight: 600;
+    font-size: var(--text-step-3);
+    line-height: 1;
+    letter-spacing: -0.04em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .stats__label {
+    font-size: var(--text-step--1);
+    color: var(--ink-muted);
+  }
+
+  .section {
+    padding-block: clamp(2rem, 1rem + 3vw, 3.5rem);
+  }
+
+  .bento {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .bento > .card {
+    padding: clamp(1.25rem, 1rem + 1vw, 2rem);
+  }
+
+  .bento__writing {
+    grid-column: span 7;
+    grid-row: span 2;
+  }
+
+  .bento__writing :global(.section-heading) {
+    margin-block-end: 0.75rem;
+  }
+
+  .bento__lede {
+    max-width: 48ch;
+    margin-block-end: 1rem;
+    color: var(--ink-muted);
+    font-size: var(--text-step--1);
+  }
+
+  .bento__writing {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .bento__topics {
+    margin-block-start: auto;
+    padding-block-start: 1.5rem;
+  }
+
+  .bento__topics ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .bento__hire,
+  .bento__toolbox {
+    grid-column: span 5;
+  }
+
+  .bento__now {
+    grid-column: 1 / -1;
+  }
+
+  .bento__hire {
+    display: grid;
+    align-content: start;
+    justify-items: start;
+    gap: 1rem;
+    overflow: hidden;
+  }
+
+  .bento__glow {
+    position: absolute;
+    inset: -40% -30% auto auto;
+    width: 70%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, var(--glow-1), transparent);
+    pointer-events: none;
+  }
+
+  .bento__eyebrow {
+    color: var(--accent);
+  }
+
+  .bento__title {
+    margin-block: 0.5rem 1.25rem;
+    font-weight: 600;
+    font-size: var(--text-step-1);
+    line-height: 1.3;
+    letter-spacing: -0.02em;
+  }
+
+  .bento__now .bento__title {
+    max-width: 48ch;
+    font-size: var(--text-step-2);
+  }
+
+  .bento__services {
+    display: grid;
+    width: 100%;
+  }
+
+  .bento__service {
+    display: grid;
+    gap: 0.15rem;
+    padding-block: 0.75rem;
+    border-block-start: 1px solid var(--rule);
+    font-weight: 550;
+    text-decoration: none;
+  }
+
+  .bento__service:hover {
+    color: var(--accent);
+  }
+
+  .bento__service-summary {
+    font-weight: 400;
+    font-size: var(--text-step--1);
+    color: var(--ink-muted);
+  }
+
+  @media (width < 56rem) {
+    .bento__writing,
+    .bento__hire,
+    .bento__toolbox {
       grid-column: 1 / -1;
-    }
-  }
-
-  @keyframes hero-rise {
-    from {
-      translate: 0 0.9em;
-    }
-  }
-
-  @keyframes fade-up {
-    from {
-      opacity: 0;
-      translate: 0 1rem;
-    }
-  }
-
-  @keyframes ticker {
-    to {
-      translate: -50% 0;
+      grid-row: auto;
     }
   }
 </style>

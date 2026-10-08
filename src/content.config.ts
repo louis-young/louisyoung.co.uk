@@ -78,6 +78,7 @@ const pages = defineCollection({
     description: z.string().min(50).max(240),
     summary: z.string(),
     updated: z.coerce.date(),
+    draft: z.boolean().default(false),
   }),
 });
 

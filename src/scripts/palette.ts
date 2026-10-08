@@ -1,5 +1,4 @@
 import { moveIndex, rankCommands, sameOriginPath } from "../lib/palette";
-import { toggleGrid } from "./shortcuts";
 import { cycleTheme } from "./theme";
 
 interface Option {
@@ -68,9 +67,15 @@ export const initPalette = (signal?: AbortSignal) => {
       restore();
     }
     for (const option of all) option.element.setAttribute("aria-selected", "false");
+    if (query) announce(resultCount(visible.length));
     if (empty) empty.hidden = visible.length > 0;
     highlight(visible.length > 0 ? 0 : -1);
   };
+
+  const plural = new Intl.PluralRules(document.documentElement.lang || "en-GB");
+  /** "3 results", from the translated one/other templates on the dialog. */
+  const resultCount = (count: number) =>
+    (dialog.dataset[plural.select(count) === "one" ? "countOne" : "countOther"] ?? "").replace("#", String(count));
 
   const announce = (message: string) => {
     if (status) status.textContent = message;
@@ -114,7 +119,6 @@ export const initPalette = (signal?: AbortSignal) => {
     }
     dialog.close();
     if (action === "theme") cycleTheme();
-    if (action === "grid") toggleGrid();
   };
 
   const open = () => {

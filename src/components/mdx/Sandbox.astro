@@ -63,13 +63,11 @@ const href = `https://codesandbox.io/s/${id}`;
     overflow: hidden;
     /* A fixed aspect ratio plus min-height would force a minimum width and overflow on phones. */
     height: clamp(22rem, 55vw, 34rem);
-    border: 2px solid var(--rule-strong);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-lg);
     background:
-      repeating-linear-gradient(
-        -45deg,
-        transparent 0 14px,
-        color-mix(in oklch, var(--signal) 9%, transparent) 14px 16px
-      ),
+      radial-gradient(30rem 16rem at 50% 0%, var(--glow-1), transparent 70%),
+      radial-gradient(circle at 1px 1px, var(--rule) 1px, transparent 0) 0 0 / 1.25rem 1.25rem,
       var(--paper-sunken);
   }
 
@@ -84,7 +82,7 @@ const href = `https://codesandbox.io/s/${id}`;
   }
 
   .sandbox__title {
-    font: 800 var(--text-step-2) / 1.1 var(--sans);
+    font: 600 var(--text-step-2) / 1.1 var(--sans);
     letter-spacing: -0.03em;
   }
 

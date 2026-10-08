@@ -4,7 +4,7 @@ import { getCollection } from "astro:content";
 import { useTranslations, formatDate } from "../../i18n";
 import { getArticles } from "../../lib/articles";
 import { cardSvg, pngResponse, svgToPng } from "../../lib/og";
-import { getWork } from "../../lib/work";
+import { getWork, isPagePublished } from "../../lib/work";
 
 interface Card {
   title: string;
@@ -14,12 +14,12 @@ interface Card {
 export const getStaticPaths = (async () => {
   const t = useTranslations();
   const cards: [string, Card][] = [
-    ["index", { title: t("site.tagline"), eyebrow: t("home.index") }],
-    ["work", { title: t("home.selectedWork"), eyebrow: `01 — ${t("nav.work")}` }],
-    ["writing", { title: t("writing.title"), eyebrow: `02 — ${t("nav.writing")}` }],
-    ["hire", { title: t("hire.heading"), eyebrow: `03 — ${t("nav.hire")}` }],
-    ["cv", { title: t("cv.heading"), eyebrow: `04 — ${t("nav.cv")}` }],
-    ...(await getCollection("pages")).map((page): [string, Card] => [
+    ["index", { title: t("site.tagline"), eyebrow: t("nav.home") }],
+    ["work", { title: t("home.selectedWork"), eyebrow: t("nav.work") }],
+    ["writing", { title: t("writing.title"), eyebrow: t("nav.writing") }],
+    ["hire", { title: t("hire.heading"), eyebrow: t("nav.hire") }],
+    ["cv", { title: t("cv.heading"), eyebrow: t("nav.cv") }],
+    ...(await getCollection("pages", isPagePublished)).map((page): [string, Card] => [
       page.id,
       { title: page.data.title, eyebrow: formatDate(page.data.updated) },
     ]),

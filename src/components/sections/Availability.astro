@@ -1,31 +1,34 @@
 ---
 import { profile } from "../../../content/data/profile";
 import { translatorFor } from "../../i18n/astro";
+import { filled } from "../../lib/placeholders";
 
 const t = translatorFor(Astro);
 const { status, from } = profile.availability;
+const date = filled(from);
 const labels = {
-  available: t("availability.available", { date: from }),
-  limited: t("availability.limited", { date: from }),
+  available: date ? t("availability.available", { date }) : t("availability.open"),
+  limited: date ? t("availability.limited", { date }) : t("availability.limitedOpen"),
   unavailable: t("availability.unavailable"),
 };
-const label = labels[status];
 ---
 
 <a href="/hire/" class:list={["chip", `chip--${status}`]}>
   <span class="chip__dot" aria-hidden="true"></span>
-  {label}
+  {labels[status]}
 </a>
 
 <style>
-  .chip--limited {
-    background: var(--ink);
-    color: var(--paper);
+  .chip:hover {
+    color: var(--ink);
+    border-color: var(--rule-strong);
   }
 
-  .chip--unavailable {
-    background: transparent;
-    color: var(--ink);
-    border: 2px solid var(--rule-strong);
+  .chip--limited :global(.chip__dot) {
+    background: var(--warning);
+  }
+
+  .chip--unavailable :global(.chip__dot) {
+    background: var(--ink-faint);
   }
 </style>

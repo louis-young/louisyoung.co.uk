@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { bookingHref, enquiryMailto } from "../../src/lib/hire";
-import { formatPeriod } from "../../src/lib/cv";
+import { formatPeriod, publishableCv } from "../../src/lib/cv";
 import { formatLocalTime, msToNextMinute } from "../../src/lib/clock";
 
 const labels = {
@@ -69,5 +69,36 @@ describe("clock", () => {
   it("counts down to the next minute", () => {
     expect(msToNextMinute(new Date("2026-01-01T00:00:15.500Z"))).toBe(44_500);
     expect(msToNextMinute(new Date("2026-01-01T00:00:00Z"))).toBe(60_000);
+  });
+});
+
+describe("publishableCv", () => {
+  const role = {
+    company: "Acme",
+    role: "Engineer",
+    start: "2020",
+    location: "[CITY]",
+    summary: "Built things.",
+    highlights: ["Shipped it", "[A HIGHLIGHT]"],
+    stack: ["React", "[GO]"],
+  };
+
+  it("drops unfinished roles, skills and education, and blanks half-written text", () => {
+    const result = publishableCv({
+      summary: "[Two or three sentences]",
+      roles: [role, { ...role, company: "[COMPANY]" }],
+      skills: [
+        { group: "Languages", items: ["TypeScript", "[Rust]"] },
+        { group: "Platform", items: ["[AWS]"] },
+      ],
+      education: [
+        { years: "[YYYY]", qualification: "[Degree]", institution: "[University]" },
+        { years: "2012 — 2015", qualification: "BSc", institution: "Somewhere" },
+      ],
+    });
+    expect(result.summary).toBe("");
+    expect(result.roles).toEqual([{ ...role, location: "", highlights: ["Shipped it"], stack: ["React"] }]);
+    expect(result.skills).toEqual([{ group: "Languages", items: ["TypeScript"] }]);
+    expect(result.education).toEqual([{ years: "2012 — 2015", qualification: "BSc", institution: "Somewhere" }]);
   });
 });

@@ -47,36 +47,21 @@ export default defineConfig({
   fonts: [
     {
       provider: fontProviders.local(),
-      name: "Schibsted Grotesk",
-      cssVariable: "--font-schibsted-grotesk",
-      fallbacks: ["Helvetica Neue", "Arial", "sans-serif"],
+      name: "Geist",
+      cssVariable: "--font-geist",
+      fallbacks: ["ui-sans-serif", "system-ui", "sans-serif"],
       options: {
-        variants: [
-          {
-            src: [fontsource("schibsted-grotesk", "schibsted-grotesk-latin-wght-normal.woff2")],
-            weight: "400 900",
-            style: "normal",
-          },
-          {
-            src: [fontsource("schibsted-grotesk", "schibsted-grotesk-latin-wght-italic.woff2")],
-            weight: "400 900",
-            style: "italic",
-          },
-        ],
+        variants: [{ src: [fontsource("geist", "geist-latin-wght-normal.woff2")], weight: "100 900", style: "normal" }],
       },
     },
     {
       provider: fontProviders.local(),
-      name: "JetBrains Mono",
-      cssVariable: "--font-jetbrains-mono",
+      name: "Geist Mono",
+      cssVariable: "--font-geist-mono",
       fallbacks: ["ui-monospace", "monospace"],
       options: {
         variants: [
-          {
-            src: [fontsource("jetbrains-mono", "jetbrains-mono-latin-wght-normal.woff2")],
-            weight: "100 800",
-            style: "normal",
-          },
+          { src: [fontsource("geist-mono", "geist-mono-latin-wght-normal.woff2")], weight: "100 900", style: "normal" },
         ],
       },
     },

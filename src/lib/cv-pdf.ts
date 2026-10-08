@@ -2,6 +2,7 @@ import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf
 
 import type { CV, Profile } from "./content-types";
 import { formatPeriod } from "./cv";
+import { isPlaceholder } from "./placeholders";
 
 export interface CvPdfLabels {
   experience: string;
@@ -110,7 +111,9 @@ export const renderCvPdf = async (profile: Profile, cv: CV, labels: CvPdfLabels,
       profile.email,
       siteUrl.replace(/^https:\/\//u, ""),
       `github.com/${profile.github}`,
-      `${profile.location.city}, ${profile.location.country}`,
+      isPlaceholder(profile.location.city)
+        ? profile.location.country
+        : `${profile.location.city}, ${profile.location.country}`,
     ].join("  ·  "),
     mono,
     8.5,
@@ -119,9 +122,9 @@ export const renderCvPdf = async (profile: Profile, cv: CV, labels: CvPdfLabels,
   y -= 10;
   rule(2);
   y -= 12;
-  write(cv.summary, regular, 10.5, { leading: 1.45 });
+  if (cv.summary) write(cv.summary, regular, 10.5, { leading: 1.45 });
 
-  heading(labels.experience);
+  if (cv.roles.length > 0) heading(labels.experience);
   for (const role of cv.roles) {
     ensure(70);
     y -= 8;
@@ -132,19 +135,19 @@ export const renderCvPdf = async (profile: Profile, cv: CV, labels: CvPdfLabels,
     const x = margin + 120;
     const width = contentWidth - 120;
     write(`${role.role}, ${role.company}`, bold, 11.5, { x, width });
-    write(role.location, mono, 8, { x, width, color: muted });
+    if (role.location) write(role.location, mono, 8, { x, width, color: muted });
     y -= 3;
-    write(role.summary, regular, 9.5, { x, width, leading: 1.4 });
+    if (role.summary) write(role.summary, regular, 9.5, { x, width, leading: 1.4 });
     for (const highlight of role.highlights) {
       ensure(14);
       page.drawRectangle({ x, y: y - 6.5, width: 3, height: 3, color: signal });
       write(highlight, regular, 9.5, { x: x + 10, width: width - 10, leading: 1.4 });
     }
-    write(role.stack.join(" · "), mono, 8, { x, width, color: muted });
+    if (role.stack.length > 0) write(role.stack.join(" · "), mono, 8, { x, width, color: muted });
     y -= 6;
   }
 
-  heading(labels.skills);
+  if (cv.skills.length > 0) heading(labels.skills);
   for (const group of cv.skills) {
     ensure(20);
     y -= 4;
@@ -154,7 +157,7 @@ export const renderCvPdf = async (profile: Profile, cv: CV, labels: CvPdfLabels,
     write(group.items.join(", "), regular, 9.5, { x: margin + 120, width: contentWidth - 120 });
   }
 
-  heading(labels.education);
+  if (cv.education.length > 0) heading(labels.education);
   for (const item of cv.education) {
     ensure(20);
     y -= 4;

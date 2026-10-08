@@ -77,8 +77,11 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
+      # Drafts (case studies, /now, /uses) are built here so the browser tests cover them.
       - name: Build
         run: pnpm build
+        env:
+          SHOW_DRAFTS: "true"
 
       - name: Validate HTML
         run: pnpm test:html

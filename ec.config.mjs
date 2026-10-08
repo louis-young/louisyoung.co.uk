@@ -6,14 +6,14 @@ export default defineEcConfig({
   themeCssSelector: (theme) => (theme.type === "dark" ? "[data-theme='dark']" : "[data-theme='light']"),
   useDarkModeMediaQuery: false,
   styleOverrides: {
-    borderRadius: "0",
-    borderWidth: "2px",
-    borderColor: "var(--rule-strong)",
+    borderRadius: "0.875rem",
+    borderWidth: "1px",
+    borderColor: "var(--rule)",
     codeFontFamily: "var(--mono)",
     uiFontFamily: "var(--mono)",
     codeFontSize: "0.875rem",
     codeLineHeight: "1.7",
-    frames: { shadowColor: "transparent", editorActiveTabIndicatorTopColor: "var(--signal)" },
+    frames: { shadowColor: "transparent", editorActiveTabIndicatorTopColor: "var(--accent)" },
   },
   defaultProps: { wrap: false },
 });

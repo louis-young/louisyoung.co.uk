@@ -62,7 +62,7 @@ test.describe("interactive states", () => {
   test("respects reduced motion", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/");
-    for (const selector of [".hero__line", ".ticker__track"]) {
+    for (const selector of [".reveal", ".hero__actions"]) {
       const duration = await page
         .locator(selector)
         .first()

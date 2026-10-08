@@ -1,5 +1,6 @@
 ---
 interface Props {
+  /** Small mono label above the title, e.g. "Writing". */
   number?: string | undefined;
   title: string;
   id: string;
@@ -11,12 +12,18 @@ const { number, title, id, level: Heading = "h2", link } = Astro.props;
 ---
 
 <div class="section-heading">
-  <Heading id={id} class="section-title">
-    {number && <span class="section-heading__number">{number}</span>}
-    {title}
-  </Heading>
+  <div>
+    {number && (
+      <p class="label section-heading__eyebrow" aria-hidden="true">
+        {number}
+      </p>
+    )}
+    <Heading id={id} class="section-title">
+      {title}
+    </Heading>
+  </div>
   {link && (
-    <a href={link.href} class="button button--small" download={link.download ? "" : undefined}>
+    <a href={link.href} class="section-heading__link" download={link.download ? "" : undefined}>
       {link.label} <span aria-hidden="true">→</span>
     </a>
   )}
@@ -26,31 +33,35 @@ const { number, title, id, level: Heading = "h2", link } = Astro.props;
   .section-heading {
     display: flex;
     flex-wrap: wrap;
-    align-items: baseline;
+    align-items: flex-end;
     justify-content: space-between;
-    gap: 1rem 1.5rem;
-    margin-block-end: clamp(1.75rem, 3vw, 2.75rem);
+    gap: 0.75rem 1.5rem;
+    margin-block-end: clamp(1.5rem, 1rem + 1.5vw, 2.25rem);
   }
 
-  .section-heading__number {
-    margin-inline-end: 0.25em;
-    color: var(--signal-text);
+  .section-heading__eyebrow {
+    margin-block-end: 0.6rem;
+    color: var(--accent);
   }
 
-  @supports (animation-timeline: view()) {
-    @media (prefers-reduced-motion: no-preference) {
-      .section-title {
-        animation: slide-in linear both;
-        animation-timeline: view();
-        animation-range: entry 0% entry 60%;
-      }
-    }
+  .section-heading__link {
+    font-size: var(--text-step--1);
+    font-weight: 500;
+    color: var(--ink-muted);
+    text-decoration: none;
+    transition: color var(--duration-fast) ease;
   }
 
-  @keyframes slide-in {
-    from {
-      opacity: 0;
-      translate: -2rem 0;
-    }
+  .section-heading__link:hover {
+    color: var(--ink);
+  }
+
+  .section-heading__link span {
+    display: inline-block;
+    transition: translate var(--duration-base) var(--ease-out-expo);
+  }
+
+  .section-heading__link:hover span {
+    translate: 3px 0;
   }
 </style>

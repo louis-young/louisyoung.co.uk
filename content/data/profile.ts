@@ -6,9 +6,9 @@ import type { Profile } from "../../src/lib/content-types";
  */
 export const profile = {
   name: "Louis Young",
-  headline: "[Senior / Staff] software engineer",
+  headline: "Software engineer",
   intro:
-    "[Senior / Staff] software engineer. I design and ship fast, accessible products with React and TypeScript, and help teams build the platforms underneath them.",
+    "I design and ship fast, accessible products with React and TypeScript, and help teams build the platforms underneath them.",
   location: { city: "[CITY]", country: "UK", timeZone: "Europe/London" },
   availability: {
     status: "available",

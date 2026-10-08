@@ -45,15 +45,11 @@ test.describe("keyboard", () => {
     await expect(page).toHaveURL("/search/?q=createContext");
   });
 
-  test("t cycles the theme and g toggles the layout grid", async ({ page }) => {
+  test("t cycles the theme", async ({ page }) => {
     await page.emulateMedia({ colorScheme: "light" });
     await page.goto("/");
     await page.keyboard.press("t");
     await expect(page.locator("[data-theme-toggle]")).toHaveAttribute("aria-label", "Colour theme: Light");
-    await page.keyboard.press("g");
-    await expect(page.locator(".grid-overlay")).toBeVisible();
-    await page.keyboard.press("g");
-    await expect(page.locator(".grid-overlay")).toBeHidden();
   });
 
   test("j and k step through the writing list", async ({ page }) => {

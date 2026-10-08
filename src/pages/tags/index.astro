@@ -31,10 +31,9 @@ const tags = getTags(await getArticles());
 
   .topics {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
-    margin-block-start: 3rem;
-    border-block-start: 2px solid var(--rule-strong);
-    border-inline-start: 1px solid var(--rule-strong);
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
+    gap: 0.75rem;
+    margin-block-start: 2.5rem;
   }
 
   .topic {
@@ -43,30 +42,31 @@ const tags = getTags(await getArticles());
     flex-wrap: wrap;
     justify-content: space-between;
     gap: 0.5rem 1rem;
-    padding: 1.4rem 1.25rem 1.25rem;
-    border-inline-end: 1px solid var(--rule-strong);
-    border-block-end: 1px solid var(--rule-strong);
+    height: 100%;
+    padding: 1.25rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-md);
+    background: color-mix(in oklch, var(--paper-raised) 85%, transparent);
     text-decoration: none;
     transition:
       border-color var(--duration-fast) ease,
-      background-color var(--duration-fast) ease;
+      translate var(--duration-base) var(--ease-out-expo);
   }
 
   .topic:hover {
-    background: var(--ink);
-    color: var(--paper);
+    border-color: var(--rule-strong);
+    translate: 0 -2px;
   }
 
-  .topic:hover .meta {
-    color: inherit;
+  .topic:hover .topic__name {
+    color: var(--accent);
   }
 
   .topic__name {
-    font-weight: 800;
-    font-size: var(--text-step-2);
-    line-height: 1;
-    letter-spacing: -0.035em;
-    text-transform: uppercase;
+    font-weight: 600;
+    font-size: var(--text-step-1);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
     overflow-wrap: anywhere;
   }
 </style>

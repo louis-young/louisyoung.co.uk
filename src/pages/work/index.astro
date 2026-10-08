@@ -16,9 +16,18 @@ const repositories = await getRepositories(profile.github);
 ---
 
 <Base title={t("work.title")} description={t("work.description")} image="/og/work.png">
-  <PageHero label={`01 — ${t("nav.work")}`} title={t("home.selectedWork")} lede={t("work.intro")} />
+  <PageHero label={t("nav.work")} title={t("home.selectedWork")} lede={t("work.intro")} />
   <section class="container-page section" aria-label={t("home.selectedWork")}>
-    <WorkTable work={work} headingLevel="h2" />
+    {work.length > 0 ? (
+      <WorkTable work={work} headingLevel="h2" />
+    ) : (
+      <div class="card empty">
+        <p class="empty__text">{t("work.empty")}</p>
+        <a href="/writing/" class="button button--small">
+          {t("home.allWriting")} <span aria-hidden="true">→</span>
+        </a>
+      </div>
+    )}
   </section>
   {repositories.length > 0 && (
     <section class="container-page section" aria-labelledby="oss-title">
@@ -31,12 +40,6 @@ const repositories = await getRepositories(profile.github);
       <Repositories repositories={repositories} />
     </section>
   )}
-  <section class="container-page cta" aria-label={t("work.cta")}>
-    <p class="cta__text">{t("work.cta")}</p>
-    <a href="/hire/" class="button button--signal">
-      {t("home.hireTitle")} →
-    </a>
-  </section>
 </Base>
 
 <style>
@@ -49,20 +52,15 @@ const repositories = await getRepositories(profile.github);
     color: var(--ink-muted);
   }
 
-  .cta {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1.5rem;
-    padding-block: 2.5rem var(--spacing-section);
-    border-block-start: 2px solid var(--rule-strong);
+  .empty {
+    display: grid;
+    justify-items: start;
+    gap: 1.25rem;
+    padding: clamp(1.5rem, 1rem + 2vw, 2.5rem);
   }
 
-  .cta__text {
-    font-weight: 800;
-    font-size: var(--text-step-3);
-    line-height: 1;
-    letter-spacing: -0.04em;
+  .empty__text {
+    max-width: 52ch;
+    color: var(--ink-muted);
   }
 </style>

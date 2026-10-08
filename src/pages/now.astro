@@ -10,4 +10,4 @@ const page = await getEntry("pages", "now");
 if (!page) throw new Error("content/pages/now.mdx is missing");
 ---
 
-<MdxPage page={page} label={`05 — ${t("nav.now")}`} />
+<MdxPage page={page} label={t("nav.now")} />

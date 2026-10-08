@@ -12,7 +12,7 @@ const tags = getTags(articles);
 ---
 
 <Base title={t("writing.title")} description={t("writing.description")} image="/og/writing.png">
-  <PageHero label={`02 — ${t("nav.writing")}`} title={t("writing.title")} lede={t("home.writingIntro")}>
+  <PageHero label={t("nav.writing")} title={t("writing.title")} lede={t("home.writingIntro")}>
     <a href="/search/" class="button button--small">
       {t("nav.search")} <kbd aria-hidden="true">/</kbd>
     </a>
@@ -57,7 +57,7 @@ const tags = getTags(articles);
     grid-template-columns: minmax(0, 1fr) minmax(0, 3fr);
     gap: 2.5rem;
     padding-block: 1rem var(--spacing-section);
-    border-block-start: 2px solid var(--rule-strong);
+    border-block-start: 1px solid var(--rule);
   }
 
   .archive__aside {
@@ -91,7 +91,7 @@ const tags = getTags(articles);
     top: 6rem;
     align-self: start;
     padding-block-start: 1.4rem;
-    font-weight: 900;
+    font-weight: 600;
     font-size: var(--text-step-2);
     letter-spacing: -0.04em;
   }

@@ -12,9 +12,9 @@ const { repositories } = Astro.props;
 
 <ul class="repos" role="list">
   {repositories.map((repo) => (
-    <li class="repo">
+    <li class="repo card card--interactive">
       <h3 class="repo__name">
-        <a href={repo.url} class="repo__link">
+        <a href={repo.url} class="repo__link stretched-link">
           {repo.name}
         </a>
       </h3>
@@ -30,25 +30,15 @@ const { repositories } = Astro.props;
 <style>
   .repos {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
-    gap: 0;
-    border-block-start: 1px solid var(--rule-strong);
-    border-inline-start: 1px solid var(--rule-strong);
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr));
+    gap: 1rem;
   }
 
   .repo {
-    position: relative;
     display: flex;
     flex-direction: column;
     gap: 0.6rem;
     padding: 1.4rem;
-    border-inline-end: 1px solid var(--rule-strong);
-    border-block-end: 1px solid var(--rule-strong);
-    transition: background-color var(--duration-fast) ease;
-  }
-
-  .repo:hover {
-    background: var(--paper-raised);
   }
 
   .repo__name {
@@ -58,12 +48,6 @@ const { repositories } = Astro.props;
 
   .repo__link {
     text-decoration: none;
-  }
-
-  .repo__link::after {
-    content: "";
-    position: absolute;
-    inset: 0;
   }
 
   .repo__description {

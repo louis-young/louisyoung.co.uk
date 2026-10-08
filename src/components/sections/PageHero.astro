@@ -1,6 +1,5 @@
 ---
 interface Props {
-  /** Small mono label above the title, e.g. "01 — Work". */
   label: string;
   title: string;
   lede?: string | undefined;
@@ -12,11 +11,17 @@ const { label, title, lede, narrow = false } = Astro.props;
 ---
 
 <header class:list={["page-hero", narrow ? "container-text" : "container-page"]}>
-  <p class="label page-hero__label">{label}</p>
-  <h1 class="page-title">{title}</h1>
-  {lede && <p class="page-lede page-hero__lede">{lede}</p>}
+  <p class="label page-hero__label reveal">{label}</p>
+  <h1 class="page-title reveal" style="--reveal-index: 1">
+    {title}
+  </h1>
+  {lede && (
+    <p class="page-lede page-hero__lede reveal" style="--reveal-index: 2">
+      {lede}
+    </p>
+  )}
   {Astro.slots.has("default") && (
-    <div class="page-hero__actions">
+    <div class="page-hero__actions reveal" style="--reveal-index: 3">
       <slot />
     </div>
   )}
@@ -24,30 +29,23 @@ const { label, title, lede, narrow = false } = Astro.props;
 
 <style>
   .page-hero {
-    padding-block: clamp(2.5rem, 1rem + 5vw, 5.5rem) clamp(2rem, 1rem + 3vw, 3.5rem);
+    padding-block: clamp(3.5rem, 2rem + 6vw, 7rem) clamp(2rem, 1rem + 3vw, 3.5rem);
   }
 
   .page-hero__label {
-    margin-block-end: 1.25rem;
-  }
-
-  .page-hero__label::before {
-    content: "";
-    display: inline-block;
-    width: 0.6rem;
-    height: 0.6rem;
-    margin-inline-end: 0.6rem;
-    background: var(--signal);
+    margin-block-end: 1rem;
+    color: var(--accent);
   }
 
   .page-hero__lede {
-    margin-block-start: 1.5rem;
+    margin-block-start: 1.25rem;
   }
 
   .page-hero__actions {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.75rem;
+    align-items: center;
+    gap: 0.6rem;
     margin-block-start: 2rem;
   }
 </style>

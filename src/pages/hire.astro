@@ -9,9 +9,12 @@ import { useTranslations } from "../i18n";
 import { localeOf } from "../i18n/astro";
 import Base from "../layouts/Base.astro";
 import { bookingHref } from "../lib/hire";
+import { isPlaceholder } from "../lib/placeholders";
 
 const t = useTranslations(localeOf(Astro));
 const booking = bookingHref(profile.bookingUrl, profile.email, t("hire.bookingSubject"));
+const testimonials = hire.testimonials.filter((item) => !isPlaceholder(`${item.quote} ${item.name} ${item.role}`));
+const terms = hire.terms.filter((term) => !isPlaceholder(term.value));
 const fields = {
   name: t("hire.field.name"),
   email: t("hire.field.email"),
@@ -24,25 +27,23 @@ const fields = {
 ---
 
 <Base title={t("hire.title")} description={t("hire.description")} image="/og/hire.png">
-  <PageHero label={`03 — ${t("nav.hire")}`} title={t("hire.heading")} lede={profile.intro}>
+  <PageHero label={t("nav.hire")} title={t("hire.heading")} lede={profile.intro}>
     <Availability />
     <a href={booking} class="button button--primary" id="book">
       {t("hire.book")}
     </a>
   </PageHero>
 
-  <section class="band" aria-labelledby="services-title">
-    <div class="container-page">
-      <SectionHeading id="services-title" number="A" title={t("hire.services")} />
-      <Services detailed />
-    </div>
+  <section class="container-page section" aria-labelledby="services-title">
+    <SectionHeading id="services-title" title={t("hire.services")} />
+    <Services detailed />
   </section>
 
   <section class="container-page section" aria-labelledby="process-title">
-    <SectionHeading id="process-title" number="B" title={t("hire.process")} />
+    <SectionHeading id="process-title" title={t("hire.process")} />
     <ol class="process" role="list">
       {hire.process.map((step, index) => (
-        <li class="process__step">
+        <li class="process__step card">
           <span class="process__number">{String(index + 1).padStart(2, "0")}</span>
           <h3 class="process__title">{step.title}</h3>
           <p>{step.body}</p>
@@ -51,12 +52,12 @@ const fields = {
     </ol>
   </section>
 
-  {hire.testimonials.length > 0 && (
+  {testimonials.length > 0 && (
     <section class="container-page section" aria-labelledby="testimonials-title">
-      <SectionHeading id="testimonials-title" number="C" title={t("hire.testimonials")} />
+      <SectionHeading id="testimonials-title" title={t("hire.testimonials")} />
       <ul class="quotes" role="list">
-        {hire.testimonials.map((item) => (
-          <li class="quote">
+        {testimonials.map((item) => (
+          <li class="quote card">
             <figure>
               <blockquote class="quote__text">
                 <p>{item.quote}</p>
@@ -74,9 +75,9 @@ const fields = {
 
   <section class="container-page section split" aria-labelledby="terms-title">
     <div>
-      <SectionHeading id="terms-title" number="D" title={t("hire.terms")} />
+      <SectionHeading id="terms-title" title={t("hire.terms")} />
       <dl class="terms">
-        {hire.terms.map((term) => (
+        {terms.map((term) => (
           <div class="terms__row">
             <dt class="label">{term.label}</dt>
             <dd>{term.value}</dd>
@@ -85,7 +86,7 @@ const fields = {
       </dl>
     </div>
     <div>
-      <SectionHeading id="faq-title" number="E" title={t("hire.faq")} />
+      <SectionHeading id="faq-title" title={t("hire.faq")} />
       <div class="faq">
         {hire.faq.map((item) => (
           <details class="faq__item">
@@ -98,8 +99,8 @@ const fields = {
   </section>
 
   <section class="container-page section" aria-labelledby="enquiry-title">
-    <SectionHeading id="enquiry-title" number="F" title={t("hire.enquiry")} />
-    <div class="enquiry">
+    <SectionHeading id="enquiry-title" title={t("hire.enquiry")} />
+    <div class="enquiry card">
       <p class="enquiry__intro">{t("hire.enquiryIntro")}</p>
       <form
         class="enquiry__form"
@@ -152,7 +153,7 @@ const fields = {
         </label>
         <div class="field--wide enquiry__actions">
           <button type="submit" class="button button--signal">
-            {t("hire.send")} →
+            {t("hire.send")} <span aria-hidden="true">→</span>
           </button>
           <a href={`mailto:${profile.email}`} class="link">
             {profile.email}
@@ -179,82 +180,72 @@ const fields = {
 </script>
 
 <style>
-  .band {
-    padding-block: var(--spacing-section);
-    background: var(--signal);
-    color: var(--on-accent);
-  }
-
-  .band :global(.section-heading__number) {
-    color: inherit;
-  }
-
   .section {
-    padding-block: var(--spacing-section);
+    padding-block: clamp(2rem, 1rem + 3vw, 3.5rem);
   }
 
-  .section + .section {
-    border-block-start: 2px solid var(--rule-strong);
+  .section:last-child {
+    padding-block-end: var(--spacing-section);
   }
 
   .process {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
-    gap: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+    gap: 1rem;
+    counter-reset: step;
   }
 
   .process__step {
     display: grid;
     align-content: start;
-    gap: 0.75rem;
-    padding-block-start: 1rem;
-    border-block-start: 2px solid var(--rule-strong);
+    gap: 0.6rem;
+    padding: 1.5rem;
   }
 
   .process__number {
-    font-weight: 900;
-    font-size: var(--text-step-4);
-    line-height: 1;
-    letter-spacing: -0.05em;
-    color: var(--signal-text);
+    display: inline-grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    margin-block-end: 0.5rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: 999px;
+    font: 500 var(--text-step--2) / 1 var(--mono);
+    color: var(--accent);
   }
 
   .process__title {
-    font-weight: 800;
-    font-size: var(--text-step-1);
-    letter-spacing: -0.025em;
+    font-weight: 600;
+    font-size: var(--text-step-0);
+    letter-spacing: -0.01em;
   }
 
   .process__step p {
     color: var(--ink-muted);
+    font-size: var(--text-step--1);
   }
 
   .quotes {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
-    gap: 2.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+    gap: 1rem;
   }
 
   .quote figure {
     display: grid;
-    gap: 1.5rem;
+    gap: 1.25rem;
     height: 100%;
-    align-content: space-between;
-    padding-block-start: 1.25rem;
-    border-block-start: 2px solid var(--rule-strong);
+    padding: 1.75rem;
   }
 
   .quote__text {
-    font-weight: 600;
-    font-size: var(--text-step-2);
-    line-height: 1.2;
-    letter-spacing: -0.025em;
-    text-indent: -0.45em;
+    font-size: var(--text-step-1);
+    line-height: 1.45;
+    letter-spacing: -0.01em;
   }
 
   .quote__text p::before {
     content: "“";
-    color: var(--signal-text);
   }
 
   .quote__text p::after {
@@ -264,88 +255,48 @@ const fields = {
   .quote__by {
     display: grid;
     gap: 0.25rem;
+    align-self: end;
   }
 
   .quote__name {
-    font-weight: 700;
+    font-weight: 600;
   }
 
   .split {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 3rem;
+    gap: clamp(2rem, 1rem + 3vw, 4rem);
   }
 
   @media (width < 56rem) {
-    .quotes {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
-      gap: 2.5rem;
-    }
-
-    .quote figure {
-      display: grid;
-      gap: 1.5rem;
-      height: 100%;
-      align-content: space-between;
-      padding-block-start: 1.25rem;
-      border-block-start: 2px solid var(--rule-strong);
-    }
-
-    .quote__text {
-      font-weight: 600;
-      font-size: var(--text-step-2);
-      line-height: 1.2;
-      letter-spacing: -0.025em;
-      text-indent: -0.45em;
-    }
-
-    .quote__text p::before {
-      content: "“";
-      color: var(--signal-text);
-    }
-
-    .quote__text p::after {
-      content: "”";
-    }
-
-    .quote__by {
-      display: grid;
-      gap: 0.25rem;
-    }
-
-    .quote__name {
-      font-weight: 700;
-    }
-
     .split {
       grid-template-columns: 1fr;
     }
   }
 
   .terms {
-    border-block-end: 1px solid var(--rule-strong);
+    display: grid;
   }
 
   .terms__row {
     display: grid;
-    grid-template-columns: 9rem minmax(0, 1fr);
+    grid-template-columns: minmax(7rem, 1fr) 2fr;
     gap: 1rem;
     align-items: baseline;
     padding-block: 0.9rem;
-    border-block-start: 1px solid var(--rule-strong);
+    border-block-start: 1px solid var(--rule);
   }
 
   .terms__row dd {
-    font-weight: 600;
+    color: var(--ink);
   }
 
   .faq {
-    border-block-end: 1px solid var(--rule-strong);
+    display: grid;
   }
 
   .faq__item {
-    border-block-start: 1px solid var(--rule-strong);
+    border-block-start: 1px solid var(--rule);
   }
 
   .faq__question {
@@ -353,8 +304,7 @@ const fields = {
     justify-content: space-between;
     gap: 1rem;
     padding-block: 1rem;
-    font-weight: 700;
-    font-size: var(--text-step-0);
+    font-weight: 550;
     cursor: pointer;
     list-style: none;
   }
@@ -365,8 +315,8 @@ const fields = {
 
   .faq__question::after {
     content: "+";
+    color: var(--ink-faint);
     font-family: var(--mono);
-    color: var(--signal-text);
     transition: rotate var(--duration-base) var(--ease-out-expo);
   }
 
@@ -375,15 +325,15 @@ const fields = {
   }
 
   .faq__answer {
-    padding-block-end: 1.25rem;
-    max-width: 60ch;
+    padding-block-end: 1.1rem;
     color: var(--ink-muted);
   }
 
   .enquiry {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
-    gap: 2.5rem;
+    gap: 2rem;
+    padding: clamp(1.5rem, 1rem + 2vw, 2.5rem);
   }
 
   .enquiry__intro {
@@ -394,12 +344,12 @@ const fields = {
   .enquiry__form {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 1.25rem;
+    gap: 1rem;
   }
 
   .field {
     display: grid;
-    gap: 0.5rem;
+    gap: 0.45rem;
   }
 
   .field--wide {
@@ -407,25 +357,29 @@ const fields = {
   }
 
   .field__label {
-    font: 500 var(--text-step--2) / 1.2 var(--mono);
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+    font-size: var(--text-step--1);
+    font-weight: 500;
   }
 
   .field__optional {
+    margin-inline-start: 0.35rem;
     color: var(--ink-faint);
+    font-weight: 400;
   }
 
   .field input,
   .field select,
   .field textarea {
-    width: 100%;
-    min-height: 3rem;
-    padding: 0.6rem 0.8rem;
-    border: 2px solid var(--rule-strong);
-    background: var(--paper-raised);
+    min-height: 2.75rem;
+    padding: 0.55rem 0.8rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
     color: var(--ink);
-    font: 500 var(--text-step-0) / 1.4 var(--sans);
+    font: inherit;
+    transition:
+      border-color var(--duration-fast) ease,
+      box-shadow var(--duration-fast) ease;
   }
 
   .field textarea {
@@ -433,7 +387,9 @@ const fields = {
   }
 
   .field :focus-visible {
-    outline-offset: 0;
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--accent) 30%, transparent);
   }
 
   .enquiry__actions {
@@ -443,7 +399,7 @@ const fields = {
     gap: 1rem 1.5rem;
   }
 
-  @media (width < 56rem) {
+  @media (width < 48rem) {
     .enquiry,
     .enquiry__form {
       grid-template-columns: 1fr;
