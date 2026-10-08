@@ -24,8 +24,8 @@ const icons = { note: "info", tip: "tip", warning: "warning" } as const;
 
 <style>
   .callout {
-    --callout: var(--note);
-    --callout-soft: var(--note-soft);
+    --callout: var(--ink);
+    --callout-soft: var(--paper-sunken);
 
     margin-block: 1.75em;
     padding: 1rem 1.25rem 1.1rem;
@@ -40,8 +40,8 @@ const icons = { note: "info", tip: "tip", warning: "warning" } as const;
   }
 
   .callout--tip {
-    --callout: var(--accent);
-    --callout-soft: var(--accent-soft);
+    --callout: var(--signal-text);
+    --callout-soft: var(--paper-sunken);
   }
 
   .callout__title {

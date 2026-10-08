@@ -33,8 +33,6 @@
   --accent-soft: oklch(93% 0.05 50);
   --on-accent: oklch(14.5% 0 0);
   --selection: oklch(85% 0.12 55);
-  --note: oklch(46% 0.12 250);
-  --note-soft: oklch(93.5% 0.03 250);
   --warning: oklch(48% 0.12 65);
   --warning-soft: oklch(93.5% 0.05 85);
 
@@ -61,8 +59,6 @@
   --accent-soft: oklch(26% 0.06 40);
   --on-accent: oklch(14.5% 0 0);
   --selection: oklch(42% 0.12 40);
-  --note: oklch(78% 0.1 250);
-  --note-soft: oklch(23% 0.04 250);
   --warning: oklch(82% 0.12 80);
   --warning-soft: oklch(24% 0.045 75);
 

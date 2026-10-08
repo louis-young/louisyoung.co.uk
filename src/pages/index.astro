@@ -38,8 +38,14 @@ const ticker = [
 <Base schema={websiteSchema()}>
   <section class="hero container-page" aria-labelledby="hero-title">
     <h1 id="hero-title" class="display hero__name">
-      <span class="hero__line">{first}</span>
-      <span class="hero__line">{last}</span>
+      <span class="visually-hidden">{profile.name}</span>
+      {[first, last].map((word) => (
+        <span class="hero__line" aria-hidden="true">
+          {[...(word ?? "")].map((letter) => (
+            <span class="hero__letter">{letter}</span>
+          ))}
+        </span>
+      ))}
     </h1>
     <div class="hero__grid">
       <p class="label hero__index">00 — {t("home.index")}</p>
@@ -166,6 +172,26 @@ const ticker = [
 
   .hero__line {
     display: block;
+  }
+
+  /* Variable-weight letters that thin out under the pointer, and their neighbours a little less. */
+  .hero__letter {
+    display: inline-block;
+    transition:
+      font-weight 600ms var(--ease-out-expo),
+      color var(--duration-base) ease;
+  }
+
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    .hero__letter:hover {
+      font-weight: 400;
+      color: var(--signal-text);
+    }
+
+    .hero__letter:has(+ .hero__letter:hover),
+    .hero__letter:hover + .hero__letter {
+      font-weight: 620;
+    }
   }
 
   @media (prefers-reduced-motion: no-preference) {

@@ -55,4 +55,6 @@ export interface Hire {
   process: { title: string; body: string }[];
   terms: { label: string; value: string }[];
   faq: { question: string; answer: string }[];
+  /** Short quotes from people you have worked with. Leave empty to hide the section. */
+  testimonials: { quote: string; name: string; role: string }[];
 }
