@@ -23,13 +23,15 @@ export const test = base.extend<{ consoleErrors: string[] }>({
   consoleErrors: [
     async ({ page }, use) => {
       const errors: string[] = [];
+      // Chromium rejects a cross-document view transition's promises when a test ends (and the
+      // page is torn down) mid-transition. That is teardown noise, not a page error.
+      const isTeardownNoise = (text: string) => text.startsWith("Transition was aborted because of invalid state");
       page.on("console", (message) => {
-        // Chromium logs this when a test ends while a cross-document view transition is still
-        // running and the page is torn down. It is teardown noise, not a page error.
-        if (message.text().startsWith("Transition was aborted because of invalid state")) return;
-        if (message.type() === "error") errors.push(message.text());
+        if (message.type() === "error" && !isTeardownNoise(message.text())) errors.push(message.text());
       });
-      page.on("pageerror", (error) => errors.push(error.message));
+      page.on("pageerror", (error) => {
+        if (!isTeardownNoise(error.message)) errors.push(error.message);
+      });
       await page.addInitScript(() => {
         document.addEventListener("securitypolicyviolation", (event) => {
           console.error(`CSP violation: ${event.violatedDirective} ${event.blockedURI}`);

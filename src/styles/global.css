@@ -118,11 +118,18 @@
   --breakpoint-xs: 30rem;
 }
 
-@layer base {
-  @view-transition {
-    navigation: auto;
-  }
+/* Cross-document view transitions. Kept at the top level: the at-rule is not valid inside @layer. */
+@view-transition {
+  navigation: auto;
+}
 
+@media (prefers-reduced-motion: reduce) {
+  @view-transition {
+    navigation: none;
+  }
+}
+
+@layer base {
   html {
     background: var(--paper);
     color: var(--ink);
@@ -188,9 +195,6 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    @view-transition {
-      navigation: none;
-    }
     *,
     *::before,
     *::after {
