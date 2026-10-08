@@ -18,7 +18,7 @@ pnpm dev
 4. Commit using [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `docs:`, `test:` …). A commit hook checks this.
 5. Open a pull request. CI must pass (`CI OK` is the single required check).
 
-If your change alters how a page looks, the visual regression job will fail until baselines are updated. Inspect the diff artifact, then run the **Update visual baselines** workflow on your branch (or add the `update-visual-baselines` label).
+If your change alters how a page looks, the visual regression job will fail until baselines are updated. Inspect the diff artifact, then add the `update-visual-baselines` label to your pull request.
 
 ## Git hooks
 

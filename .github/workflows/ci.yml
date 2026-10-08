@@ -226,13 +226,11 @@ jobs:
             echo "Screenshots differ from (or are missing in) \`tests/visual/__screenshots__/\`."
             echo
             echo "- Download the **visual-report** artifact from this run to inspect the diffs."
-            echo "- If the changes are intended, run the **Update visual baselines** workflow"
-            echo "  (Actions tab -> Update visual baselines -> Run workflow on this branch),"
-            echo "  or add the \`update-visual-baselines\` label to the pull request."
+            echo "- If the changes are intended, add the \`update-visual-baselines\` label to the pull request."
             echo
             echo "Baselines must be generated in the Playwright container, not locally."
           } >> "$GITHUB_STEP_SUMMARY"
-          echo "::error title=Visual regression::Snapshots differ or are missing. Run the 'Update visual baselines' workflow if the change is intended."
+          echo "::error title=Visual regression::Snapshots differ or are missing. Add the update-visual-baselines label to the pull request if the change is intended."
 
       - name: Upload visual report
         if: ${{ failure() }}

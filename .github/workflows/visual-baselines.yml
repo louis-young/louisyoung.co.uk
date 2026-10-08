@@ -1,12 +1,14 @@
 name: Update visual baselines
 
+# Triggered only by labelling a same-repository pull request. There is deliberately no
+# workflow_dispatch: a manual run would execute an arbitrary ref's code in the default
+# branch's cache scope (CodeQL: cache poisoning).
 on:
-  workflow_dispatch:
   pull_request:
     types: [labeled]
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.head.ref || github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.head.ref }}
   cancel-in-progress: true
 
 permissions: {}
@@ -23,14 +25,8 @@ jobs:
     # pull request opened from a fork.
     if: >-
       github.repository == 'louis-young/louisyoung.co.uk' &&
-      (
-        (github.event_name == 'workflow_dispatch' && github.ref_type == 'branch') ||
-        (
-          github.event_name == 'pull_request' &&
-          github.event.label.name == 'update-visual-baselines' &&
-          github.event.pull_request.head.repo.full_name == github.repository
-        )
-      )
+      github.event.label.name == 'update-visual-baselines' &&
+      github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -40,30 +36,11 @@ jobs:
       image: mcr.microsoft.com/playwright:v1.63.0-noble@sha256:eff16c30e6f3f4af0a03fa4b706120d5e9b0891c344a27d64559aff5900a4a27
     env:
       HOME: /root
-    outputs:
-      sha: ${{ steps.target.outputs.sha }}
-      branch: ${{ steps.target.outputs.branch }}
     steps:
-      - name: Resolve target
-        id: target
-        env:
-          PR_SHA: ${{ github.event.pull_request.head.sha }}
-          PR_BRANCH: ${{ github.event.pull_request.head.ref }}
-          REF_NAME: ${{ github.ref_name }}
-          SHA: ${{ github.sha }}
-        run: |
-          if [ -n "$PR_SHA" ]; then
-            echo "sha=$PR_SHA" >> "$GITHUB_OUTPUT"
-            echo "branch=$PR_BRANCH" >> "$GITHUB_OUTPUT"
-          else
-            echo "sha=$SHA" >> "$GITHUB_OUTPUT"
-            echo "branch=$REF_NAME" >> "$GITHUB_OUTPUT"
-          fi
-
+      # The default pull_request checkout (the merge ref) is what the CI visual job tests.
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ steps.target.outputs.sha }}
           persist-credentials: false
 
       - name: Setup
@@ -100,7 +77,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ needs.generate.outputs.sha }}
+          ref: ${{ github.event.pull_request.head.sha }}
           persist-credentials: false
 
       - name: Replace baselines
@@ -119,7 +96,7 @@ jobs:
           # with contents: write) so CI re-runs on the new commit.
           GITHUB_TOKEN: ${{ secrets.VISUAL_BASELINES_TOKEN || github.token }}
           REPOSITORY: ${{ github.repository }}
-          BRANCH: ${{ needs.generate.outputs.branch }}
+          BRANCH: ${{ github.event.pull_request.head.ref }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

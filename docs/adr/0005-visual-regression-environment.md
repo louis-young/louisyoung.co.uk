@@ -10,7 +10,7 @@ Screenshots differ across operating systems, font rasterisers and browser builds
 ## Decision
 
 - `@playwright/test` is pinned to an exact version, and visual tests run in `mcr.microsoft.com/playwright:<same version>-noble`, pinned by digest.
-- Baselines are created and updated only by the **Update visual baselines** workflow (manual, or the `update-visual-baselines` label), which commits them back to the branch.
+- Baselines are created and updated only by the **Update visual baselines** workflow, triggered by the `update-visual-baselines` label on a pull request (there is no manual trigger, which would let a run execute an arbitrary ref in the default branch's cache scope), which commits them back to the branch.
 - Screenshots use reduced motion, disabled animations and loaded fonts, with a tight 0.2% pixel tolerance.
 
 ## Consequences

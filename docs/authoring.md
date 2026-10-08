@@ -98,4 +98,4 @@ Put images next to the article and reference them relatively: `![A diagram of th
 1. Set `draft: false` and check the date.
 2. Run `pnpm check && pnpm test`.
 3. Run `pnpm build && pnpm preview` and read it through once in each theme.
-4. Open a pull request. CI runs the whole suite, and visual baselines can be refreshed with the **Update visual baselines** workflow.
+4. Open a pull request. CI runs the whole suite, and visual baselines can be refreshed by adding the `update-visual-baselines` label.
