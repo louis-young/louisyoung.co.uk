@@ -1,0 +1,48 @@
+---
+import { translatorFor } from "../i18n/astro";
+import Icon from "./Icon.astro";
+
+const t = translatorFor(Astro);
+const label = (option: string) => `${t("theme.label")}: ${option}`;
+---
+
+<button
+  type="button"
+  class="icon-button theme-toggle"
+  data-theme-toggle
+  aria-label={label(t("theme.system"))}
+  title={label(t("theme.system"))}
+  data-label-system={label(t("theme.system"))}
+  data-label-light={label(t("theme.light"))}
+  data-label-dark={label(t("theme.dark"))}
+>
+  <Icon name="monitor" class="theme-toggle__icon theme-toggle__icon--system" />
+  <Icon name="sun" class="theme-toggle__icon theme-toggle__icon--light" />
+  <Icon name="moon" class="theme-toggle__icon theme-toggle__icon--dark" />
+</button>
+
+<style>
+  .theme-toggle {
+    position: relative;
+  }
+
+  .theme-toggle :global(.theme-toggle__icon) {
+    grid-area: 1 / 1;
+    opacity: 0;
+    scale: 0.6;
+    rotate: -30deg;
+    transition:
+      opacity var(--duration-base) ease,
+      scale var(--duration-base) var(--ease-out-expo),
+      rotate var(--duration-base) var(--ease-out-expo);
+  }
+
+  :global(:root:not([data-theme-preference])) :global(.theme-toggle__icon--system),
+  :global(:root[data-theme-preference="system"]) :global(.theme-toggle__icon--system),
+  :global(:root[data-theme-preference="light"]) :global(.theme-toggle__icon--light),
+  :global(:root[data-theme-preference="dark"]) :global(.theme-toggle__icon--dark) {
+    opacity: 1;
+    scale: 1;
+    rotate: 0deg;
+  }
+</style>

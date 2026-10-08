@@ -1,0 +1,123 @@
+---
+import { Picture } from "astro:assets";
+
+import { useTranslations } from "../i18n";
+import { localeOf } from "../i18n/astro";
+import { articlePath, type Article } from "../lib/articles";
+import ArticleMeta from "./ArticleMeta.astro";
+import Icon from "./Icon.astro";
+
+interface Props {
+  article: Article;
+  minutes: number;
+}
+
+const { article, minutes } = Astro.props;
+const t = useTranslations(localeOf(Astro));
+---
+
+<article class="featured">
+  <a href={articlePath(article)} class="featured__media" tabindex="-1" aria-hidden="true">
+    <Picture
+      src={article.data.cover.src}
+      alt=""
+      formats={["avif", "webp"]}
+      widths={[480, 800, 1200]}
+      sizes="(min-width: 64rem) 36rem, 100vw"
+      loading="eager"
+      fetchpriority="high"
+      class="featured__image"
+      style={`view-transition-name: cover-${article.id}`}
+    />
+  </a>
+  <div class="featured__body">
+    <p class="eyebrow">{t("home.latest")}</p>
+    <h2 class="featured__title">
+      <a href={articlePath(article)} style={`view-transition-name: title-${article.id}`}>
+        {article.data.title}
+      </a>
+    </h2>
+    <p class="featured__description">{article.data.description}</p>
+    <ArticleMeta date={article.data.date} updated={article.data.updated} minutes={minutes} />
+    <a href={articlePath(article)} class="featured__cta link" aria-hidden="true" tabindex="-1">
+      <Icon name="arrow-right" size={18} />
+    </a>
+  </div>
+</article>
+
+<style>
+  .featured {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: clamp(1.5rem, 4vw, 3.5rem);
+    align-items: center;
+  }
+
+  .featured__media {
+    display: block;
+    overflow: hidden;
+    border-radius: var(--radius-lg);
+    background: var(--paper-sunken);
+    box-shadow: var(--shadow-raised);
+  }
+
+  :global(.featured__image) {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    transition: scale var(--duration-slow) var(--ease-out-expo);
+  }
+
+  .featured:hover :global(.featured__image) {
+    scale: 1.03;
+  }
+
+  .featured__body {
+    display: grid;
+    gap: 1rem;
+    justify-items: start;
+  }
+
+  .featured__title {
+    font: 540 var(--text-step-4) / 1.05 var(--serif);
+    letter-spacing: -0.03em;
+  }
+
+  .featured__title a {
+    text-decoration: none;
+    background: linear-gradient(currentColor, currentColor) 0 100% / 0 2px no-repeat;
+    transition: background-size var(--duration-slow) var(--ease-out-expo);
+  }
+
+  .featured:hover .featured__title a {
+    background-size: 100% 2px;
+  }
+
+  .featured__description {
+    max-width: 52ch;
+    color: var(--ink-muted);
+  }
+
+  .featured__cta {
+    display: inline-grid;
+    place-items: center;
+    width: 3rem;
+    height: 3rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: 999px;
+    transition:
+      translate var(--duration-base) var(--ease-out-expo),
+      border-color var(--duration-fast) ease;
+  }
+
+  .featured:hover .featured__cta {
+    translate: 0.35rem 0;
+    border-color: currentColor;
+  }
+
+  @media (width < 52rem) {
+    .featured {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

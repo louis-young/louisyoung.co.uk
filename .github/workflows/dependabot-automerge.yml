@@ -1,0 +1,37 @@
+name: Dependabot auto-merge
+
+# pull_request_target is required so the token can enable auto-merge on
+# Dependabot PRs. This workflow never checks out or runs PR code.
+on:
+  pull_request_target: # zizmor: ignore[dangerous-triggers]
+    types: [opened, reopened, synchronize]
+
+permissions: {}
+
+jobs:
+  automerge:
+    name: Enable auto-merge
+    if: ${{ github.event.pull_request.user.login == 'dependabot[bot]' && github.repository == 'louis-young/louisyoung.co.uk' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Fetch Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
+
+      - name: Enable auto-merge (squash)
+        # Dev dependencies: patch + minor. Everything else (production
+        # dependencies, GitHub Actions): patch only. Majors always need review.
+        if: >-
+          steps.metadata.outputs.update-type == 'version-update:semver-patch' ||
+          (
+            steps.metadata.outputs.update-type == 'version-update:semver-minor' &&
+            steps.metadata.outputs.dependency-type == 'direct:development'
+          )
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: gh pr merge --auto --squash "$PR_URL"

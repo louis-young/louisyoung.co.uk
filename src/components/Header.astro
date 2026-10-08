@@ -1,0 +1,130 @@
+---
+import { translatorFor } from "../i18n/astro";
+import Icon from "./Icon.astro";
+import ThemeToggle from "./ThemeToggle.astro";
+
+const t = translatorFor(Astro);
+const path = Astro.url.pathname;
+const links = [
+  { href: "/", label: t("nav.writing"), current: path === "/" },
+  { href: "/tags/", label: t("tags.title"), current: path.startsWith("/tags/") },
+];
+---
+
+<header class="site-header">
+  <div class="container-page site-header__inner">
+    <a href="/" class="wordmark" aria-label={`Louis Young, ${t("nav.home")}`}>
+      <span class="wordmark__mark" aria-hidden="true">
+        LY
+      </span>
+      <span class="wordmark__name">Louis Young</span>
+    </a>
+    <nav aria-label={t("nav.label")} class="site-nav">
+      <ul class="site-nav__list" role="list">
+        {links.map((link) => (
+          <li>
+            <a href={link.href} class="site-nav__link" aria-current={link.current ? "page" : undefined}>
+              {link.label}
+            </a>
+          </li>
+        ))}
+        <li>
+          <a href="/search/" class="icon-button" aria-label={t("nav.search")} title={`${t("nav.search")} (/)`}>
+            <Icon name="search" />
+          </a>
+        </li>
+        <li>
+          <ThemeToggle />
+        </li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: color-mix(in oklch, var(--paper) 82%, transparent);
+    backdrop-filter: saturate(1.4) blur(14px);
+    border-block-end: 1px solid color-mix(in oklch, var(--rule) 70%, transparent);
+  }
+
+  .site-header__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-height: 4rem;
+  }
+
+  .wordmark {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    text-decoration: none;
+  }
+
+  .wordmark__mark {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 0.6rem;
+    background: var(--ink);
+    color: var(--paper);
+    font: italic 600 1rem / 1 var(--serif);
+    letter-spacing: -0.04em;
+    transition:
+      background-color var(--duration-base) ease,
+      rotate var(--duration-slow) var(--ease-out-expo);
+  }
+
+  .wordmark:hover .wordmark__mark {
+    background: var(--accent);
+    color: var(--on-accent);
+    rotate: -6deg;
+  }
+
+  .wordmark__name {
+    font: 560 1.2rem / 1 var(--serif);
+    letter-spacing: -0.02em;
+  }
+
+  .site-nav__list {
+    display: flex;
+    align-items: center;
+    gap: 0.15rem;
+  }
+
+  .site-nav__link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    padding-inline: 0.75rem;
+    font-size: var(--text-step--1);
+    font-weight: 550;
+    color: var(--ink-muted);
+    text-decoration: none;
+    transition: color var(--duration-fast) ease;
+  }
+
+  .site-nav__link:hover,
+  .site-nav__link[aria-current="page"] {
+    color: var(--ink);
+  }
+
+  .site-nav__link[aria-current="page"] {
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.5em;
+  }
+
+  @media (width < 30rem) {
+    .wordmark__name {
+      display: none;
+    }
+  }
+</style>

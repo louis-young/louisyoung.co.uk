@@ -1,0 +1,38 @@
+---
+import { formatDate, isoDate } from "../i18n";
+import { localeOf } from "../i18n/astro";
+import { useTranslations } from "../i18n";
+
+interface Props {
+  date: Date;
+  updated?: Date | undefined;
+  minutes: number;
+  class?: string;
+}
+
+const { date, updated, minutes, class: className } = Astro.props;
+const locale = localeOf(Astro);
+const t = useTranslations(locale);
+---
+
+<p class:list={["meta article-meta", className]}>
+  <time datetime={isoDate(date)}>{formatDate(date, locale)}</time>
+  <span aria-hidden="true">·</span>
+  <span>{t("article.readingTime", { minutes })}</span>
+  {updated && (
+    <>
+      <span aria-hidden="true">·</span>
+      <span>
+        {t("article.updated")} <time datetime={isoDate(updated)}>{formatDate(updated, locale)}</time>
+      </span>
+    </>
+  )}
+</p>
+
+<style>
+  .article-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.6rem;
+  }
+</style>

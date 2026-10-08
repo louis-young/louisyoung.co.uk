@@ -1,0 +1,68 @@
+---
+import ArticleRow from "../components/ArticleRow.astro";
+import { useTranslations } from "../i18n";
+import { localeOf } from "../i18n/astro";
+import Base from "../layouts/Base.astro";
+import { getArticles } from "../lib/articles";
+
+const t = useTranslations(localeOf(Astro));
+const suggestions = (await getArticles()).slice(0, 3);
+---
+
+<Base title={t("notFound.title")} noindex>
+  <section class="container-page page">
+    <p class="page__code" aria-hidden="true">
+      404
+    </p>
+    <h1 class="page__title">{t("notFound.title")}</h1>
+    <p class="page__body">{t("notFound.body")}</p>
+    <p class="page__actions">
+      <a href="/" class="button button--primary">
+        {t("notFound.home")}
+      </a>
+      <a href="/search/" class="button">
+        {t("nav.search")}
+      </a>
+    </p>
+    <div class="page__list">
+      {suggestions.map((article) => (
+        <ArticleRow article={article} headingLevel="h2" />
+      ))}
+    </div>
+  </section>
+</Base>
+
+<style>
+  .page {
+    padding-block: clamp(3rem, 2rem + 5vw, 6rem) var(--spacing-section);
+  }
+
+  .page__code {
+    font: italic 400 clamp(5rem, 3rem + 10vw, 11rem) / 0.9 var(--serif);
+    letter-spacing: -0.06em;
+    color: var(--accent);
+  }
+
+  .page__title {
+    margin-block-start: 1rem;
+    font: 500 var(--text-step-4) / 1.05 var(--serif);
+    letter-spacing: -0.03em;
+  }
+
+  .page__body {
+    max-width: 48ch;
+    margin-block-start: 1rem;
+    color: var(--ink-muted);
+  }
+
+  .page__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-block-start: 2rem;
+  }
+
+  .page__list {
+    margin-block-start: 4rem;
+  }
+</style>

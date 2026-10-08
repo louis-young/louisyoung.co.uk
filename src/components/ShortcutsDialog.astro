@@ -1,0 +1,97 @@
+---
+import { translatorFor } from "../i18n/astro";
+import Icon from "./Icon.astro";
+
+const t = translatorFor(Astro);
+const shortcuts = [
+  { key: "/", label: t("shortcuts.search") },
+  { key: "t", label: t("shortcuts.theme") },
+  { key: "?", label: t("shortcuts.help") },
+];
+---
+
+<dialog id="shortcuts" class="shortcuts" aria-labelledby="shortcuts-title">
+  <div class="shortcuts__panel">
+    <div class="shortcuts__header">
+      <h2 id="shortcuts-title">{t("shortcuts.title")}</h2>
+      <button type="button" class="icon-button" data-shortcuts-close aria-label={t("shortcuts.close")}>
+        <Icon name="close" />
+      </button>
+    </div>
+    <dl class="shortcuts__list">
+      {shortcuts.map((shortcut) => (
+        <div class="shortcuts__row">
+          <dt>
+            <kbd>{shortcut.key}</kbd>
+          </dt>
+          <dd>{shortcut.label}</dd>
+        </div>
+      ))}
+    </dl>
+  </div>
+</dialog>
+
+<style>
+  .shortcuts {
+    width: min(100% - 2rem, 24rem);
+    margin: auto;
+    padding: 0;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-lg);
+    background: var(--paper-raised);
+    color: var(--ink);
+    box-shadow: var(--shadow-raised);
+  }
+
+  .shortcuts::backdrop {
+    background: oklch(15% 0.02 265 / 0.45);
+    backdrop-filter: blur(4px);
+  }
+
+  .shortcuts[open] {
+    animation: dialog-in var(--duration-base) var(--ease-out-expo);
+  }
+
+  .shortcuts__panel {
+    padding: 1.25rem 1.5rem 1.5rem;
+  }
+
+  .shortcuts__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-block-end: 0.75rem;
+  }
+
+  .shortcuts__header h2 {
+    font: 560 var(--text-step-1) / 1.2 var(--serif);
+  }
+
+  .shortcuts__row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding-block: 0.6rem;
+    border-block-start: 1px solid var(--rule);
+    font-size: var(--text-step--1);
+  }
+
+  kbd {
+    display: inline-grid;
+    place-items: center;
+    min-width: 1.75rem;
+    padding: 0.15rem 0.4rem;
+    border: 1px solid var(--rule-strong);
+    border-block-end-width: 2px;
+    border-radius: var(--radius-sm);
+    font: 500 0.85rem / 1.2 var(--mono);
+  }
+
+  @keyframes dialog-in {
+    from {
+      opacity: 0;
+      translate: 0 0.5rem;
+      scale: 0.98;
+    }
+  }
+</style>

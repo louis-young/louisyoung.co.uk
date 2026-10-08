@@ -1,0 +1,129 @@
+---
+import { translatorFor } from "../i18n/astro";
+import type { TocItem } from "../lib/toc";
+
+interface Props {
+  items: TocItem[];
+}
+
+const { items } = Astro.props;
+const t = translatorFor(Astro);
+---
+
+{items.length > 1 && (
+  <nav class="toc" aria-labelledby="toc-title">
+    <details class="toc__details" open>
+      <summary id="toc-title" class="toc__title eyebrow">
+        {t("article.contents")}
+      </summary>
+      <ol class="toc__list" role="list">
+        {items.map((item) => (
+          <li>
+            <a href={`#${item.slug}`} class="toc__link" data-toc-link={item.slug}>
+              {item.text}
+            </a>
+            {item.children.length > 0 && (
+              <ol class="toc__list toc__list--nested" role="list">
+                {item.children.map((child) => (
+                  <li>
+                    <a href={`#${child.slug}`} class="toc__link" data-toc-link={child.slug}>
+                      {child.text}
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </li>
+        ))}
+      </ol>
+    </details>
+  </nav>
+)}
+
+<script>
+  /**
+   * Scroll-spy: the current section is the last heading above 30% of the viewport. Computed
+   * once per frame while scrolling, so long sections still keep their entry highlighted.
+   */
+  const links = new Map(
+    [...document.querySelectorAll<HTMLAnchorElement>("[data-toc-link]")].map((link) => [
+      link.dataset["tocLink"]!,
+      link,
+    ]),
+  );
+  const headings = [...links.keys()].flatMap((id) => document.getElementById(id) ?? []);
+  let current: string | undefined;
+  let frame = 0;
+
+  const update = () => {
+    frame = 0;
+    const threshold = window.innerHeight * 0.3;
+    const active = headings.findLast((heading) => heading.getBoundingClientRect().top <= threshold)?.id;
+    if (active === current) return;
+    if (current) links.get(current)?.removeAttribute("aria-current");
+    if (active) links.get(active)?.setAttribute("aria-current", "location");
+    current = active;
+  };
+
+  if (headings.length > 0) {
+    update();
+    window.addEventListener("scroll", () => (frame ||= requestAnimationFrame(update)), { passive: true });
+  }
+</script>
+
+<style>
+  .toc__title {
+    cursor: pointer;
+    list-style: none;
+    padding-block-end: 0.75rem;
+  }
+
+  .toc__title::-webkit-details-marker {
+    display: none;
+  }
+
+  .toc__list {
+    display: grid;
+    gap: 0.1rem;
+    border-inline-start: 1px solid var(--rule);
+    font-size: var(--text-step--1);
+    line-height: 1.4;
+  }
+
+  .toc__list--nested {
+    margin-block: 0.1rem 0.3rem;
+    margin-inline-start: 0.85rem;
+    border: 0;
+  }
+
+  .toc__link {
+    position: relative;
+    display: block;
+    padding: 0.3rem 0 0.3rem 1rem;
+    color: var(--ink-muted);
+    text-decoration: none;
+    transition: color var(--duration-fast) ease;
+  }
+
+  .toc__link:hover {
+    color: var(--ink);
+  }
+
+  .toc__link[aria-current="location"] {
+    color: var(--accent);
+  }
+
+  .toc__list:not(.toc__list--nested) > li > .toc__link[aria-current="location"]::before,
+  .toc__list--nested .toc__link[aria-current="location"]::before {
+    content: "";
+    position: absolute;
+    inset-block: 0.3rem;
+    inset-inline-start: -1px;
+    width: 2px;
+    background: currentColor;
+  }
+
+  .toc__list--nested .toc__link[aria-current="location"]::before {
+    inset-inline-start: calc(-0.85rem - 1px);
+  }
+</style>

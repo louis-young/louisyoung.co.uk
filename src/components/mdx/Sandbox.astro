@@ -1,0 +1,105 @@
+---
+import { translatorFor } from "../../i18n/astro";
+import Icon from "../Icon.astro";
+
+interface Props {
+  /** The CodeSandbox sandbox id, e.g. `fetch-api-9d09j`. */
+  id: string;
+  title: string;
+  /** Show only the rendered preview rather than the editor. */
+  view?: "preview" | "editor";
+}
+
+const { id, title, view = "editor" } = Astro.props;
+const t = translatorFor(Astro);
+const params = new URLSearchParams({ fontsize: "14", hidenavigation: "1", theme: "dark" });
+if (view === "preview") params.set("view", "preview");
+const embed = `https://codesandbox.io/embed/${id}?${params.toString()}`;
+const href = `https://codesandbox.io/s/${id}`;
+---
+
+<sandbox-embed class="sandbox" data-src={embed} data-title={title}>
+  <div class="sandbox__facade">
+    <p class="sandbox__title">{title}</p>
+    <p class="sandbox__notice">{t("sandbox.notice")}</p>
+    <div class="sandbox__actions">
+      <button type="button" class="button button--primary" data-sandbox-load>
+        <Icon name="play" size={14} />
+        {t("sandbox.load")}
+      </button>
+      <a class="button" href={href} rel="noopener noreferrer">
+        {t("sandbox.open")}
+        <Icon name="arrow-up-right" size={14} />
+      </a>
+    </div>
+  </div>
+</sandbox-embed>
+
+<script>
+  class SandboxEmbed extends HTMLElement {
+    connectedCallback() {
+      this.querySelector("[data-sandbox-load]")?.addEventListener("click", () => this.load(), { once: true });
+    }
+
+    load() {
+      const iframe = document.createElement("iframe");
+      iframe.src = this.dataset["src"] ?? "";
+      iframe.title = this.dataset["title"] ?? "";
+      iframe.loading = "lazy";
+      iframe.allow = "clipboard-write";
+      iframe.setAttribute("sandbox", "allow-forms allow-modals allow-popups allow-same-origin allow-scripts");
+      iframe.className = "sandbox__frame";
+      this.replaceChildren(iframe);
+      iframe.focus();
+    }
+  }
+
+  customElements.define("sandbox-embed", SandboxEmbed);
+</script>
+
+<style>
+  .sandbox {
+    display: block;
+    overflow: hidden;
+    /* A fixed aspect ratio plus min-height would force a minimum width and overflow on phones. */
+    height: clamp(22rem, 55vw, 34rem);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-lg);
+    background:
+      linear-gradient(135deg, color-mix(in oklch, var(--accent) 10%, transparent), transparent 55%), var(--paper-sunken);
+  }
+
+  .sandbox__facade {
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 0.6rem;
+    height: 100%;
+    padding: 2rem;
+    text-align: center;
+  }
+
+  .sandbox__title {
+    font: 560 var(--text-step-2) / 1.15 var(--serif);
+  }
+
+  .sandbox__notice {
+    max-width: 40ch;
+    font: 400 var(--text-step--1) / 1.5 var(--sans);
+    color: var(--ink-muted);
+  }
+
+  .sandbox__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-block-start: 0.75rem;
+  }
+
+  .sandbox :global(.sandbox__frame) {
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+</style>

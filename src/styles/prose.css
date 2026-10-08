@@ -1,0 +1,192 @@
+/*
+ * Long-form article typography. Prose is set in Newsreader with optical sizing so body
+ * copy and display headings each get the right cut of the same family.
+ */
+.prose {
+  --measure: 68ch;
+  --breakout: min(4rem, (100vw - 100%) / 2 - var(--spacing-gutter));
+
+  font-family: var(--serif);
+  font-size: var(--text-step-0);
+  font-optical-sizing: auto;
+  line-height: 1.7;
+  font-variant-ligatures: common-ligatures;
+  font-kerning: normal;
+  color: var(--ink);
+}
+
+.prose > * + * {
+  margin-block-start: 1.25em;
+}
+
+.prose :where(h2, h3, h4) {
+  position: relative;
+  font-family: var(--serif);
+  font-weight: 560;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+  scroll-margin-top: 5rem;
+}
+
+.prose h2 {
+  margin-block-start: 2.4em;
+  font-size: var(--text-step-2);
+}
+
+.prose h3 {
+  margin-block-start: 2em;
+  font-size: var(--text-step-1);
+}
+
+.prose :where(h2, h3) + * {
+  margin-block-start: 0.75em;
+}
+
+.prose .heading-anchor {
+  text-decoration: none;
+}
+
+.prose .heading-anchor::before {
+  content: "#";
+  position: absolute;
+  inset-inline-start: -1.1em;
+  color: var(--ink-faint);
+  font-weight: 400;
+  opacity: 0;
+  transition: opacity var(--duration-fast) ease;
+}
+
+.prose :where(h2, h3):hover .heading-anchor::before,
+.prose .heading-anchor:focus-visible::before {
+  opacity: 1;
+}
+
+.prose a:not(.heading-anchor) {
+  color: var(--accent);
+  text-decoration-line: underline;
+  text-decoration-color: color-mix(in oklch, var(--accent) 35%, transparent);
+  text-decoration-thickness: 0.06em;
+  text-underline-offset: 0.2em;
+  transition: text-decoration-color var(--duration-fast) ease;
+}
+
+.prose a:not(.heading-anchor):hover {
+  text-decoration-color: currentColor;
+}
+
+.prose a[data-external]::after {
+  content: "↗";
+  display: inline-block;
+  margin-inline-start: 0.1em;
+  font-family: var(--sans);
+  font-size: 0.7em;
+  vertical-align: 0.25em;
+  text-decoration: none;
+}
+
+.prose :where(strong, b) {
+  font-weight: 650;
+}
+
+.prose :where(ul, ol) {
+  padding-inline-start: 1.4em;
+}
+
+.prose ul {
+  list-style: none;
+}
+
+.prose ul > li {
+  position: relative;
+}
+
+.prose ul > li::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: -1em;
+  top: 0.78em;
+  width: 0.35em;
+  height: 1.5px;
+  background: var(--ink-faint);
+}
+
+.prose ol {
+  list-style: decimal;
+}
+
+.prose ol > li::marker {
+  font-family: var(--mono);
+  font-size: 0.8em;
+  color: var(--ink-muted);
+}
+
+.prose li + li {
+  margin-block-start: 0.4em;
+}
+
+.prose :not(pre) > code {
+  padding: 0.12em 0.36em;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  background: var(--paper-sunken);
+  font-family: var(--mono);
+  font-size: 0.8em;
+  font-variant-ligatures: none;
+  overflow-wrap: anywhere;
+}
+
+.prose blockquote {
+  padding-inline-start: 1.25em;
+  border-inline-start: 2px solid var(--accent);
+  font-style: italic;
+  font-size: 1.05em;
+  color: var(--ink-muted);
+}
+
+.prose hr {
+  margin-block: 3em;
+  border: 0;
+  text-align: center;
+}
+
+.prose hr::after {
+  content: "⁂";
+  color: var(--ink-faint);
+}
+
+/* Code, demos and sandboxes break out of the text column on wide screens. */
+.prose > :where(.expressive-code, .demo, .sandbox, figure) {
+  margin-inline: calc(-1 * max(0px, var(--breakout)));
+  margin-block: 2em;
+}
+
+.prose .expressive-code {
+  font-size: var(--text-step--1);
+}
+
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--sans);
+  font-size: var(--text-step--1);
+  font-variant-numeric: tabular-nums;
+}
+
+.prose :where(th, td) {
+  padding: 0.6em 0.8em;
+  border-block-end: 1px solid var(--rule);
+  text-align: start;
+}
+
+.prose th {
+  font-weight: 600;
+  border-block-end-color: var(--rule-strong);
+}
+
+.prose figcaption {
+  margin-block-start: 0.75em;
+  font-family: var(--sans);
+  font-size: var(--text-step--1);
+  color: var(--ink-muted);
+  text-align: center;
+}

@@ -1,0 +1,82 @@
+---
+import { useTranslations } from "../i18n";
+import { localeOf } from "../i18n/astro";
+import Base from "../layouts/Base.astro";
+
+const t = useTranslations(localeOf(Astro));
+---
+
+<Base title={t("search.title")} description={t("search.description")}>
+  <section class="container-text page">
+    <h1 class="page__title">{t("search.title")}</h1>
+    <p class="page__body">{t("search.description")}</p>
+    <div id="search" class="search" data-placeholder={t("search.description")} data-label={t("search.title")}></div>
+  </section>
+</Base>
+
+<script>
+  import "@pagefind/default-ui/css/ui.css";
+  // @ts-expect-error -- @pagefind/default-ui ships no type declarations.
+  import { PagefindUI } from "@pagefind/default-ui";
+
+  const element = document.querySelector<HTMLElement>("#search");
+  if (element) {
+    new PagefindUI({
+      element,
+      showSubResults: true,
+      showImages: false,
+      resetStyles: false,
+      autofocus: true,
+      translations: { placeholder: element.dataset["placeholder"] },
+    });
+    // Pagefind labels its input with a placeholder only; give it a real accessible name.
+    element.querySelector("input")?.setAttribute("aria-label", element.dataset["label"] ?? "");
+    const query = new URLSearchParams(window.location.search).get("q");
+    if (query) {
+      const input = element.querySelector<HTMLInputElement>("input");
+      if (input) {
+        input.value = query;
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+    }
+  }
+</script>
+
+<style>
+  .page {
+    padding-block: clamp(3rem, 2rem + 5vw, 6rem) var(--spacing-section);
+    min-height: 60vh;
+  }
+
+  .page__title {
+    font: 500 var(--text-step-5) / 1.05 var(--serif);
+    letter-spacing: -0.035em;
+  }
+
+  .page__body {
+    margin-block: 1rem 2rem;
+    color: var(--ink-muted);
+  }
+
+  .search {
+    --pagefind-ui-scale: 0.9;
+    --pagefind-ui-primary: var(--accent);
+    --pagefind-ui-text: var(--ink);
+    --pagefind-ui-background: var(--paper-raised);
+    --pagefind-ui-border: var(--rule-strong);
+    --pagefind-ui-tag: var(--paper-sunken);
+    --pagefind-ui-border-width: 1px;
+    --pagefind-ui-border-radius: 0.625rem;
+    --pagefind-ui-font: var(--sans);
+  }
+
+  .search :global(.pagefind-ui__result-title) {
+    font-family: var(--serif);
+    font-size: var(--text-step-1);
+  }
+
+  .search :global(mark) {
+    background: var(--accent-soft);
+    color: inherit;
+  }
+</style>

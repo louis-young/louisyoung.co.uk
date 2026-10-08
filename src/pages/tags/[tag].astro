@@ -1,0 +1,60 @@
+---
+import ArticleRow from "../../components/ArticleRow.astro";
+import { useTranslations } from "../../i18n";
+import { localeOf } from "../../i18n/astro";
+import Base from "../../layouts/Base.astro";
+import { getArticles, getTags, type Article } from "../../lib/articles";
+
+export const getStaticPaths = async () => {
+  const articles = await getArticles();
+  return getTags(articles).map(({ tag }) => ({
+    params: { tag },
+    props: { articles: articles.filter((article) => article.data.tags.includes(tag)) },
+  }));
+};
+
+interface Props {
+  articles: Article[];
+}
+
+const { tag } = Astro.params;
+const { articles } = Astro.props;
+const t = useTranslations(localeOf(Astro));
+---
+
+<Base title={t("tags.heading", { tag })}>
+  <section class="container-page page">
+    <p class="eyebrow">
+      <a href="/tags/" class="link">
+        {t("tags.title")}
+      </a>
+    </p>
+    <h1 class="page__title">{t("tags.heading", { tag })}</h1>
+    <p class="meta page__count">{t("tags.count", { count: articles.length })}</p>
+    <div class="page__list">
+      {articles.map((article) => (
+        <ArticleRow article={article} headingLevel="h2" />
+      ))}
+    </div>
+  </section>
+</Base>
+
+<style>
+  .page {
+    padding-block: clamp(3rem, 2rem + 5vw, 6rem) var(--spacing-section);
+  }
+
+  .page__title {
+    margin-block-start: 1rem;
+    font: 500 var(--text-step-4) / 1.05 var(--serif);
+    letter-spacing: -0.03em;
+  }
+
+  .page__count {
+    margin-block-start: 1rem;
+  }
+
+  .page__list {
+    margin-block-start: 2.5rem;
+  }
+</style>

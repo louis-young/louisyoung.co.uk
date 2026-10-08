@@ -1,0 +1,39 @@
+name: Content correction
+description: Report a typo, factual error or outdated information in an article or page.
+title: "Content: "
+labels: [content]
+body:
+  - type: input
+    id: url
+    attributes:
+      label: Page URL
+      placeholder: https://louisyoung.co.uk/...
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Type of correction
+      options:
+        - Typo or grammar
+        - Factual or technical error
+        - Outdated information
+        - Broken link or code sample
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: current
+    attributes:
+      label: Current text
+      description: Quote the text that needs changing.
+      render: markdown
+    validations:
+      required: true
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested correction
+      description: What should it say instead? Include sources if relevant.
+    validations:
+      required: false

@@ -1,0 +1,93 @@
+---
+import { Font } from "astro:assets";
+
+import { useTranslations } from "../i18n";
+import { localeOf } from "../i18n/astro";
+import { absoluteUrl, jsonLd } from "../lib/seo";
+import { site } from "../site.config";
+
+interface Props {
+  title?: string | undefined;
+  description?: string | undefined;
+  /** Path to the Open Graph image, relative to the site root. */
+  image?: string | undefined;
+  type?: "website" | "article";
+  published?: Date | undefined;
+  updated?: Date | undefined;
+  schema?: unknown;
+  noindex?: boolean;
+}
+
+const locale = localeOf(Astro);
+const t = useTranslations(locale);
+const {
+  title,
+  description = t("site.description"),
+  image = "/og/index.png",
+  type = "website",
+  published,
+  updated,
+  schema,
+  noindex = false,
+} = Astro.props;
+
+const fullTitle = title ? `${title} · ${site.name}` : `${site.name} · ${t("site.tagline")}`;
+const canonical = new URL(Astro.url.pathname, site.url).href;
+const imageUrl = absoluteUrl(image);
+---
+
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>{fullTitle}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonical} />
+{noindex && <meta name="robots" content="noindex" />}
+
+<meta name="color-scheme" content="light dark" />
+<meta name="theme-color" content="oklch(98.6% 0.006 85)" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="oklch(17.5% 0.016 265)" media="(prefers-color-scheme: dark)" />
+
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<link rel="icon" href="/favicon.ico" sizes="32x32" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<link rel="manifest" href="/manifest.webmanifest" />
+
+<link rel="alternate" type="application/rss+xml" title={`${site.name} (RSS)`} href="/rss.xml" />
+<link rel="alternate" type="application/atom+xml" title={`${site.name} (Atom)`} href="/atom.xml" />
+<link rel="alternate" type="application/feed+json" title={`${site.name} (JSON Feed)`} href="/feed.json" />
+<link rel="sitemap" href="/sitemap-index.xml" />
+
+<meta property="og:site_name" content={site.name} />
+<meta property="og:locale" content={locale.replace("-", "_")} />
+<meta property="og:type" content={type} />
+<meta property="og:url" content={canonical} />
+<meta property="og:title" content={title ?? site.name} />
+<meta property="og:description" content={description} />
+<meta property="og:image" content={imageUrl} />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content={title ?? site.name} />
+{published && <meta property="article:published_time" content={published.toISOString()} />}
+{updated && <meta property="article:modified_time" content={updated.toISOString()} />}
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="author" content={site.author.name} />
+
+<Font cssVariable="--font-newsreader" preload={[{ style: "normal" }]} />
+<Font cssVariable="--font-instrument-sans" preload />
+<Font cssVariable="--font-geist-mono" />
+
+<script is:inline>
+  (() => {
+    let stored = null;
+    try {
+      stored = localStorage.getItem("theme");
+    } catch {}
+    const preference = stored === "light" || stored === "dark" ? stored : "system";
+    const dark =
+      preference === "dark" || (preference === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
+    document.documentElement.dataset.theme = dark ? "dark" : "light";
+    document.documentElement.dataset.themePreference = preference;
+  })();
+</script>
+
+{schema && <script is:inline type="application/ld+json" set:html={jsonLd(schema)} />}

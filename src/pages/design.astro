@@ -1,0 +1,241 @@
+---
+import { Code } from "astro-expressive-code/components";
+
+import Icon from "../components/Icon.astro";
+import Callout from "../components/mdx/Callout.astro";
+import Demo from "../components/mdx/Demo.astro";
+import Sandbox from "../components/mdx/Sandbox.astro";
+import Base from "../layouts/Base.astro";
+
+/**
+ * The living style guide. It renders the real tokens and components, so it can't drift
+ * from the site, and the visual regression suite screenshots it in both themes.
+ */
+const colours = [
+  ["paper", "Page background"],
+  ["paper-raised", "Cards, dialogs"],
+  ["paper-sunken", "Wells, footer"],
+  ["ink", "Body text"],
+  ["ink-muted", "Secondary text (≥ 4.5:1)"],
+  ["ink-faint", "Decoration only (≥ 3:1)"],
+  ["rule", "Hairlines"],
+  ["rule-strong", "Control borders"],
+  ["accent", "Links, emphasis"],
+  ["accent-soft", "Accent wash"],
+  ["note", "Note callouts"],
+  ["warning", "Warning callouts"],
+] as const;
+
+const steps = [5, 4, 3, 2, 1, 0, -1, -2] as const;
+const sample = `const [count, setCount] = useState(0);
+
+const handleClick = () => {
+  setCount((previousCount) => previousCount + 1); // [!code highlight]
+};`;
+---
+
+<Base title="Design system" description="The tokens and components that make up louisyoung.co.uk." noindex>
+  <div class="container-page guide">
+    <header class="guide__header">
+      <p class="eyebrow">Style guide</p>
+      <h1 class="guide__title">Design system</h1>
+      <p class="guide__lede">
+        The tokens and components this site is built from, rendered live. Colours are OKLCH; every text pairing is
+        contrast-tested in both themes.
+      </p>
+    </header>
+
+    <section aria-labelledby="colour">
+      <h2 id="colour" class="guide__heading">
+        Colour
+      </h2>
+      <ul class="swatches" role="list">
+        {colours.map(([token, use]) => (
+          <li class="swatch">
+            <span class="swatch__chip" style={`background: var(--${token})`} />
+            <code class="swatch__token">--{token}</code>
+            <span class="swatch__use">{use}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section aria-labelledby="type">
+      <h2 id="type" class="guide__heading">
+        Type
+      </h2>
+      <p class="guide__note">
+        Newsreader (serif, optical sizes) for reading, Instrument Sans for interface, Geist Mono for code and metadata.
+        A fluid scale from 360px to 1280px.
+      </p>
+      <ol class="type-scale" role="list">
+        {steps.map((step) => (
+          <li class="type-scale__row">
+            <code class="meta">step-{step}</code>
+            <span style={`font-size: var(--text-step-${step})`}>Building for the web</span>
+          </li>
+        ))}
+      </ol>
+    </section>
+
+    <section aria-labelledby="controls">
+      <h2 id="controls" class="guide__heading">
+        Controls
+      </h2>
+      <div class="row">
+        <button type="button" class="button button--primary">
+          Primary
+        </button>
+        <button type="button" class="button">
+          Secondary
+        </button>
+        <button type="button" class="button" disabled>
+          Disabled
+        </button>
+        <a class="tag" href="/tags/react/">
+          react
+        </a>
+        <button type="button" class="icon-button" aria-label="Search">
+          <Icon name="search" />
+        </button>
+        <a href="/" class="link">
+          Inline link
+        </a>
+        <kbd>?</kbd>
+      </div>
+    </section>
+
+    <section aria-labelledby="content" class="prose guide__prose">
+      <h2 id="content" class="guide__heading">
+        Content components
+      </h2>
+      <p>
+        Authors get these in every article without importing them. Inline <code>code</code>, <strong>strong</strong>,
+        <em>emphasis</em> and{" "}
+        <a href="https://developer.mozilla.org/" data-external>
+          external links
+        </a>
+        .
+      </p>
+      <Callout>A note for context the reader might otherwise miss.</Callout>
+      <Callout type="tip">A tip that saves the reader time.</Callout>
+      <Callout type="warning" title="Custom title">
+        A warning about a sharp edge.
+      </Callout>
+      <blockquote>Quotations from documentation or other writers.</blockquote>
+      <Code code={sample} lang="jsx" title="counter.jsx" />
+      <Demo title="A live React island">
+        <div class="demo-counter">
+          <output class="demo-counter__value">0</output>
+          <div class="demo-counter__actions">
+            <button type="button" class="button button--primary">
+              Increment
+            </button>
+          </div>
+        </div>
+      </Demo>
+      <Sandbox id="context-api-z7pmb" title="Click-to-load sandbox" view="preview" />
+    </section>
+  </div>
+</Base>
+
+<style>
+  .guide {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--spacing-section);
+    padding-block: clamp(3rem, 2rem + 5vw, 6rem) var(--spacing-section);
+  }
+
+  .guide__title {
+    margin-block-start: 1rem;
+    font: 500 var(--text-step-5) / 1.05 var(--serif);
+    letter-spacing: -0.035em;
+  }
+
+  .guide__lede {
+    max-width: 56ch;
+    margin-block-start: 1rem;
+    color: var(--ink-muted);
+  }
+
+  .guide__heading {
+    margin-block-end: 1.5rem;
+    padding-block-end: 0.75rem;
+    border-block-end: 1px solid var(--rule);
+    font: 540 var(--text-step-3) / 1.1 var(--serif);
+    letter-spacing: -0.02em;
+  }
+
+  .guide__note {
+    max-width: 60ch;
+    margin-block-end: 1.5rem;
+    color: var(--ink-muted);
+  }
+
+  .guide__prose {
+    max-width: 42rem;
+  }
+
+  .swatches {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 13rem), 1fr));
+    gap: 1rem;
+  }
+
+  .swatch {
+    display: grid;
+    gap: 0.25rem;
+  }
+
+  .swatch__chip {
+    height: 4.5rem;
+    margin-block-end: 0.4rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-md);
+  }
+
+  .swatch__token {
+    font: 500 var(--text-step--1) / 1.3 var(--mono);
+  }
+
+  .swatch__use {
+    font-size: var(--text-step--1);
+    color: var(--ink-muted);
+  }
+
+  .type-scale__row {
+    display: grid;
+    grid-template-columns: 6rem minmax(0, 1fr);
+    align-items: baseline;
+    gap: 1rem;
+    padding-block: 0.6rem;
+    border-block-end: 1px solid var(--rule);
+    font-family: var(--serif);
+    line-height: 1.15;
+  }
+
+  .type-scale__row > span {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  kbd {
+    display: inline-grid;
+    place-items: center;
+    min-width: 1.75rem;
+    padding: 0.15rem 0.4rem;
+    border: 1px solid var(--rule-strong);
+    border-block-end-width: 2px;
+    border-radius: var(--radius-sm);
+    font: 500 0.85rem / 1.2 var(--mono);
+  }
+</style>
