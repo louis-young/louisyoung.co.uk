@@ -2,12 +2,19 @@ import { experimental_AstroContainer as AstroContainer } from "astro/container";
 import { JSDOM } from "jsdom";
 import { beforeAll, describe, expect, it } from "vitest";
 
+import { cv } from "../../content/data/cv";
+import { hire } from "../../content/data/hire";
+import { profile } from "../../content/data/profile";
+
 import Footer from "../../src/components/Footer.astro";
 import Header from "../../src/components/Header.astro";
 import Callout from "../../src/components/mdx/Callout.astro";
 import Demo from "../../src/components/mdx/Demo.astro";
 import Sandbox from "../../src/components/mdx/Sandbox.astro";
-import ShortcutsDialog from "../../src/components/ShortcutsDialog.astro";
+import Palette from "../../src/components/Palette.astro";
+import Availability from "../../src/components/sections/Availability.astro";
+import CvRoles from "../../src/components/sections/CvRoles.astro";
+import Services from "../../src/components/sections/Services.astro";
 import ThemeToggle from "../../src/components/ThemeToggle.astro";
 import Toc from "../../src/components/Toc.astro";
 
@@ -15,7 +22,40 @@ import Toc from "../../src/components/Toc.astro";
  * Renders UI chrome with the pseudo-locale. Any visible or announced string that is not
  * wrapped in ⟦…⟧ was hard-coded rather than translated.
  */
-const allowed = new Set(["Louis Young", "LY", "RSS", "Atom", "JSON Feed", "GitHub", "LinkedIn", "X", "?", "/", "t"]);
+const allowed = new Set([
+  "Louis Young",
+  "LY",
+  "RSS",
+  "Atom",
+  "JSON Feed",
+  "GitHub",
+  "LinkedIn",
+  "X",
+  "⌘K",
+  "Esc",
+  "T",
+  "G",
+]);
+
+/**
+ * Editable content (profile, CV, services) is the author's words, not UI chrome, and paths
+ * and email addresses are not prose.
+ */
+const isContent = (value: string) =>
+  value.startsWith("/") ||
+  /^[A-Z]$/u.test(value) ||
+  value.includes("@") ||
+  /\[[^\]]+\]/u.test(value) ||
+  contentStrings.has(value);
+
+const contentStrings = new Set(
+  [
+    ...hire.services.flatMap((service) => [service.name, service.summary, service.price, ...service.details]),
+    ...cv.roles.flatMap((role) => [...role.highlights, role.stack.join(" · ")]),
+    profile.availability.note,
+    ...profile.email.split("@"),
+  ].map((value) => value.trim()),
+);
 
 let container: AstroContainer;
 
@@ -45,14 +85,26 @@ const untranslated = (html: string) => {
   return strings
     .map((value) => value.trim())
     .filter((value) => /\p{L}/u.test(value))
-    .filter((value) => !allowed.has(value) && !value.includes("⟦"))
+    .filter((value) => !allowed.has(value) && !value.includes("⟦") && !isContent(value))
     .filter((value) => !/^(?:Louis Young, )?⟦/u.test(value));
 };
 
 const cases = [
   ["Header", Header, {}],
   ["Footer", Footer, {}],
-  ["ShortcutsDialog", ShortcutsDialog, {}],
+  [
+    "Palette",
+    Palette,
+    {
+      props: {
+        work: [{ title: "⟦Case⟧", href: "/work/a/" }],
+        articles: [{ title: "⟦Article⟧", href: "/a/" }],
+      },
+    },
+  ],
+  ["Availability", Availability, {}],
+  ["CvRoles", CvRoles, { props: { detailed: true } }],
+  ["Services", Services, { props: { detailed: true } }],
   ["ThemeToggle", ThemeToggle, {}],
   ["Callout", Callout, {}],
   ["Demo", Demo, { props: { title: "⟦Demo⟧" } }],

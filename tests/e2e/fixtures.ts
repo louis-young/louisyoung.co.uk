@@ -6,8 +6,19 @@ export const articleSlugs = readdirSync(new URL("../../content/articles/", impor
   .filter((entry) => entry.isDirectory())
   .map((entry) => entry.name);
 
+export const workSlugs = readdirSync(new URL("../../content/work/", import.meta.url), { withFileTypes: true })
+  .filter((entry) => entry.isDirectory())
+  .map((entry) => entry.name);
+
 export const pages = [
   "/",
+  "/work/",
+  ...workSlugs.map((slug) => `/work/${slug}/`),
+  "/writing/",
+  "/hire/",
+  "/cv/",
+  "/now/",
+  "/uses/",
   "/tags/",
   "/tags/react/",
   "/search/",

@@ -11,11 +11,10 @@ const satori = (createRequire(import.meta.url)("satori") as typeof SatoriModule)
 
 /** sRGB approximations of the OKLCH tokens; Satori does not parse `oklch()`. */
 const palette = {
-  paper: "#fbf9f4",
-  ink: "#151a27",
-  muted: "#596071",
-  rule: "#e3dfd6",
-  accent: "#b8381e",
+  paper: "#f4f4f2",
+  ink: "#0a0a0a",
+  muted: "#4d4d4d",
+  signal: "#ff5a1f",
 } as const;
 
 /** Resolved from the project root: this module is bundled, so `import.meta.url` moves at build time. */
@@ -25,13 +24,13 @@ let fonts: Promise<SatoriOptions["fonts"]> | undefined;
 
 const loadFonts = () =>
   (fonts ??= Promise.all([
-    readFile(fontFile("newsreader", "newsreader-latin-500-normal.woff")),
-    readFile(fontFile("newsreader", "newsreader-latin-500-italic.woff")),
-    readFile(fontFile("instrument-sans", "instrument-sans-latin-500-normal.woff")),
-  ]).then(([serif, serifItalic, sans]) => [
-    { name: "Newsreader", data: serif, weight: 500, style: "normal" },
-    { name: "Newsreader", data: serifItalic, weight: 500, style: "italic" },
-    { name: "Instrument Sans", data: sans, weight: 500, style: "normal" },
+    readFile(fontFile("schibsted-grotesk", "schibsted-grotesk-latin-900-normal.woff")),
+    readFile(fontFile("schibsted-grotesk", "schibsted-grotesk-latin-500-normal.woff")),
+    readFile(fontFile("jetbrains-mono", "jetbrains-mono-latin-500-normal.woff")),
+  ]).then(([black, medium, mono]) => [
+    { name: "Schibsted Grotesk", data: black, weight: 900, style: "normal" },
+    { name: "Schibsted Grotesk", data: medium, weight: 500, style: "normal" },
+    { name: "JetBrains Mono", data: mono, weight: 500, style: "normal" },
   ]));
 
 interface Node {
@@ -53,13 +52,12 @@ const mark = (size: number) =>
       justifyContent: "center",
       width: size,
       height: size,
-      borderRadius: size * 0.27,
-      background: palette.ink,
-      color: palette.paper,
-      fontFamily: "Newsreader",
-      fontStyle: "italic",
-      fontSize: size * 0.46,
-      letterSpacing: "-0.04em",
+      background: palette.signal,
+      color: palette.ink,
+      fontFamily: "Schibsted Grotesk",
+      fontWeight: 900,
+      fontSize: size * 0.5,
+      letterSpacing: "-0.06em",
     },
     "LY",
   );
@@ -68,8 +66,21 @@ const mark = (size: number) =>
 export const markSvg = async (size = 64) =>
   satori(mark(size) as never, { width: size, height: size, fonts: await loadFonts() });
 
-/** Clamps the title size so long titles still fit in three lines. */
-export const titleSize = (title: string) => (title.length > 60 ? 64 : title.length > 40 ? 76 : 88);
+/** Steps the title size down so long titles still fit in three lines. */
+export const titleSize = (title: string) => (title.length > 60 ? 70 : title.length > 40 ? 84 : 100);
+
+const label = (text: string) =>
+  h(
+    "div",
+    {
+      display: "flex",
+      fontFamily: "JetBrains Mono",
+      fontSize: 22,
+      letterSpacing: "0.04em",
+      textTransform: "uppercase",
+    },
+    text,
+  );
 
 export const cardSvg = async ({ title, eyebrow }: { title: string; eyebrow: string }) =>
   satori(
@@ -78,33 +89,36 @@ export const cardSvg = async ({ title, eyebrow }: { title: string; eyebrow: stri
       {
         display: "flex",
         flexDirection: "column",
-        justifyContent: "space-between",
         width: "100%",
         height: "100%",
-        padding: "64px 72px",
         background: palette.paper,
         color: palette.ink,
-        fontFamily: "Instrument Sans",
-        borderBottom: `14px solid ${palette.accent}`,
+        fontFamily: "Schibsted Grotesk",
       },
       [
-        h("div", { display: "flex", alignItems: "center", gap: 20 }, [
-          mark(64),
-          h(
-            "div",
-            { display: "flex", fontFamily: "Newsreader", fontSize: 34, letterSpacing: "-0.02em" },
-            "Louis Young",
-          ),
-        ]),
         h(
           "div",
           {
             display: "flex",
-            fontFamily: "Newsreader",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: "28px 56px",
+            borderBottom: `4px solid ${palette.ink}`,
+          },
+          [label("Louis Young"), label(eyebrow)],
+        ),
+        h(
+          "div",
+          {
+            display: "flex",
+            flexGrow: 1,
+            alignItems: "flex-end",
+            padding: "40px 56px 48px",
+            fontWeight: 900,
             fontSize: titleSize(title),
-            lineHeight: 1.04,
-            letterSpacing: "-0.035em",
-            maxWidth: 1000,
+            lineHeight: 0.92,
+            letterSpacing: "-0.055em",
+            textTransform: "uppercase",
           },
           title,
         ),
@@ -113,12 +127,11 @@ export const cardSvg = async ({ title, eyebrow }: { title: string; eyebrow: stri
           {
             display: "flex",
             justifyContent: "space-between",
-            fontSize: 26,
-            color: palette.muted,
-            paddingTop: 28,
-            borderTop: `2px solid ${palette.rule}`,
+            alignItems: "center",
+            padding: "26px 56px",
+            background: palette.signal,
           },
-          [h("div", { display: "flex" }, eyebrow), h("div", { display: "flex" }, "louisyoung.co.uk")],
+          [label("louisyoung.co.uk"), mark(56)],
         ),
       ],
     ) as never,

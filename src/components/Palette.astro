@@ -1,0 +1,296 @@
+---
+import { translatorFor } from "../i18n/astro";
+import { site } from "../site.config";
+
+interface Item {
+  title: string;
+  href: string;
+  keywords?: string;
+}
+
+interface Props {
+  work: readonly Item[];
+  articles: readonly Item[];
+}
+
+const t = translatorFor(Astro);
+const { work, articles } = Astro.props;
+
+interface Option {
+  title: string;
+  keywords?: string | undefined;
+  href?: string;
+  action?: string;
+  value?: string;
+  done?: string;
+  hint?: string;
+}
+
+const groups: { id: string; label: string; options: Option[] }[] = [
+  {
+    id: "pages",
+    label: t("palette.pages"),
+    options: [
+      { title: t("nav.home"), href: "/", hint: "/" },
+      { title: t("nav.work"), href: "/work/", hint: "/work" },
+      { title: t("nav.writing"), href: "/writing/", hint: "/writing" },
+      { title: t("nav.hire"), href: "/hire/", hint: "/hire" },
+      { title: t("nav.cv"), href: "/cv/", hint: "/cv" },
+      { title: t("nav.now"), href: "/now/", hint: "/now" },
+      { title: t("nav.uses"), href: "/uses/", hint: "/uses" },
+      { title: t("tags.title"), href: "/tags/", hint: "/tags" },
+    ],
+  },
+  {
+    id: "actions",
+    label: t("palette.actions"),
+    options: [
+      { title: t("palette.search"), action: "search", hint: "/" },
+      { title: t("hire.book"), href: "/hire/#book" },
+      {
+        title: t("palette.copyEmail"),
+        action: "copy",
+        value: site.author.email,
+        done: t("palette.copied"),
+        keywords: site.author.email,
+      },
+      { title: t("palette.downloadCv"), href: "/cv.pdf", action: "download" },
+      { title: t("palette.theme"), action: "theme", hint: "T" },
+      { title: t("palette.grid"), action: "grid", hint: "G" },
+    ],
+  },
+  { id: "work", label: t("palette.work"), options: work.map((item) => ({ ...item })) },
+  { id: "writing", label: t("palette.writing"), options: articles.map((item) => ({ ...item })) },
+];
+---
+
+<dialog id="palette" class="palette" aria-labelledby="palette-title">
+  <h2 id="palette-title" class="visually-hidden">
+    {t("palette.title")}
+  </h2>
+  <div class="palette__search">
+    <span class="palette__prompt" aria-hidden="true">
+      →
+    </span>
+    <input
+      type="text"
+      class="palette__input"
+      role="combobox"
+      aria-expanded="true"
+      aria-controls="palette-list"
+      aria-autocomplete="list"
+      aria-label={t("palette.title")}
+      placeholder={t("palette.placeholder")}
+      autocomplete="off"
+      spellcheck="false"
+    />
+    <button type="button" class="palette__esc" data-palette-close aria-label={t("palette.close")}>
+      <kbd>Esc</kbd>
+    </button>
+  </div>
+  <div id="palette-list" class="palette__list" role="listbox" aria-label={t("palette.title")}>
+    <div role="none" class="palette__results" data-palette-results hidden></div>
+    {groups.map((group) => (
+      <div role="group" aria-labelledby={`palette-group-${group.id}`} data-group={group.id}>
+        <div id={`palette-group-${group.id}`} class="palette__group label">
+          {group.label}
+        </div>
+        <div role="none" class="palette__options">
+          {group.options.map((option, index) => (
+            <div
+              role="option"
+              id={`palette-${group.id}-${index}`}
+              class="palette__option"
+              aria-selected="false"
+              data-group={group.id}
+              data-title={option.title}
+              data-keywords={option.keywords}
+              data-href={option.href}
+              data-action={option.action}
+              data-value={option.value}
+              data-done={option.done}
+            >
+              <span class="palette__title">{option.title}</span>
+              {option.hint && (
+                <span class="palette__hint" aria-hidden="true">
+                  {option.hint}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    ))}
+  </div>
+  <p class="palette__empty" data-palette-empty hidden>
+    {t("palette.empty")}
+  </p>
+  <p class="visually-hidden" role="status" data-palette-status></p>
+  <div class="palette__footer label" aria-hidden="true">
+    <span>
+      <kbd>↑</kbd>
+      <kbd>↓</kbd> {t("palette.navigate")}
+    </span>
+    <span>
+      <kbd>↵</kbd> {t("palette.select")}
+    </span>
+    <span>
+      <kbd>Esc</kbd> {t("palette.close")}
+    </span>
+  </div>
+</dialog>
+
+<style>
+  .palette {
+    width: min(100% - 2rem, 40rem);
+    max-height: min(80dvh, 36rem);
+    margin: 12vh auto auto;
+    padding: 0;
+    border: 2px solid var(--rule-strong);
+    background: var(--paper);
+    color: var(--ink);
+    box-shadow: 10px 10px 0 var(--signal);
+    overflow: hidden;
+  }
+
+  .palette[open] {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .palette::backdrop {
+    background: oklch(14.5% 0 0 / 0.55);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .palette[open] {
+      animation: palette-in var(--duration-base) var(--ease-out-expo);
+    }
+  }
+
+  .palette__search {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding-inline: 1.1rem 0.6rem;
+    border-block-end: 2px solid var(--rule-strong);
+  }
+
+  .palette__prompt {
+    color: var(--signal-text);
+    font: 700 1.4rem / 1 var(--sans);
+  }
+
+  .palette__input {
+    flex: 1;
+    min-width: 0;
+    min-height: 4rem;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: 600 var(--text-step-1) / 1.2 var(--sans);
+    letter-spacing: -0.02em;
+  }
+
+  .palette__input:focus-visible {
+    outline: none;
+  }
+
+  .palette__input::placeholder {
+    color: var(--ink-faint);
+  }
+
+  .palette__esc {
+    display: grid;
+    place-items: center;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    cursor: pointer;
+    color: var(--ink-muted);
+  }
+
+  .palette__list {
+    flex: 1;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-block: 0.25rem 0.75rem;
+  }
+
+  .palette__group {
+    padding: 0.9rem 1.1rem 0.35rem;
+  }
+
+  .palette__option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-height: 2.75rem;
+    padding: 0.4rem 1.1rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    cursor: pointer;
+  }
+
+  .palette__option[aria-selected="true"] {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  .palette__option[aria-selected="true"] .palette__hint {
+    color: inherit;
+  }
+
+  .palette__title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .palette__hint {
+    flex-shrink: 0;
+    font: 500 var(--text-step--2) / 1 var(--mono);
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+
+  .palette__empty {
+    padding: 1.25rem 1.1rem 1.5rem;
+    color: var(--ink-muted);
+  }
+
+  .palette__footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.25rem;
+    padding: 0.7rem 1.1rem;
+    border-block-start: 1px solid var(--rule);
+  }
+
+  kbd {
+    display: inline-grid;
+    place-items: center;
+    min-width: 1.6em;
+    margin-inline-end: 0.2em;
+    padding: 0.1em 0.3em;
+    border: 1px solid currentColor;
+    font: 500 0.85em / 1.2 var(--mono);
+  }
+
+  @media (width < 36rem) {
+    .palette {
+      margin-block-start: 1rem;
+    }
+
+    .palette__footer {
+      display: none;
+    }
+  }
+
+  @keyframes palette-in {
+    from {
+      opacity: 0;
+      translate: 0 -0.75rem;
+    }
+  }
+</style>

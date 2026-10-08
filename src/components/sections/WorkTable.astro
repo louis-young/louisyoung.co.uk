@@ -1,0 +1,168 @@
+---
+import { translatorFor } from "../../i18n/astro";
+import { caseNumber, workPath, type CaseStudy } from "../../lib/work";
+
+interface Props {
+  work: readonly CaseStudy[];
+  headingLevel?: "h2" | "h3";
+}
+
+const t = translatorFor(Astro);
+const { work, headingLevel: Heading = "h3" } = Astro.props;
+---
+
+<div class="work-table">
+  <div class="work-table__head label" aria-hidden="true">
+    <span>{t("work.number")}</span>
+    <span>{t("work.project")}</span>
+    <span>{t("work.role")}</span>
+    <span>{t("work.stack")}</span>
+    <span>{t("work.year")}</span>
+  </div>
+  <ol class="work-table__rows" role="list">
+    {work.map((study, index) => (
+      <li class="work-row">
+        <span class="work-row__number">{caseNumber(index)}</span>
+        <Heading class="work-row__title">
+          <a href={workPath(study)} class="work-row__link">
+            {study.data.title}
+          </a>
+          <span class="work-row__arrow" aria-hidden="true">
+            ↗
+          </span>
+        </Heading>
+        <p class="work-row__role">
+          <span class="visually-hidden">{t("work.role")}: </span>
+          {study.data.role}
+        </p>
+        <p class="work-row__stack">
+          <span class="visually-hidden">{t("work.stack")}: </span>
+          {study.data.stack.join(" · ")}
+        </p>
+        <p class="work-row__year">
+          <span class="visually-hidden">{t("work.year")}: </span>
+          {study.data.year}
+        </p>
+      </li>
+    ))}
+  </ol>
+</div>
+
+<style>
+  .work-table {
+    --columns: 4.5rem minmax(0, 2.2fr) minmax(0, 1.2fr) minmax(0, 1.5fr) 5.5rem;
+    border-block-end: 1px solid var(--rule-strong);
+  }
+
+  .work-table__head,
+  .work-row {
+    display: grid;
+    grid-template-columns: var(--columns);
+    gap: 1.25rem;
+    align-items: baseline;
+  }
+
+  .work-table__head {
+    padding-block: 0.65rem;
+    border-block-end: 1px solid var(--rule-strong);
+  }
+
+  .work-row {
+    position: relative;
+    padding-block: 1.6rem;
+    border-block-start: 1px solid var(--rule-strong);
+    transition:
+      background-color var(--duration-fast) ease,
+      color var(--duration-fast) ease,
+      padding var(--duration-base) var(--ease-out-expo);
+  }
+
+  .work-row:first-child {
+    border-block-start: 0;
+  }
+
+  .work-row__number,
+  .work-row__year {
+    font: 500 var(--text-step--1) / 1 var(--mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .work-row__title {
+    font-weight: 700;
+    font-size: var(--text-step-2);
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+  }
+
+  .work-row__link {
+    text-decoration: none;
+  }
+
+  .work-row__link::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+  }
+
+  .work-row__link:focus-visible {
+    outline: none;
+  }
+
+  .work-row:has(.work-row__link:focus-visible) {
+    outline: 3px solid var(--signal);
+    outline-offset: 2px;
+  }
+
+  .work-row__arrow {
+    display: inline-block;
+    margin-inline-start: 0.15em;
+    color: var(--signal-text);
+    transition: translate var(--duration-base) var(--ease-out-expo);
+  }
+
+  .work-row__stack {
+    color: var(--ink-muted);
+  }
+
+  @media (hover: hover) {
+    .work-row:hover {
+      padding-inline: 1rem;
+      background: var(--ink);
+      color: var(--paper);
+    }
+
+    .work-row:hover .work-row__stack {
+      color: inherit;
+    }
+
+    .work-row:hover .work-row__arrow {
+      translate: 0.2em -0.2em;
+    }
+  }
+
+  @media (width < 52rem) {
+    .work-table__head {
+      display: none;
+    }
+
+    .work-row {
+      grid-template-columns: 3rem minmax(0, 1fr) auto;
+      gap: 0.4rem 1rem;
+    }
+
+    .work-row__title {
+      grid-column: 2 / -1;
+    }
+
+    .work-row__role,
+    .work-row__stack {
+      grid-column: 2 / 3;
+      font-size: var(--text-step--1);
+    }
+
+    .work-row__year {
+      grid-column: 3;
+      grid-row: 2;
+    }
+  }
+</style>

@@ -1,18 +1,38 @@
 import type { APIRoute, GetStaticPaths } from "astro";
+import { getCollection } from "astro:content";
 
 import { useTranslations, formatDate } from "../../i18n";
-import { getArticles, type Article } from "../../lib/articles";
+import { getArticles } from "../../lib/articles";
 import { cardSvg, pngResponse, svgToPng } from "../../lib/og";
+import { getWork } from "../../lib/work";
 
-export const getStaticPaths = (async () => [
-  { params: { slug: "index" }, props: { article: undefined } },
-  ...(await getArticles()).map((article) => ({ params: { slug: article.id }, props: { article } })),
-]) satisfies GetStaticPaths;
+interface Card {
+  title: string;
+  eyebrow: string;
+}
 
-export const GET: APIRoute<{ article: Article | undefined }> = async ({ props: { article } }) => {
+export const getStaticPaths = (async () => {
   const t = useTranslations();
-  const svg = article
-    ? await cardSvg({ title: article.data.title, eyebrow: formatDate(article.data.date) })
-    : await cardSvg({ title: t("site.tagline"), eyebrow: t("nav.writing") });
-  return pngResponse(svgToPng(svg, 1200));
-};
+  const cards: [string, Card][] = [
+    ["index", { title: t("site.tagline"), eyebrow: t("home.index") }],
+    ["work", { title: t("home.selectedWork"), eyebrow: `01 — ${t("nav.work")}` }],
+    ["writing", { title: t("writing.title"), eyebrow: `02 — ${t("nav.writing")}` }],
+    ["hire", { title: t("hire.heading"), eyebrow: `03 — ${t("nav.hire")}` }],
+    ["cv", { title: t("cv.heading"), eyebrow: `04 — ${t("nav.cv")}` }],
+    ...(await getCollection("pages")).map((page): [string, Card] => [
+      page.id,
+      { title: page.data.title, eyebrow: formatDate(page.data.updated) },
+    ]),
+    ...(await getWork()).map((study): [string, Card] => [
+      `work-${study.id}`,
+      { title: study.data.title, eyebrow: study.data.year },
+    ]),
+    ...(await getArticles()).map((article): [string, Card] => [
+      article.id,
+      { title: article.data.title, eyebrow: formatDate(article.data.date) },
+    ]),
+  ];
+  return cards.map(([slug, { title, eyebrow }]) => ({ params: { slug }, props: { title, eyebrow } }));
+}) satisfies GetStaticPaths;
+
+export const GET: APIRoute<Card> = async ({ props }) => pngResponse(svgToPng(await cardSvg(props), 1200));

@@ -8,7 +8,7 @@ const t = useTranslations(localeOf(Astro));
 
 <Base title={t("search.title")} description={t("search.description")}>
   <section class="container-text page">
-    <h1 class="page__title">{t("search.title")}</h1>
+    <h1 class="page-title">{t("search.title")}</h1>
     <p class="page__body">{t("search.description")}</p>
     <div id="search" class="search" data-placeholder={t("search.description")} data-label={t("search.title")}></div>
   </section>
@@ -48,11 +48,6 @@ const t = useTranslations(localeOf(Astro));
     min-height: 60vh;
   }
 
-  .page__title {
-    font: 500 var(--text-step-5) / 1.05 var(--serif);
-    letter-spacing: -0.035em;
-  }
-
   .page__body {
     margin-block: 1rem 2rem;
     color: var(--ink-muted);
@@ -65,13 +60,14 @@ const t = useTranslations(localeOf(Astro));
     --pagefind-ui-background: var(--paper-raised);
     --pagefind-ui-border: var(--rule-strong);
     --pagefind-ui-tag: var(--paper-sunken);
-    --pagefind-ui-border-width: 1px;
-    --pagefind-ui-border-radius: 0.625rem;
+    --pagefind-ui-border-width: 2px;
+    --pagefind-ui-border-radius: 0;
     --pagefind-ui-font: var(--sans);
   }
 
   .search :global(.pagefind-ui__result-title) {
-    font-family: var(--serif);
+    font-weight: 700;
+    letter-spacing: -0.02em;
     font-size: var(--text-step-1);
   }
 

@@ -1,41 +1,51 @@
-import { articleSlugs, expect, test } from "./fixtures";
+import { articleSlugs, expect, test, workSlugs } from "./fixtures";
 
 test.describe("navigation", () => {
-  test("home lists every article, newest first", async ({ page }) => {
+  test("home introduces Louis and links to every section", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("React");
-    const links = page.locator(".featured__title a, .article-row__link");
-    await expect(links).toHaveCount(articleSlugs.length);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(/Louis\s*Young/iu);
+    for (const name of ["Selected work", "Writing", "Work with me", "Curriculum vitae", "Now"]) {
+      await expect(page.getByRole("heading", { level: 2, name: new RegExp(name, "iu") })).toBeVisible();
+    }
+    await expect(page.locator(".work-row")).toHaveCount(workSlugs.length);
+  });
+
+  test("the writing page lists every article, newest first", async ({ page }) => {
+    await page.goto("/writing/");
+    await expect(page.locator(".article-row__link")).toHaveCount(articleSlugs.length);
     const dates = await page
-      .locator("main time")
+      .locator(".article-row time")
       .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("datetime") ?? ""));
     expect(dates).toEqual([...dates].sort().reverse());
   });
 
-  test("the featured article opens", async ({ page }) => {
-    await page.goto("/");
-    const title = await page.locator(".featured__title a").innerText();
-    await page.locator(".featured__title a").click();
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText(title);
-  });
-
-  test("an archive row is clickable anywhere, not just on the title", async ({ page }) => {
-    await page.goto("/");
+  test("a row is clickable anywhere, not just on the title", async ({ page }) => {
+    await page.goto("/writing/");
     const row = page.locator(".article-row").first();
     const href = await row.locator("a").getAttribute("href");
-    // The title link stretches over the row, so click where the description is drawn.
     await row.scrollIntoViewIfNeeded();
     const box = (await row.locator(".article-row__description").boundingBox())!;
     await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
     await expect(page).toHaveURL(href!);
   });
 
-  test("primary navigation marks the current page", async ({ page }) => {
+  test("case studies open from the work table and link onwards", async ({ page }) => {
+    await page.goto("/work/");
+    const first = page.locator(".work-row__link").first();
+    const title = await first.innerText();
+    await first.click();
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(title);
+    await page.getByRole("navigation", { name: "Next case study" }).locator(".case__next").click();
+    await expect(page).toHaveURL(/\/work\/[a-z-]+\/$/u);
+  });
+
+  test("primary navigation marks the current section", async ({ page }) => {
     await page.goto("/tags/");
     const nav = page.getByRole("navigation", { name: "Primary" });
-    await expect(nav.getByRole("link", { name: "Topics" })).toHaveAttribute("aria-current", "page");
-    await nav.getByRole("link", { name: "Writing" }).click();
-    await expect(page).toHaveURL("/");
+    await expect(nav.getByRole("link", { name: /Writing/u })).toHaveAttribute("aria-current", "true");
+    await nav.getByRole("link", { name: /Hire/u }).click();
+    await expect(page).toHaveURL("/hire/");
+    await expect(nav.getByRole("link", { name: /Hire/u })).toHaveAttribute("aria-current", "page");
   });
 
   test("topics link to filtered lists", async ({ page }) => {

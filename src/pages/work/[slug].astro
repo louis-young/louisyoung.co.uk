@@ -1,0 +1,221 @@
+---
+import { render } from "astro:content";
+
+import Callout from "../../components/mdx/Callout.astro";
+import { useTranslations } from "../../i18n";
+import { localeOf } from "../../i18n/astro";
+import Base from "../../layouts/Base.astro";
+import { caseNumber, getWork, workPath, type CaseStudy } from "../../lib/work";
+
+export const getStaticPaths = async () => {
+  const work = await getWork();
+  return work.map((study, index) => ({
+    params: { slug: study.id },
+    props: { study, index, next: work[(index + 1) % work.length] },
+  }));
+};
+
+interface Props {
+  study: CaseStudy;
+  index: number;
+  next: CaseStudy | undefined;
+}
+
+const { study, index, next } = Astro.props;
+const { data } = study;
+const { Content } = await render(study);
+const t = useTranslations(localeOf(Astro));
+const facts = [
+  { label: t("work.client"), value: data.client },
+  { label: t("work.role"), value: data.role },
+  { label: t("work.year"), value: data.year },
+  { label: t("work.stack"), value: data.stack.join(" · ") },
+];
+---
+
+<Base title={data.title} description={data.summary} image={`/og/work-${study.id}.png`} type="article">
+  <article class="case" data-pagefind-body>
+    <header class="container-page case__header">
+      <p class="label case__label">
+        <a href="/work/">{t("nav.work")}</a> / {caseNumber(index)}
+      </p>
+      <h1 class="page-title case__title">{data.title}</h1>
+      <p class="page-lede case__summary">{data.summary}</p>
+      <dl class="case__facts">
+        {facts.map((fact) => (
+          <div class="case__fact">
+            <dt class="label">{fact.label}</dt>
+            <dd>{fact.value}</dd>
+          </div>
+        ))}
+      </dl>
+    </header>
+
+    {data.outcomes.length > 0 && (
+      <section class="outcomes" aria-label={t("work.outcomes")}>
+        <ul class="container-page outcomes__list" role="list">
+          {data.outcomes.map((outcome) => (
+            <li class="outcome">
+              <span class="outcome__value">{outcome.value}</span>
+              <span class="outcome__label">{outcome.label}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+
+    <div class="container-text case__body prose">
+      <Content components={{ Callout }} />
+    </div>
+
+    {data.links.length > 0 && (
+      <ul class="container-text case__links" role="list">
+        {data.links.map((link) => (
+          <li>
+            <a href={link.href} class="button button--small">
+              {link.label} ↗
+            </a>
+          </li>
+        ))}
+      </ul>
+    )}
+  </article>
+
+  <nav class="container-page case__nav" aria-label={t("work.next")}>
+    {next && next.id !== study.id && (
+      <a href={workPath(next)} class="case__next">
+        <span class="label">{t("work.next")} →</span>
+        <span class="case__next-title">{next.data.title}</span>
+      </a>
+    )}
+    <div class="case__nav-actions">
+      <a href="/work/" class="button button--small">
+        {t("work.all")}
+      </a>
+      <a href="/hire/" class="button button--small button--signal">
+        {t("work.cta")} →
+      </a>
+    </div>
+  </nav>
+</Base>
+
+<style>
+  .case__header {
+    padding-block: clamp(2.5rem, 1rem + 5vw, 5.5rem) clamp(2rem, 1rem + 3vw, 3.5rem);
+  }
+
+  .case__label a {
+    color: var(--ink);
+  }
+
+  .case__title {
+    margin-block-start: 1.25rem;
+    max-width: 14ch;
+  }
+
+  .case__summary {
+    margin-block-start: 1.5rem;
+  }
+
+  .case__facts {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin-block-start: clamp(2rem, 4vw, 3.5rem);
+    border-block-start: 2px solid var(--rule-strong);
+  }
+
+  .case__fact {
+    display: grid;
+    gap: 0.4rem;
+    padding: 1rem 1rem 0 0;
+  }
+
+  .case__fact dd {
+    font-weight: 600;
+  }
+
+  @media (width < 48rem) {
+    .case__facts {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .outcomes {
+    background: var(--night);
+    color: var(--day);
+  }
+
+  .outcomes__list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  }
+
+  .outcome {
+    display: grid;
+    gap: 0.5rem;
+    padding: clamp(1.75rem, 4vw, 3rem) 1.5rem clamp(1.75rem, 4vw, 3rem) 0;
+  }
+
+  .outcome + .outcome {
+    padding-inline-start: 1.5rem;
+    border-inline-start: 1px solid color-mix(in oklch, var(--day) 30%, transparent);
+  }
+
+  .outcome__value {
+    color: var(--signal);
+    font-weight: 900;
+    font-size: var(--text-step-5);
+    line-height: 0.9;
+    letter-spacing: -0.06em;
+  }
+
+  .outcome__label {
+    font: 500 var(--text-step--1) / 1.3 var(--mono);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .case__body {
+    padding-block: var(--spacing-section) 0;
+  }
+
+  .case__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-block-start: 2rem;
+  }
+
+  .case__nav {
+    display: grid;
+    gap: 2rem;
+    margin-block-start: var(--spacing-section);
+    padding-block: 2rem var(--spacing-section);
+    border-block-start: 2px solid var(--rule-strong);
+  }
+
+  .case__next {
+    display: grid;
+    gap: 0.75rem;
+    text-decoration: none;
+  }
+
+  .case__next-title {
+    font-weight: 900;
+    font-size: var(--text-step-4);
+    line-height: 0.95;
+    letter-spacing: -0.05em;
+    text-transform: uppercase;
+    transition: color var(--duration-fast) ease;
+  }
+
+  .case__next:hover .case__next-title {
+    color: var(--signal-text);
+  }
+
+  .case__nav-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+</style>

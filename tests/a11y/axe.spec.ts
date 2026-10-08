@@ -33,10 +33,13 @@ test.describe("WCAG 2.2 AA", () => {
 });
 
 test.describe("interactive states", () => {
-  test("the shortcuts dialog is accessible when open", async ({ page }) => {
+  test("the command palette is accessible when open and filtered", async ({ page }) => {
     await page.goto("/");
-    await page.getByRole("button", { name: "Keyboard shortcuts" }).click();
-    const results = await new AxeBuilder({ page }).include("#shortcuts").analyze();
+    await page.getByRole("button", { name: "Open command palette" }).first().click();
+    let results = await new AxeBuilder({ page }).include("#palette").analyze();
+    expect(results.violations).toEqual([]);
+    await page.getByRole("combobox").fill("react");
+    results = await new AxeBuilder({ page }).include("#palette").analyze();
     expect(results.violations).toEqual([]);
   });
 
@@ -59,7 +62,12 @@ test.describe("interactive states", () => {
   test("respects reduced motion", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/");
-    const duration = await page.locator(".hero__title").evaluate((node) => getComputedStyle(node).animationDuration);
-    expect(Number.parseFloat(duration)).toBeLessThan(0.001);
+    for (const selector of [".hero__line", ".ticker__track"]) {
+      const duration = await page
+        .locator(selector)
+        .first()
+        .evaluate((node) => getComputedStyle(node).animationDuration);
+      expect(Number.parseFloat(duration), selector).toBeLessThan(0.001);
+    }
   });
 });

@@ -1,0 +1,126 @@
+---
+import ArticleRow from "../components/ArticleRow.astro";
+import PageHero from "../components/sections/PageHero.astro";
+import { useTranslations } from "../i18n";
+import { localeOf } from "../i18n/astro";
+import Base from "../layouts/Base.astro";
+import { getArticles, getTags, groupByYear } from "../lib/articles";
+
+const t = useTranslations(localeOf(Astro));
+const articles = await getArticles();
+const tags = getTags(articles);
+---
+
+<Base title={t("writing.title")} description={t("writing.description")} image="/og/writing.png">
+  <PageHero label={`02 — ${t("nav.writing")}`} title={t("writing.title")} lede={t("home.writingIntro")}>
+    <a href="/search/" class="button button--small">
+      {t("nav.search")} <kbd aria-hidden="true">/</kbd>
+    </a>
+    <a href="/rss.xml" class="button button--small">
+      RSS
+    </a>
+  </PageHero>
+
+  <div class="container-page archive">
+    <aside class="archive__aside" aria-label={t("tags.title")}>
+      <p class="label">{t("writing.count", { count: articles.length })}</p>
+      <ul class="archive__tags" role="list">
+        {tags.map(({ tag, count }) => (
+          <li>
+            <a class="tag" href={`/tags/${tag}/`}>
+              {tag} <span class="archive__count">{count}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </aside>
+    <div>
+      {groupByYear(articles).map(([year, group]) => (
+        <section class="archive__year" aria-labelledby={`year-${year}`}>
+          <h2 id={`year-${year}`} class="archive__year-label">
+            {year}
+          </h2>
+          <div class="archive__rows">
+            {group.map((article) => (
+              <ArticleRow article={article} />
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+  </div>
+</Base>
+
+<style>
+  .archive {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 3fr);
+    gap: 2.5rem;
+    padding-block: 1rem var(--spacing-section);
+    border-block-start: 2px solid var(--rule-strong);
+  }
+
+  .archive__aside {
+    position: sticky;
+    top: 6rem;
+    align-self: start;
+    display: grid;
+    gap: 1rem;
+    padding-block-start: 1.25rem;
+  }
+
+  .archive__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .archive__count {
+    margin-inline-start: 0.4em;
+    color: var(--ink-faint);
+  }
+
+  .archive__year {
+    display: grid;
+    grid-template-columns: 6rem minmax(0, 1fr);
+    gap: 1.5rem;
+  }
+
+  .archive__year-label {
+    position: sticky;
+    top: 6rem;
+    align-self: start;
+    padding-block-start: 1.4rem;
+    font-weight: 900;
+    font-size: var(--text-step-2);
+    letter-spacing: -0.04em;
+  }
+
+  .archive__rows {
+    border-block-end: 1px solid var(--rule-strong);
+  }
+
+  kbd {
+    padding: 0.1em 0.4em;
+    border: 1px solid currentColor;
+  }
+
+  @media (width < 56rem) {
+    .archive {
+      grid-template-columns: 1fr;
+    }
+
+    .archive__aside {
+      position: static;
+    }
+
+    .archive__year {
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+
+    .archive__year-label {
+      position: static;
+    }
+  }
+</style>

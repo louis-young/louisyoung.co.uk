@@ -1,58 +1,78 @@
 ---
+import { profile } from "../../content/data/profile";
 import { translatorFor } from "../i18n/astro";
 import { site } from "../site.config";
-import Icon from "./Icon.astro";
 
 const t = translatorFor(Astro);
 const year = String(new Date().getUTCFullYear());
+const [local, domain] = profile.email.split("@");
 ---
 
 <footer class="site-footer">
-  <div class="container-page site-footer__inner">
-    <div class="site-footer__intro">
-      <p class="site-footer__name">Louis Young</p>
-      <p class="site-footer__tagline">{t("site.tagline")}</p>
-    </div>
-    <nav aria-label={t("footer.elsewhere")} class="site-footer__links">
-      <ul role="list" class="site-footer__social">
-        {site.social.map((profile) => (
+  <div class="container-page">
+    <a href={`mailto:${profile.email}`} class="site-footer__email">
+      <span>{local}</span>
+      <span class="site-footer__at">@</span>
+      <wbr />
+      <span>{domain}</span>
+    </a>
+    <div class="site-footer__grid">
+      <nav aria-label={t("footer.elsewhere")}>
+        <p class="label site-footer__heading">{t("footer.elsewhere")}</p>
+        <ul role="list">
+          {site.social.map((profile) => (
+            <li>
+              <a href={profile.href} rel="me noopener">
+                {profile.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+      <nav aria-label={t("footer.feeds")}>
+        <p class="label site-footer__heading">{t("footer.feeds")}</p>
+        <ul role="list">
           <li>
-            <a
-              href={profile.href}
-              class="icon-button"
-              rel="me noopener"
-              aria-label={profile.label}
-              title={profile.label}
-            >
-              <Icon name={profile.id} size={18} />
+            <a href="/rss.xml">RSS</a>
+          </li>
+          <li>
+            <a href="/atom.xml">Atom</a>
+          </li>
+          <li>
+            <a href="/feed.json">JSON Feed</a>
+          </li>
+        </ul>
+      </nav>
+      <nav aria-label={t("footer.site")}>
+        <p class="label site-footer__heading">{t("footer.site")}</p>
+        <ul role="list">
+          <li>
+            <a href="/uses/">{t("nav.uses")}</a>
+          </li>
+          <li>
+            <a href="/tags/">{t("tags.title")}</a>
+          </li>
+          <li>
+            <a href="/cv.pdf" download>
+              {t("palette.downloadCv")}
             </a>
           </li>
-        ))}
-        <li>
-          <a href="/rss.xml" class="icon-button" aria-label={`${t("footer.feeds")}: RSS`} title="RSS">
-            <Icon name="rss" size={18} />
-          </a>
-        </li>
-      </ul>
-    </nav>
-    <div class="site-footer__fine">
-      <p>{t("footer.copyright", { year })}</p>
-      <p>{t("footer.colophon")}</p>
-      <p class="site-footer__fine-links">
-        <a href={site.repository} class="link">
-          {t("footer.source")}
-        </a>
-        <a href="/atom.xml" class="link">
-          Atom
-        </a>
-        <a href="/feed.json" class="link">
-          JSON Feed
-        </a>
-        <button type="button" class="site-footer__kbd" data-shortcuts-open>
-          <kbd>?</kbd>
-          {t("shortcuts.title")}
+          <li>
+            <a href={site.repository}>{t("footer.source")}</a>
+          </li>
+        </ul>
+      </nav>
+      <div class="site-footer__colophon">
+        <p>{t("footer.colophon")}</p>
+        <button type="button" class="site-footer__palette" data-palette-open>
+          <kbd>⌘K</kbd>
+          {t("palette.title")}
         </button>
-      </p>
+      </div>
+    </div>
+    <div class="site-footer__fine label">
+      <p>{t("footer.copyright", { year })}</p>
+      <a href="#top">{t("footer.backToTop")} ↑</a>
     </div>
   </div>
 </footer>
@@ -60,80 +80,118 @@ const year = String(new Date().getUTCFullYear());
 <style>
   .site-footer {
     margin-block-start: auto;
-    padding-block: var(--spacing-section) 2.5rem;
-    border-block-start: 1px solid var(--rule);
-    background: var(--paper-sunken);
+    padding-block: var(--spacing-section) 1.5rem;
+    border-block-start: 2px solid var(--rule-strong);
   }
 
-  .site-footer__inner {
+  .site-footer__email {
+    display: block;
+    font-weight: 900;
+    font-size: clamp(2.1rem, 0.4rem + 7.6vw, 7rem);
+    line-height: 0.9;
+    letter-spacing: -0.06em;
+    text-decoration: none;
+    overflow-wrap: anywhere;
+    transition: color var(--duration-fast) ease;
+  }
+
+  .site-footer__at {
+    display: inline-block;
+    margin-inline: 0.04em;
+    padding-inline: 0.02em;
+    background: var(--signal);
+    color: var(--on-accent);
+    line-height: 0.95;
+  }
+
+  .site-footer__email:hover {
+    color: var(--signal-text);
+  }
+
+  .site-footer__email:hover .site-footer__at {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  .site-footer__grid {
     display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(0, 1.5fr);
     gap: 2rem;
-    grid-template-columns: 1fr auto;
-    align-items: start;
+    margin-block-start: clamp(2.5rem, 5vw, 4.5rem);
+    padding-block-start: 1.25rem;
+    border-block-start: 1px solid var(--rule-strong);
   }
 
-  .site-footer__name {
-    font: 560 var(--text-step-2) / 1.1 var(--serif);
-    letter-spacing: -0.02em;
+  .site-footer__heading {
+    margin-block-end: 0.75rem;
   }
 
-  .site-footer__tagline {
-    max-width: 34ch;
-    margin-block-start: 0.5rem;
+  .site-footer__grid ul {
+    display: grid;
+    gap: 0.15rem;
+  }
+
+  .site-footer__grid a {
+    display: inline-flex;
+    min-height: 2rem;
+    align-items: center;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .site-footer__grid a:hover {
+    text-decoration: underline;
+    text-decoration-color: var(--signal);
+    text-decoration-thickness: 2px;
+  }
+
+  .site-footer__colophon {
+    display: grid;
+    align-content: start;
+    justify-items: start;
+    gap: 1rem;
     color: var(--ink-muted);
     font-size: var(--text-step--1);
   }
 
-  .site-footer__social {
-    display: flex;
-    gap: 0.25rem;
-  }
-
-  .site-footer__fine {
-    grid-column: 1 / -1;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 0.75rem 2rem;
-    padding-block-start: 1.5rem;
-    border-block-start: 1px solid var(--rule);
-    font-size: var(--text-step--2);
-    color: var(--ink-muted);
-  }
-
-  .site-footer__fine-links {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.25rem 1rem;
-  }
-
-  .site-footer__kbd {
+  .site-footer__palette {
     display: inline-flex;
     align-items: center;
-    gap: 0.4em;
-    color: inherit;
+    gap: 0.6rem;
+    min-height: 2.75rem;
+    color: var(--ink);
+    font: 500 var(--text-step--2) / 1 var(--mono);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
     cursor: pointer;
   }
 
-  .site-footer__kbd:hover {
+  .site-footer__palette kbd {
+    padding: 0.35em 0.5em;
+    border: 2px solid var(--rule-strong);
+    font: inherit;
+  }
+
+  .site-footer__fine {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-block-start: 3rem;
+  }
+
+  .site-footer__fine a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    margin-block: -1rem;
     color: var(--ink);
+    text-decoration: none;
   }
 
-  kbd {
-    display: inline-grid;
-    place-items: center;
-    min-width: 1.5em;
-    padding: 0.1em 0.35em;
-    border: 1px solid var(--rule-strong);
-    border-block-end-width: 2px;
-    border-radius: var(--radius-sm);
-    font: 500 0.9em / 1.2 var(--mono);
-  }
-
-  @media (width < 40rem) {
-    .site-footer__inner {
-      grid-template-columns: 1fr;
+  @media (width < 56rem) {
+    .site-footer__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
 </style>

@@ -1,43 +1,62 @@
 ---
+import { profile } from "../../content/data/profile";
 import { translatorFor } from "../i18n/astro";
-import Icon from "./Icon.astro";
+import { formatLocalTime } from "../lib/clock";
 import ThemeToggle from "./ThemeToggle.astro";
 
 const t = translatorFor(Astro);
 const path = Astro.url.pathname;
 const links = [
-  { href: "/", label: t("nav.writing"), current: path === "/" },
-  { href: "/tags/", label: t("tags.title"), current: path.startsWith("/tags/") },
-];
+  { href: "/work/", label: t("nav.work") },
+  { href: "/writing/", label: t("nav.writing"), also: ["/tags/", "/search/"] },
+  { href: "/hire/", label: t("nav.hire") },
+  { href: "/cv/", label: t("nav.cv") },
+  { href: "/now/", label: t("nav.now") },
+].map((link, index) => ({
+  ...link,
+  number: String(index + 1).padStart(2, "0"),
+  current: path === link.href,
+  section: path.startsWith(link.href) || (link.also ?? []).some((prefix) => path.startsWith(prefix)),
+}));
+const now = new Date();
 ---
 
 <header class="site-header">
   <div class="container-page site-header__inner">
-    <a href="/" class="wordmark" aria-label={`Louis Young, ${t("nav.home")}`}>
-      <span class="wordmark__mark" aria-hidden="true">
-        LY
-      </span>
-      <span class="wordmark__name">Louis Young</span>
+    <a href="/" class="site-header__name" aria-current={path === "/" ? "page" : undefined}>
+      <span class="site-header__mark" aria-hidden="true"></span>
+      {profile.name}
     </a>
+    <p class="site-header__place">
+      {profile.location.city}, {profile.location.country} · {t("nav.localTime")}{" "}
+      <time data-clock data-time-zone={profile.location.timeZone} datetime={now.toISOString()}>
+        {formatLocalTime(now, profile.location.timeZone)}
+      </time>
+    </p>
     <nav aria-label={t("nav.label")} class="site-nav">
-      <ul class="site-nav__list" role="list">
+      <ol class="site-nav__list" role="list">
         {links.map((link) => (
           <li>
-            <a href={link.href} class="site-nav__link" aria-current={link.current ? "page" : undefined}>
+            <a
+              href={link.href}
+              class="site-nav__link"
+              aria-current={link.current ? "page" : link.section ? "true" : undefined}
+            >
+              <span class="site-nav__number" aria-hidden="true">
+                {link.number}
+              </span>
               {link.label}
             </a>
           </li>
         ))}
-        <li>
-          <a href="/search/" class="icon-button" aria-label={t("nav.search")} title={`${t("nav.search")} (/)`}>
-            <Icon name="search" />
-          </a>
-        </li>
-        <li>
-          <ThemeToggle />
-        </li>
-      </ul>
+      </ol>
     </nav>
+    <div class="site-header__tools">
+      <button type="button" class="site-header__palette" data-palette-open aria-label={t("palette.open")}>
+        <kbd>⌘K</kbd>
+      </button>
+      <ThemeToggle />
+    </div>
   </div>
 </header>
 
@@ -46,85 +65,154 @@ const links = [
     position: sticky;
     top: 0;
     z-index: 20;
-    background: color-mix(in oklch, var(--paper) 82%, transparent);
-    backdrop-filter: saturate(1.4) blur(14px);
-    border-block-end: 1px solid color-mix(in oklch, var(--rule) 70%, transparent);
+    background: var(--paper);
+    border-block-end: 2px solid var(--rule-strong);
+    font: 500 var(--text-step--2) / 1.2 var(--mono);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
   }
 
   .site-header__inner {
-    display: flex;
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
     align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    min-height: 4rem;
+    gap: 0.5rem 1.75rem;
+    min-height: 4.25rem;
   }
 
-  .wordmark {
+  .site-header__name {
     display: inline-flex;
     align-items: center;
-    gap: 0.7rem;
+    gap: 0.6rem;
+    min-height: 2.75rem;
+    font-weight: 700;
     text-decoration: none;
   }
 
-  .wordmark__mark {
-    display: grid;
-    place-items: center;
-    width: 2.25rem;
-    height: 2.25rem;
-    border-radius: 0.6rem;
-    background: var(--ink);
-    color: var(--paper);
-    font: italic 600 1rem / 1 var(--serif);
-    letter-spacing: -0.04em;
-    transition:
-      background-color var(--duration-base) ease,
-      rotate var(--duration-slow) var(--ease-out-expo);
+  .site-header__mark {
+    width: 0.85rem;
+    height: 0.85rem;
+    background: var(--signal);
+    transition: rotate var(--duration-slow) var(--ease-out-expo);
   }
 
-  .wordmark:hover .wordmark__mark {
-    background: var(--accent);
-    color: var(--on-accent);
-    rotate: -6deg;
+  .site-header__name:hover .site-header__mark {
+    rotate: 45deg;
   }
 
-  .wordmark__name {
-    font: 560 1.2rem / 1 var(--serif);
-    letter-spacing: -0.02em;
+  .site-header__place {
+    color: var(--ink-muted);
+    white-space: nowrap;
+  }
+
+  .site-header__place time {
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
   }
 
   .site-nav__list {
     display: flex;
-    align-items: center;
-    gap: 0.15rem;
+    gap: 0 1.4rem;
   }
 
   .site-nav__link {
+    position: relative;
     display: inline-flex;
     align-items: center;
+    gap: 0.45em;
     min-height: 2.75rem;
-    padding-inline: 0.75rem;
-    font-size: var(--text-step--1);
-    font-weight: 550;
-    color: var(--ink-muted);
     text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .site-nav__number {
+    color: var(--ink-faint);
     transition: color var(--duration-fast) ease;
   }
 
-  .site-nav__link:hover,
-  .site-nav__link[aria-current="page"] {
-    color: var(--ink);
+  .site-nav__link::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0.55rem;
+    height: 2px;
+    background: var(--signal);
+    scale: 0 1;
+    transform-origin: left;
+    transition: scale var(--duration-base) var(--ease-out-expo);
   }
 
-  .site-nav__link[aria-current="page"] {
-    text-decoration: underline;
-    text-decoration-color: var(--accent);
-    text-decoration-thickness: 2px;
-    text-underline-offset: 0.5em;
+  .site-nav__link:hover::after,
+  .site-nav__link[aria-current]::after {
+    scale: 1 1;
   }
 
-  @media (width < 30rem) {
-    .wordmark__name {
+  .site-nav__link:hover .site-nav__number,
+  .site-nav__link[aria-current] .site-nav__number {
+    color: var(--accent);
+  }
+
+  .site-header__tools {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .site-header__palette {
+    display: grid;
+    place-items: center;
+    min-width: 3.25rem;
+    min-height: 2.75rem;
+    padding-inline: 0.6rem;
+    border: 2px solid var(--rule-strong);
+    cursor: pointer;
+    transition:
+      background-color var(--duration-fast) ease,
+      color var(--duration-fast) ease;
+  }
+
+  .site-header__palette:hover {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  .site-header__palette kbd {
+    font: inherit;
+  }
+
+  @media (width < 72rem) {
+    .site-header__place {
       display: none;
+    }
+
+    .site-header__inner {
+      grid-template-columns: auto 1fr auto;
+    }
+
+    .site-nav {
+      justify-self: end;
+    }
+  }
+
+  @media (width < 48rem) {
+    .site-header__inner {
+      grid-template-columns: 1fr auto;
+      min-height: 0;
+      padding-block-start: 0.4rem;
+    }
+
+    .site-nav {
+      grid-row: 2;
+      grid-column: 1 / -1;
+      justify-self: stretch;
+      margin-inline: calc(-1 * var(--spacing-gutter));
+      padding-inline: var(--spacing-gutter);
+      border-block-start: 1px solid var(--rule);
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .site-nav__list {
+      gap: 0 1.1rem;
     }
   }
 </style>

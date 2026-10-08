@@ -1,4 +1,4 @@
-import { expect, test } from "./fixtures";
+import { expect, pages, test } from "./fixtures";
 
 test.describe("article page", () => {
   test.beforeEach(async ({ page }) => {
@@ -112,7 +112,7 @@ test.describe("layout", () => {
   for (const width of [320, 390, 768]) {
     test(`nothing overflows horizontally at ${width}px`, async ({ page }) => {
       await page.setViewportSize({ width, height: 800 });
-      for (const path of ["/", "/how-to-fetch-data-from-backend-react/", "/design/"]) {
+      for (const path of pages) {
         await page.goto(path);
         const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
         expect(overflow, path).toBeLessThanOrEqual(0);

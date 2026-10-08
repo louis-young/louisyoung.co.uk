@@ -1,0 +1,40 @@
+---
+import { render, type CollectionEntry } from "astro:content";
+
+import { formatDate, isoDate, useTranslations } from "../../i18n";
+import { localeOf } from "../../i18n/astro";
+import Base from "../../layouts/Base.astro";
+import Callout from "../mdx/Callout.astro";
+import PageHero from "./PageHero.astro";
+
+interface Props {
+  page: CollectionEntry<"pages">;
+  label: string;
+}
+
+const { page, label } = Astro.props;
+const { Content } = await render(page);
+const locale = localeOf(Astro);
+const t = useTranslations(locale);
+---
+
+<Base title={page.data.title} description={page.data.description} image={`/og/${page.id}.png`}>
+  <PageHero label={label} title={page.data.title} lede={page.data.summary} narrow>
+    <p class="label">
+      <time datetime={isoDate(page.data.updated)}>
+        {t("page.updated", { date: formatDate(page.data.updated, locale) })}
+      </time>
+    </p>
+  </PageHero>
+  <div class="container-text mdx-page prose" data-pagefind-body>
+    <Content components={{ Callout }} />
+  </div>
+  <slot />
+</Base>
+
+<style>
+  .mdx-page {
+    padding-block: 2.5rem var(--spacing-section);
+    border-block-start: 2px solid var(--rule-strong);
+  }
+</style>

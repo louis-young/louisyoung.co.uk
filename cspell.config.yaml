@@ -17,6 +17,7 @@ words:
   - autolinks
   - avif
   - checkly
+  - claudecode
   - codesandbox
   - cookieless
   - delectus
@@ -31,7 +32,9 @@ words:
   - fontsource
   - frontmatter
   - geist
+  - ghostty
   - gitleaks
+  - grotesk
   - hidenavigation
   - hreflang
   - hsts
@@ -45,6 +48,7 @@ words:
   - louisyoung
   - newsreader
   - nosniff
+  - nownownow
   - nums
   - oklch
   - opsz
@@ -58,6 +62,7 @@ words:
   - rehype
   - resvg
   - satori
+  - schibsted
   - scrollspy
   - shiki
   - sidenotes
