@@ -71,10 +71,12 @@ const paletteArticles = (await getArticles()).map((article) => ({
       import { initClock } from "../scripts/clock";
       import { initPalette } from "../scripts/palette";
       import { initShortcuts } from "../scripts/shortcuts";
+      import { initSpotlight } from "../scripts/spotlight";
       import { initTheme } from "../scripts/theme";
 
       initTheme();
       initClock();
+      initSpotlight();
       initShortcuts(initPalette());
     </script>
     {analytics && <script is:inline defer src="/_vercel/insights/script.js" />}
