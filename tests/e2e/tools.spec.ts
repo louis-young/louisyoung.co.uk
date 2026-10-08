@@ -81,4 +81,50 @@ test.describe("tools", () => {
     await expect(page.locator("[data-jwt-times]")).toContainText("14 Nov 2023, 23:13:20 · expired");
     await expect(page.getByText("The signature is not verified.", { exact: false })).toBeVisible();
   });
+
+  test("the colour converter writes every format and a tonal scale", async ({ page }) => {
+    await page.goto("/tools/colour/");
+    await page.getByLabel("Colour", { exact: true }).fill("hsl(0 100% 50%)");
+    await expect(page.locator('[data-format="hex"]')).toHaveText("#ff0000");
+    await expect(page.locator('[data-format="rgb"]')).toHaveText("rgb(255 0 0)");
+    await expect(page.locator('[data-format="oklch"]')).toHaveText(/^oklch\(62\.\d+% 0\.25\d* 29\.\d+\)$/u);
+    await expect(page.locator("[data-step]")).toHaveCount(11);
+    await page.getByLabel("Custom property name").fill("danger");
+    await expect(page.locator("[data-css]")).toContainText("--danger-500: #");
+    await expect(page.locator('[data-step="950"] [data-on-white]')).toHaveText(/^1\d\.\d\d:1$/u);
+  });
+
+  test("the unit converter lists every equivalent", async ({ page }) => {
+    await page.goto("/tools/units/");
+    await page.getByLabel("Value", { exact: true }).fill("2");
+    await page.getByLabel("Unit", { exact: true }).selectOption("rem");
+    await page.getByLabel("Root font size (px)").fill("10");
+    await expect(page.locator('tr[data-unit="px"] [data-value]')).toHaveText("20px");
+    await expect(page.locator('tr[data-unit="pt"] [data-value]')).toHaveText("15pt");
+    await page.getByLabel("Viewport width (px)").fill("0");
+    await expect(page.getByRole("alert")).toHaveText("Font sizes and viewport sizes need to be positive numbers.");
+  });
+
+  test("the easing editor responds to presets, inputs and the keyboard", async ({ page }) => {
+    await page.goto("/tools/easing/");
+    const output = page.locator("[data-output]");
+    await expect(output).toHaveText("cubic-bezier(0.16, 1, 0.3, 1)");
+    await page.getByRole("button", { name: "ease-in-out", exact: true }).click();
+    await expect(output).toHaveText("cubic-bezier(0.42, 0, 0.58, 1)");
+    await page.getByLabel("Control point 1 x (time)").fill("0.5");
+    await expect(output).toHaveText("cubic-bezier(0.5, 0, 0.58, 1)");
+    const handle = page.getByRole("slider", { name: "Control point 2" });
+    await handle.focus();
+    await page.keyboard.press("Shift+ArrowLeft");
+    await expect(output).toHaveText("cubic-bezier(0.5, 0, 0.48, 1)");
+    await expect(handle).toHaveAttribute("aria-valuetext", "Time 0.48, progress 1");
+    await page.locator("[data-plot]").scrollIntoViewIfNeeded();
+    const box = (await page.locator("[data-plot]").boundingBox())!;
+    const start = (await handle.boundingBox())!;
+    await page.mouse.move(start.x + start.width / 2, start.y + start.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(box.x + box.width, box.y + box.height * (90 / 330));
+    await page.mouse.up();
+    await expect(output).toHaveText("cubic-bezier(0.5, 0, 1, 1)");
+  });
 });

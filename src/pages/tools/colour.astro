@@ -1,0 +1,371 @@
+---
+import PageHero from "../../components/sections/PageHero.astro";
+import { useTranslations } from "../../i18n";
+import { localeOf } from "../../i18n/astro";
+import Base from "../../layouts/Base.astro";
+import { formats, parseAnyColour, ratioText, scaleCss, tonalScale } from "../../lib/colour-convert";
+
+const t = useTranslations(localeOf(Astro));
+const start = "#7c6cf0";
+const name = "brand";
+const base = parseAnyColour(start)!;
+const values = formats(base);
+const scale = tonalScale(base);
+const rows = [
+  { format: "hex", label: t("tools.colour.hex") },
+  { format: "rgb", label: t("tools.colour.rgb") },
+  { format: "hsl", label: t("tools.colour.hsl") },
+  { format: "oklch", label: t("tools.colour.oklch") },
+] as const;
+---
+
+<Base title={t("tools.colour.title")} description={t("tools.colour.summary")} image="/og/tools.png">
+  <PageHero label={t("nav.tools")} title={t("tools.colour.title")} lede={t("tools.colour.summary")} />
+  <div class="container-page colour" data-colour data-copied={t("tools.copied")}>
+    <div class="colour__input card">
+      <div class="colour__field">
+        <label for="colour-input" class="colour__label">
+          {t("tools.colour.input")}
+        </label>
+        <div class="colour__control">
+          <input
+            type="color"
+            class="colour__picker"
+            data-picker
+            value={values.hex}
+            aria-label={t("tools.colour.picker")}
+          />
+          <input
+            id="colour-input"
+            type="text"
+            class="colour__text"
+            data-input
+            value={start}
+            autocomplete="off"
+            spellcheck="false"
+            aria-describedby="colour-hint"
+          />
+        </div>
+        <p id="colour-hint" class="colour__hint" data-hint>
+          {t("tools.colour.hint")}
+        </p>
+      </div>
+      <div class="colour__preview" data-preview style={`background: ${values.hex}`}></div>
+    </div>
+
+    <section class="colour__formats card" aria-labelledby="colour-formats">
+      <h2 id="colour-formats" class="label">
+        {t("tools.colour.formats")}
+      </h2>
+      <dl class="colour__list">
+        {rows.map(({ format, label }) => (
+          <div class="colour__row">
+            <dt>{label}</dt>
+            <dd>
+              <output data-format={format} for="colour-input">
+                {values[format]}
+              </output>
+              <button type="button" class="button button--small" data-copy={format}>
+                <span data-copy-label>{t("tools.copy")}</span>
+                <span class="visually-hidden">{label}</span>
+              </button>
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+
+    <section class="colour__scale card" aria-labelledby="colour-scale">
+      <div class="colour__heading">
+        <h2 id="colour-scale" class="label">
+          {t("tools.colour.scale")}
+        </h2>
+        <p class="colour__hint">{t("tools.colour.scaleHint")}</p>
+      </div>
+      <ol class="colour__steps" role="list">
+        {scale.map((step) => (
+          <li class="colour__step" data-step={step.step}>
+            <span class="colour__chip" data-chip aria-hidden="true" style={`background: ${step.hex}`} />
+            <span class="colour__step-name">{step.step}</span>
+            <code class="colour__hex" data-hex>
+              {step.hex}
+            </code>
+            <dl class="colour__ratios">
+              <div>
+                <dt>{t("tools.colour.onWhite")}</dt>
+                <dd data-on-white>{ratioText(step.onWhite)}</dd>
+              </div>
+              <div>
+                <dt>{t("tools.colour.onBlack")}</dt>
+                <dd data-on-black>{ratioText(step.onBlack)}</dd>
+              </div>
+            </dl>
+          </li>
+        ))}
+      </ol>
+      <div class="colour__css">
+        <div class="colour__field colour__name">
+          <label for="colour-name" class="colour__label">
+            {t("tools.colour.name")}
+          </label>
+          <input
+            id="colour-name"
+            type="text"
+            class="colour__text"
+            data-name
+            value={name}
+            autocomplete="off"
+            spellcheck="false"
+          />
+        </div>
+        <div class="colour__field">
+          <p class="label" id="colour-css-label">
+            {t("tools.colour.css")}
+          </p>
+          <div class="colour__code">
+            <pre><output data-css for="colour-input colour-name" aria-labelledby="colour-css-label">{scaleCss(scale, name)}</output></pre>
+            <button type="button" class="button button--small" data-copy="css">
+              <span data-copy-label>{t("tools.copy")}</span>
+              <span class="visually-hidden">{t("tools.colour.css")}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</Base>
+
+<script>
+  import { initColour } from "../../scripts/tool-colour";
+
+  initColour();
+</script>
+
+<style>
+  .colour {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+    gap: 1rem;
+    align-items: start;
+    padding-block-end: var(--spacing-section);
+  }
+
+  .colour > .card {
+    padding: clamp(1.25rem, 1rem + 1vw, 2rem);
+  }
+
+  .colour__input,
+  .colour__formats,
+  .colour__scale {
+    display: grid;
+    gap: 1.25rem;
+  }
+
+  .colour__input {
+    align-self: stretch;
+    grid-template-rows: auto 1fr;
+  }
+
+  .colour__scale {
+    grid-column: 1 / -1;
+  }
+
+  .colour__field {
+    display: grid;
+    gap: 0.45rem;
+    min-width: 0;
+  }
+
+  .colour__label {
+    font-weight: 500;
+    font-size: var(--text-step--1);
+  }
+
+  .colour__control {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .colour__picker {
+    flex-shrink: 0;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0.2rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+    cursor: pointer;
+  }
+
+  .colour__text {
+    flex: 1;
+    min-width: 0;
+    min-height: 2.75rem;
+    padding: 0.5rem 0.8rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+    color: var(--ink);
+    font: 500 var(--text-step--1) / 1 var(--mono);
+  }
+
+  .colour__text:focus-visible,
+  .colour__picker:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .colour__text[aria-invalid="true"] {
+    border-color: var(--warning);
+  }
+
+  .colour__hint {
+    font-size: var(--text-step--2);
+    color: var(--ink-faint);
+  }
+
+  .colour__hint[data-invalid] {
+    color: var(--warning);
+  }
+
+  .colour__preview {
+    min-height: 8rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-md);
+  }
+
+  .colour__list {
+    display: grid;
+  }
+
+  .colour__row {
+    display: grid;
+    grid-template-columns: 4.5rem minmax(0, 1fr);
+    align-items: center;
+    gap: 1rem;
+    padding-block: 0.6rem;
+    border-block-start: 1px solid var(--rule);
+  }
+
+  .colour__row dt {
+    color: var(--ink-muted);
+    font-size: var(--text-step--1);
+  }
+
+  .colour__row dd {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+  }
+
+  .colour__row output {
+    min-width: 0;
+    font: 500 var(--text-step--1) / 1.5 var(--mono);
+    overflow-wrap: anywhere;
+  }
+
+  .colour__heading {
+    display: grid;
+    gap: 0.4rem;
+  }
+
+  .colour__steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 7.5rem), 1fr));
+    gap: 0.75rem;
+  }
+
+  .colour__step {
+    display: grid;
+    gap: 0.3rem;
+    min-width: 0;
+    font-size: var(--text-step--2);
+  }
+
+  .colour__chip {
+    height: 3.5rem;
+    margin-block-end: 0.25rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-sm);
+  }
+
+  .colour__step-name {
+    font-weight: 600;
+    font-size: var(--text-step--1);
+  }
+
+  .colour__hex {
+    font-family: var(--mono);
+    color: var(--ink-muted);
+  }
+
+  .colour__ratios {
+    display: grid;
+    gap: 0.1rem;
+  }
+
+  .colour__ratios div {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .colour__ratios dt {
+    color: var(--ink-muted);
+  }
+
+  .colour__ratios dd {
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .colour__css {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+    gap: 1rem;
+    align-items: start;
+    padding-block-start: 1.25rem;
+    border-block-start: 1px solid var(--rule);
+  }
+
+  .colour__code {
+    position: relative;
+    padding: 1rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-md);
+    background: var(--paper-sunken);
+  }
+
+  .colour__code pre {
+    margin: 0;
+    font: 500 var(--text-step--1) / 1.6 var(--mono);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .colour__code .button {
+    position: absolute;
+    inset-block-start: 0.75rem;
+    inset-inline-end: 0.75rem;
+  }
+
+  @media (width < 30rem) {
+    .colour__row {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.35rem;
+    }
+  }
+
+  @media (width < 56rem) {
+    .colour,
+    .colour__css {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .colour__preview {
+      min-height: 4rem;
+    }
+  }
+</style>

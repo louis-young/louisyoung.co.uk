@@ -1,0 +1,245 @@
+---
+import PageHero from "../../components/sections/PageHero.astro";
+import { useTranslations } from "../../i18n";
+import { localeOf } from "../../i18n/astro";
+import Base from "../../layouts/Base.astro";
+import { convertAll, defaultContext, units } from "../../lib/units-tool";
+
+const t = useTranslations(localeOf(Astro));
+const start = { value: 24, unit: "px" } as const;
+const contextFields = [
+  { name: "root", label: t("tools.units.root"), value: defaultContext.root },
+  { name: "parent", label: t("tools.units.parent"), value: defaultContext.parent },
+  { name: "viewportWidth", label: t("tools.units.viewportWidth"), value: defaultContext.viewportWidth },
+  { name: "viewportHeight", label: t("tools.units.viewportHeight"), value: defaultContext.viewportHeight },
+];
+const descriptions = {
+  px: t("tools.units.px"),
+  rem: t("tools.units.rem"),
+  em: t("tools.units.em"),
+  pt: t("tools.units.pt"),
+  vw: t("tools.units.vw"),
+  vh: t("tools.units.vh"),
+  "%": t("tools.units.percent"),
+};
+const result = convertAll(start.value, start.unit, defaultContext);
+const rows = "rows" in result ? result.rows : [];
+---
+
+<Base title={t("tools.units.title")} description={t("tools.units.summary")} image="/og/tools.png">
+  <PageHero label={t("nav.tools")} title={t("tools.units.title")} lede={t("tools.units.summary")} />
+  <div
+    class="container-page units"
+    data-units
+    data-error-value={t("tools.units.errorValue")}
+    data-error-context={t("tools.units.errorContext")}
+    data-copied={t("tools.copied")}
+  >
+    <div class="units__fields card">
+      <div class="units__pair">
+        <label class="units__field">
+          <span class="units__label">{t("tools.units.value")}</span>
+          <input type="number" name="value" value={start.value} step="any" inputmode="decimal" />
+        </label>
+        <div class="units__field">
+          <label for="units-unit" class="units__label">
+            {t("tools.units.unit")}
+          </label>
+          <select id="units-unit" name="unit">
+            {units.map((unit) => (
+              <option value={unit} selected={unit === start.unit}>
+                {unit}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+      <div class="units__context">
+        <h2 class="label">{t("tools.units.context")}</h2>
+        {contextFields.map((field) => (
+          <label class="units__field">
+            <span class="units__label">{field.label}</span>
+            <input type="number" name={field.name} value={field.value} min="1" step="any" inputmode="decimal" />
+          </label>
+        ))}
+      </div>
+    </div>
+    <section class="units__result card" aria-labelledby="units-result">
+      <h2 id="units-result" class="label">
+        {t("tools.units.result")}
+      </h2>
+      <p class="units__error" data-error role="alert" hidden></p>
+      <div class="units__table" aria-live="polite">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">{t("tools.units.value")}</th>
+              <th scope="col">{t("tools.units.context")}</th>
+              <th scope="col">
+                <span class="visually-hidden">{t("tools.copy")}</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr data-unit={row.unit} data-current={row.unit === start.unit ? "" : undefined}>
+                <th scope="row">
+                  <code data-value>{row.css}</code>
+                </th>
+                <td>{descriptions[row.unit]}</td>
+                <td>
+                  <button type="button" class="button button--small" data-copy={row.unit}>
+                    <span data-copy-label>{t("tools.copy")}</span>
+                    <span class="visually-hidden">{row.unit}</span>
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</Base>
+
+<script>
+  import { initUnits } from "../../scripts/tool-units";
+
+  initUnits();
+</script>
+
+<style>
+  .units {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+    gap: 1rem;
+    align-items: start;
+    padding-block-end: var(--spacing-section);
+  }
+
+  .units > .card {
+    padding: clamp(1.25rem, 1rem + 1vw, 2rem);
+  }
+
+  .units__fields,
+  .units__context,
+  .units__result {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .units__context {
+    padding-block-start: 1.25rem;
+    border-block-start: 1px solid var(--rule);
+  }
+
+  .units__pair {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    gap: 0.75rem;
+  }
+
+  .units__field {
+    display: grid;
+    gap: 0.4rem;
+    min-width: 0;
+  }
+
+  .units__label {
+    font-weight: 500;
+    font-size: var(--text-step--1);
+  }
+
+  .units__field input,
+  .units__field select {
+    min-width: 0;
+    min-height: 2.75rem;
+    padding: 0.5rem 0.8rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+    color: var(--ink);
+    font: 500 var(--text-step--1) / 1 var(--mono);
+  }
+
+  .units__field input:focus-visible,
+  .units__field select:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .units__error {
+    color: var(--ink);
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-sm);
+    background: var(--warning-soft);
+  }
+
+  .units__table {
+    overflow-x: auto;
+  }
+
+  .units__table table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--text-step--1);
+  }
+
+  .units__table thead th {
+    padding-block: 0 0.5rem;
+    color: var(--ink-muted);
+    font-weight: 500;
+    font-size: var(--text-step--2);
+    text-align: start;
+  }
+
+  .units__table tbody th,
+  .units__table td {
+    padding: 0.55rem 0.5rem;
+    border-block-start: 1px solid var(--rule);
+    text-align: start;
+    vertical-align: middle;
+  }
+
+  .units__table tbody th {
+    padding-inline-start: 0;
+    font-weight: 400;
+  }
+
+  .units__table td:last-child {
+    padding-inline-end: 0;
+    text-align: end;
+  }
+
+  .units__table td:nth-child(2) {
+    color: var(--ink-muted);
+  }
+
+  .units__table code {
+    font: 600 var(--text-step--1) / 1.3 var(--mono);
+    white-space: nowrap;
+  }
+
+  .units__table tr[data-current] th,
+  .units__table tr[data-current] td {
+    background: var(--accent-soft);
+  }
+
+  .units__table tr[data-current] th {
+    border-start-start-radius: var(--radius-sm);
+    border-end-start-radius: var(--radius-sm);
+    padding-inline-start: 0.5rem;
+  }
+
+  .units__table tr[data-current] td:last-child {
+    border-start-end-radius: var(--radius-sm);
+    border-end-end-radius: var(--radius-sm);
+    padding-inline-end: 0.5rem;
+  }
+
+  @media (width < 56rem) {
+    .units {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

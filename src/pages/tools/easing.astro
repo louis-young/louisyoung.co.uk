@@ -1,0 +1,431 @@
+---
+import PageHero from "../../components/sections/PageHero.astro";
+import { useTranslations } from "../../i18n";
+import { localeOf } from "../../i18n/astro";
+import Base from "../../layouts/Base.astro";
+import { curvePath, formatBezier, graph, presetFor, presets, toGraph, type Bezier } from "../../lib/easing-tool";
+
+const t = useTranslations(localeOf(Astro));
+const start: Bezier = [0.16, 1, 0.3, 1];
+const [x1, y1, x2, y2] = start;
+const origin = toGraph(0, 0);
+const end = toGraph(1, 1);
+const handles = [
+  { index: 1, label: t("tools.easing.point1"), x: x1, y: y1, at: toGraph(x1, y1), from: origin },
+  { index: 2, label: t("tools.easing.point2"), x: x2, y: y2, at: toGraph(x2, y2), from: end },
+];
+const fields = handles.flatMap((handle) => [
+  { name: `x${handle.index}`, point: handle.label, label: t("tools.easing.x"), value: handle.x, min: 0, max: 1 },
+  { name: `y${handle.index}`, point: handle.label, label: t("tools.easing.y"), value: handle.y, min: -0.6, max: 1.6 },
+]);
+const valueText = t("tools.easing.handleValue");
+const fill = (x: number, y: number) => valueText.replace("{x}", String(x)).replace("{y}", String(y));
+const percent = (value: number, of: number) => `${(value / of) * 100}%`;
+const css = formatBezier(start);
+---
+
+<Base title={t("tools.easing.title")} description={t("tools.easing.summary")} image="/og/tools.png">
+  <PageHero label={t("nav.tools")} title={t("tools.easing.title")} lede={t("tools.easing.summary")} />
+  <div class="container-page easing" data-easing data-value-text={valueText} data-copied={t("tools.copied")}>
+    <div class="easing__graph card">
+      <div class="easing__plot" data-plot>
+        <svg viewBox={`0 0 ${graph.width} ${graph.height}`} aria-hidden="true" focusable="false">
+          <rect class="easing__range" x="0" y="0" width={graph.width} height={graph.height}></rect>
+          <rect class="easing__square" x="0" y={end[1]} width={graph.width} height={origin[1] - end[1]}></rect>
+          <line class="easing__diagonal" x1={origin[0]} y1={origin[1]} x2={end[0]} y2={end[1]}></line>
+          {handles.map((handle) => (
+            <line
+              class="easing__arm"
+              data-arm={handle.index}
+              x1={handle.from[0]}
+              y1={handle.from[1]}
+              x2={handle.at[0]}
+              y2={handle.at[1]}
+            />
+          ))}
+          <path class="easing__curve" data-curve d={curvePath(start)}></path>
+          <text class="easing__axis" x={graph.width} y={origin[1] + 14} text-anchor="end">
+            {t("tools.easing.time")} →
+          </text>
+          <text class="easing__axis" x={-(origin[1] + end[1]) / 2} y="-6" text-anchor="middle" transform="rotate(-90)">
+            {t("tools.easing.progress")} →
+          </text>
+        </svg>
+        {handles.map((handle) => (
+          <div
+            class="easing__handle"
+            data-handle={handle.index}
+            role="slider"
+            tabindex="0"
+            aria-label={handle.label}
+            aria-valuemin="0"
+            aria-valuemax="1"
+            aria-valuenow={handle.x}
+            aria-valuetext={fill(handle.x, handle.y)}
+            aria-describedby="easing-keys"
+            style={`left: ${percent(handle.at[0], graph.width)}; top: ${percent(handle.at[1], graph.height)}`}
+          ></div>
+        ))}
+      </div>
+      <p id="easing-keys" class="easing__hint">
+        {t("tools.easing.keys")}
+      </p>
+    </div>
+
+    <div class="easing__controls card">
+      <div class="easing__fields">
+        {fields.map((field) => (
+          <div class="easing__field">
+            <label for={`easing-${field.name}`} class="easing__label">
+              <span class="easing__point">{field.point}</span> {field.label}
+            </label>
+            <input
+              id={`easing-${field.name}`}
+              type="number"
+              name={field.name}
+              value={field.value}
+              min={field.min}
+              max={field.max}
+              step="0.01"
+              inputmode="decimal"
+            />
+          </div>
+        ))}
+      </div>
+
+      <div class="easing__section">
+        <h2 id="easing-presets" class="label">
+          {t("tools.easing.presets")}
+        </h2>
+        <div class="easing__presets" role="group" aria-labelledby="easing-presets">
+          {presets.map((preset) => (
+            <button
+              type="button"
+              class="easing__preset"
+              data-preset={preset.name}
+              aria-pressed={presetFor(start) === preset.name ? "true" : "false"}
+            >
+              {preset.name}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div class="easing__section">
+        <p class="label">{t("tools.easing.result")}</p>
+        <div class="easing__code">
+          <output data-output for="easing-x1 easing-y1 easing-x2 easing-y2" aria-live="polite">
+            {css}
+          </output>
+          <button type="button" class="button button--small" data-copy>
+            <span data-copy-label>{t("tools.copy")}</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="easing__section">
+        <h2 class="label">{t("tools.easing.preview")}</h2>
+        <div class="easing__tracks" data-tracks style={`--curve: ${css}`}>
+          <div class="easing__track">
+            <span class="easing__track-label">{t("tools.easing.yours")}</span>
+            <span class="easing__lane">
+              <span class="easing__ball" data-ball></span>
+            </span>
+          </div>
+          <div class="easing__track">
+            <span class="easing__track-label">{t("tools.easing.linear")}</span>
+            <span class="easing__lane">
+              <span class="easing__ball easing__ball--linear"></span>
+            </span>
+          </div>
+        </div>
+        <p class="easing__reduced">{t("tools.easing.reduced")}</p>
+      </div>
+    </div>
+  </div>
+</Base>
+
+<script>
+  import { initEasing } from "../../scripts/tool-easing";
+
+  initEasing();
+</script>
+
+<style>
+  .easing {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+    gap: 1rem;
+    align-items: start;
+    padding-block-end: var(--spacing-section);
+  }
+
+  .easing > .card {
+    padding: clamp(1.25rem, 1rem + 1vw, 2rem);
+  }
+
+  .easing__graph {
+    display: grid;
+    justify-items: center;
+    gap: 1rem;
+  }
+
+  .easing__plot {
+    position: relative;
+    width: min(100%, 17rem);
+    aspect-ratio: 200 / 330;
+    margin: 1rem;
+  }
+
+  .easing__plot svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .easing__range {
+    fill: none;
+    stroke: var(--rule);
+    stroke-width: 1;
+    stroke-dasharray: 2 4;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .easing__square {
+    fill: var(--paper-sunken);
+    stroke: var(--rule-strong);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .easing__diagonal {
+    stroke: var(--rule-strong);
+    stroke-width: 1;
+    stroke-dasharray: 4 4;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .easing__arm {
+    stroke: var(--ink-faint);
+    stroke-width: 1.5;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .easing__curve {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .easing__axis {
+    fill: var(--ink-muted);
+    font: 500 9px var(--mono);
+  }
+
+  .easing__handle {
+    position: absolute;
+    width: 1.5rem;
+    height: 1.5rem;
+    translate: -50% -50%;
+    border: 2px solid var(--paper-raised);
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent);
+    cursor: grab;
+    touch-action: none;
+  }
+
+  .easing__handle:active {
+    cursor: grabbing;
+  }
+
+  .easing__handle:focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 3px;
+  }
+
+  .easing__hint,
+  .easing__reduced {
+    font-size: var(--text-step--2);
+    color: var(--ink-muted);
+    text-align: center;
+  }
+
+  .easing__controls {
+    display: grid;
+    gap: 1.5rem;
+  }
+
+  .easing__fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem 0.75rem;
+  }
+
+  .easing__field {
+    display: grid;
+    gap: 0.4rem;
+    min-width: 0;
+  }
+
+  .easing__label {
+    display: grid;
+    font-weight: 500;
+    font-size: var(--text-step--1);
+  }
+
+  .easing__point {
+    color: var(--ink-muted);
+    font-weight: 400;
+    font-size: var(--text-step--2);
+  }
+
+  .easing__field input {
+    min-width: 0;
+    min-height: 2.75rem;
+    padding: 0.5rem 0.8rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+    color: var(--ink);
+    font: 500 var(--text-step--1) / 1 var(--mono);
+  }
+
+  .easing__field input:focus-visible,
+  .easing__preset:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .easing__section {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .easing__presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .easing__preset {
+    min-height: 2.25rem;
+    padding: 0.35rem 0.75rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: 999px;
+    background: var(--paper-sunken);
+    color: var(--ink);
+    font: 500 var(--text-step--2) / 1 var(--mono);
+    cursor: pointer;
+  }
+
+  .easing__preset:hover {
+    border-color: var(--accent);
+  }
+
+  .easing__preset[aria-pressed="true"] {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  .easing__code {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-md);
+    background: var(--paper-sunken);
+  }
+
+  .easing__code output {
+    flex: 1;
+    min-width: 0;
+    font: 500 var(--text-step--1) / 1.5 var(--mono);
+    overflow-wrap: anywhere;
+  }
+
+  .easing__tracks {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .easing__track {
+    display: grid;
+    gap: 0.35rem;
+  }
+
+  .easing__track-label {
+    font-size: var(--text-step--2);
+    color: var(--ink-muted);
+  }
+
+  .easing__lane {
+    display: block;
+    container-type: inline-size;
+    padding: 0.35rem;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    background: var(--paper-sunken);
+  }
+
+  .easing__ball {
+    display: block;
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  .easing__ball--linear {
+    background: var(--ink-faint);
+  }
+
+  .easing__reduced {
+    display: none;
+    text-align: start;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .easing__ball {
+      animation: easing-slide 2s var(--curve, ease) infinite;
+    }
+
+    .easing__ball--linear {
+      animation-timing-function: linear;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .easing__tracks {
+      display: none;
+    }
+
+    .easing__reduced {
+      display: block;
+    }
+  }
+
+  @keyframes easing-slide {
+    from {
+      translate: 0;
+    }
+
+    70%,
+    to {
+      translate: calc(100cqi - 100%);
+    }
+  }
+
+  @media (width < 56rem) {
+    .easing {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>
