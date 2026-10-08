@@ -507,6 +507,52 @@
     border-color: var(--rule-strong);
   }
 
+  /* Topic chips with a count: links that the writing archive upgrades to in-place filters. */
+  .chip-filter {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-height: 2rem;
+    padding: 0.2rem 0.3rem 0.2rem 0.75rem;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    background: var(--paper-sunken);
+    font: 500 var(--text-step--2) / 1 var(--mono);
+    color: var(--ink-muted);
+    text-decoration: none;
+    transition:
+      color var(--duration-fast) ease,
+      border-color var(--duration-fast) ease,
+      background-color var(--duration-fast) ease;
+  }
+
+  .chip-filter:hover {
+    color: var(--ink);
+    border-color: var(--rule-strong);
+  }
+
+  .chip-filter[aria-current] {
+    border-color: color-mix(in oklch, var(--accent) 45%, transparent);
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  .chip-filter__count {
+    display: inline-grid;
+    place-items: center;
+    min-width: 1.45rem;
+    height: 1.45rem;
+    padding-inline: 0.3rem;
+    border-radius: 999px;
+    background: var(--paper-raised);
+    color: var(--ink-faint);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .chip-filter[aria-current] .chip-filter__count {
+    color: var(--accent);
+  }
+
   .chip {
     display: inline-flex;
     align-items: center;
@@ -617,10 +663,15 @@
 /* Windows High Contrast and other forced-colour modes: keep every boundary that colour alone drew. */
 @media (forced-colors: active) {
   .chip,
+  .chip-filter,
   .button,
   .tag,
   .card {
     border: 1px solid CanvasText;
+  }
+
+  .chip-filter[aria-current] {
+    border-width: 2px;
   }
 
   .backdrop,
@@ -649,7 +700,9 @@
   .backdrop,
   .article__toc,
   .article__actions,
+  .author,
   .pager,
+  .pager__hint,
   .related,
   #palette {
     display: none !important;

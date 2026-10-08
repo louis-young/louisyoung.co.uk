@@ -14,7 +14,7 @@ const { article, headingLevel: Heading = "h3", compact = false } = Astro.props;
 const locale = localeOf(Astro);
 ---
 
-<article class:list={["article-row", { "article-row--compact": compact }]}>
+<article class:list={["article-row", { "article-row--compact": compact }]} data-topics={article.data.tags.join(" ")}>
   <Heading class="article-row__title">
     <a href={articlePath(article)} class="article-row__link">
       {article.data.title}
@@ -42,7 +42,9 @@ const locale = localeOf(Astro);
     padding: 1.1rem 1rem;
     margin-inline: -1rem;
     border-radius: var(--radius-md);
-    transition: background-color var(--duration-fast) ease;
+    transition:
+      background-color var(--duration-fast) ease,
+      box-shadow var(--duration-fast) ease;
   }
 
   .article-row + :global(.article-row)::before {
@@ -50,6 +52,12 @@ const locale = localeOf(Astro);
     position: absolute;
     inset: 0 1rem auto;
     border-block-start: 1px solid var(--rule);
+    transition: opacity var(--duration-fast) ease;
+  }
+
+  /* When a filter hides rows, the first one still showing needs no rule above it. */
+  :global(.article-row:nth-child(1 of :not([hidden])))::before {
+    display: none;
   }
 
   .article-row__title {
@@ -115,6 +123,17 @@ const locale = localeOf(Astro);
   @media (hover: hover) {
     .article-row:hover {
       background: color-mix(in oklch, var(--paper-raised) 80%, transparent);
+      box-shadow: inset 0 0 0 1px var(--rule);
+    }
+
+    /* The highlighted row brings its own edge, so the rules either side of it step back. */
+    .article-row:hover::before,
+    .article-row:hover + :global(.article-row)::before {
+      opacity: 0;
+    }
+
+    .article-row:hover .article-row__date {
+      color: var(--ink-muted);
     }
 
     .article-row:hover .article-row__arrow {
