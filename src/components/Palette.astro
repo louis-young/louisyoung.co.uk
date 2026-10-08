@@ -169,13 +169,13 @@ const groups: { id: string; label: string; options: Option[] }[] = [
     padding: 0;
     border: 1px solid var(--rule-strong);
     border-radius: var(--radius-lg);
-    background: color-mix(in oklch, var(--paper-raised) 92%, transparent);
+    /* Opaque rather than a backdrop blur, which stalls WebKit's software renderer. */
+    background: var(--paper-raised);
     color: var(--ink);
     box-shadow:
       0 0 0 1px color-mix(in oklch, var(--ink) 4%, transparent),
       0 30px 80px -20px oklch(0% 0 0 / 0.55),
       0 0 60px -10px var(--glow-1);
-    backdrop-filter: blur(20px) saturate(1.4);
     overflow: hidden;
   }
 
@@ -185,8 +185,7 @@ const groups: { id: string; label: string; options: Option[] }[] = [
   }
 
   .palette::backdrop {
-    background: oklch(10% 0.01 270 / 0.5);
-    backdrop-filter: blur(4px);
+    background: oklch(10% 0.01 270 / 0.6);
   }
 
   @media (prefers-reduced-motion: no-preference) {

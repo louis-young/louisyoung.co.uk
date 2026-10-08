@@ -71,9 +71,9 @@ const t = translatorFor(Astro);
     padding: 0.35rem 0.85rem 0.35rem 0.45rem;
     border: 1px solid var(--rule);
     border-radius: 999px;
-    background: color-mix(in oklch, var(--paper-raised) 88%, transparent);
+    /* Solid rather than a backdrop blur: it is fixed, so a blur would re-render on every scroll frame. */
+    background: color-mix(in oklch, var(--paper-raised) 96%, transparent);
     box-shadow: var(--shadow-raised);
-    backdrop-filter: blur(12px) saturate(1.4);
     font: 500 var(--text-step--2) / 1 var(--mono);
     font-variant-numeric: tabular-nums;
     color: var(--ink-muted);
