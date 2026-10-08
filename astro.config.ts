@@ -16,7 +16,9 @@ const fontsource = (pkg: string, file: string) => `./node_modules/@fontsource-va
 export default defineConfig({
   site: site.url,
   trailingSlash: "always",
-  build: { format: "directory" },
+  // External stylesheets are covered by `style-src 'self'`; WebKit refused some hashed inline
+  // <style> blocks on some pages, and files cache across pages.
+  build: { format: "directory", inlineStylesheets: "never" },
   prefetch: { prefetchAll: true, defaultStrategy: "hover" },
   i18n: {
     locales: [...site.locales],
