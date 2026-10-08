@@ -40,7 +40,8 @@ export default defineConfig({
       scriptDirective: { resources: ["'self'", "'wasm-unsafe-eval'"] },
       // Expressive Code sets token colours and view transitions use names via style attributes.
       // Attribute styles cannot execute script; <style> elements stay hash-locked.
-      styleDirective: { resources: [{ resource: "'unsafe-inline'", kind: "attribute" }] },
+      // 'report-sample' only adds the first characters of anything blocked to violation reports.
+      styleDirective: { resources: ["'self'", "'report-sample'", { resource: "'unsafe-inline'", kind: "attribute" }] },
     },
   },
   fonts: [
