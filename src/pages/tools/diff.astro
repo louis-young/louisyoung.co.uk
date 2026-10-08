@@ -1,0 +1,384 @@
+---
+import PageHero from "../../components/sections/PageHero.astro";
+import { useTranslations } from "../../i18n";
+import { localeOf } from "../../i18n/astro";
+import Base from "../../layouts/Base.astro";
+import { toolPageProps } from "../../lib/tool-catalogue";
+
+const t = useTranslations(localeOf(Astro));
+const views = [
+  { value: "split", label: t("tools.diff.split") },
+  { value: "unified", label: t("tools.diff.unified") },
+];
+const before = [
+  "Pack list",
+  "",
+  "Passport",
+  "Phone charger",
+  "Sun cream",
+  "Walking boots",
+  "A good book",
+  "Travel adaptor",
+];
+const after = [
+  "Pack list",
+  "",
+  "Passport",
+  "Phone charger",
+  "Waterproof jacket",
+  "Walking boots",
+  "Two good books",
+  "Travel adaptor",
+  "Headphones",
+];
+---
+
+<Base {...toolPageProps("diff", t)}>
+  <PageHero label={t("nav.tools")} title={t("tools.diff.title")} lede={t("tools.diff.summary")} />
+  <div
+    class="container-page diff"
+    data-diff
+    data-before={t("tools.diff.before")}
+    data-after={t("tools.diff.after")}
+    data-line={t("tools.diff.line")}
+    data-added={t("tools.diff.added")}
+    data-removed={t("tools.diff.removed")}
+    data-unchanged={t("tools.diff.unchanged")}
+    data-added-line={t("tools.diff.addedLine")}
+    data-removed-line={t("tools.diff.removedLine")}
+    data-skipped={t("tools.diff.skipped")}
+    data-identical={t("tools.diff.identical")}
+    data-empty={t("tools.diff.empty")}
+    data-error-long={t("tools.diff.errorLong")}
+    data-error-different={t("tools.diff.errorDifferent")}
+  >
+    <div class="diff__inputs card">
+      <div class="diff__field">
+        <label class="diff__label" for="diff-before">
+          {t("tools.diff.before")}
+        </label>
+        <textarea
+          id="diff-before"
+          class="diff__area"
+          rows="10"
+          spellcheck="false"
+          autocomplete="off"
+          data-before
+        >{before.join("\n")}</textarea>
+      </div>
+      <div class="diff__field">
+        <label class="diff__label" for="diff-after">
+          {t("tools.diff.after")}
+        </label>
+        <textarea
+          id="diff-after"
+          class="diff__area"
+          rows="10"
+          spellcheck="false"
+          autocomplete="off"
+          data-after
+        >{after.join("\n")}</textarea>
+      </div>
+    </div>
+
+    <section class="diff__result card" aria-labelledby="diff-result">
+      <div class="diff__head">
+        <h2 id="diff-result" class="label">
+          {t("tools.diff.result")}
+        </h2>
+        <div class="diff__view">
+          <p id="diff-view" class="visually-hidden">
+            {t("tools.diff.view")}
+          </p>
+          <div class="diff__segmented" role="radiogroup" aria-labelledby="diff-view">
+            {views.map((view, i) => (
+              <label class="diff__segment">
+                <input type="radio" name="view" value={view.value} checked={i === 0} />
+                <span>{view.label}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      </div>
+      <p class="diff__status" role="status" data-status></p>
+      <div class="diff__output" aria-live="polite" data-output></div>
+    </section>
+  </div>
+</Base>
+
+<script>
+  import { initDiff } from "../../scripts/tool-diff";
+
+  initDiff();
+</script>
+
+<style>
+  .diff {
+    display: grid;
+    gap: 1rem;
+    padding-block-end: var(--spacing-section);
+  }
+
+  .diff > .card {
+    min-width: 0;
+    padding: clamp(1.25rem, 1rem + 1vw, 2rem);
+  }
+
+  .diff__inputs {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 1rem 1.5rem;
+  }
+
+  .diff__field,
+  .diff__result {
+    display: grid;
+    gap: 0.6rem;
+    min-width: 0;
+  }
+
+  .diff__result {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+  }
+
+  .diff__label {
+    font-weight: 500;
+    font-size: var(--text-step--1);
+  }
+
+  .diff__area {
+    width: 100%;
+    min-width: 0;
+    min-height: 12rem;
+    padding: 0.8rem 1rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+    color: var(--ink);
+    font: 400 var(--text-step--1) / 1.6 var(--mono);
+    tab-size: 4;
+    white-space: pre;
+    overflow-wrap: normal;
+    overflow-x: auto;
+    resize: vertical;
+  }
+
+  .diff__area:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .diff__head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem 1rem;
+  }
+
+  .diff__segmented {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    max-width: 100%;
+    padding: 0.25rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-md);
+    background: var(--paper-sunken);
+  }
+
+  .diff__segment {
+    position: relative;
+    display: grid;
+  }
+
+  .diff__segment input {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .diff__segment span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.25rem;
+    padding-inline: 0.9rem;
+    border: 1px solid transparent;
+    border-radius: calc(var(--radius-md) - 0.25rem);
+    color: var(--ink-muted);
+    font-size: var(--text-step--1);
+    font-weight: 500;
+    pointer-events: none;
+  }
+
+  .diff__segment input:checked + span {
+    border-color: var(--rule-strong);
+    background: var(--paper-raised);
+    color: var(--ink);
+    box-shadow: 0 1px 2px oklch(0% 0 0 / 0.08);
+  }
+
+  .diff__segment input:focus-visible + span {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  @media (forced-colors: active) {
+    .diff__segment input:checked + span {
+      border-color: Highlight;
+      outline: 2px solid Highlight;
+    }
+  }
+
+  .diff__status {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    font-size: var(--text-step--1);
+  }
+
+  .diff__status[data-invalid] {
+    padding: 0.6rem 0.9rem;
+    border-radius: var(--radius-sm);
+    background: var(--warning-soft);
+  }
+
+  .diff__status :global(.diff__count) {
+    padding: 0.2rem 0.65rem;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .diff__status :global(.diff__count--added) {
+    background: color-mix(in oklch, var(--success) 16%, transparent);
+  }
+
+  .diff__status :global(.diff__count--removed) {
+    background: var(--warning-soft);
+  }
+
+  .diff__output {
+    /* Positioned, so the visually hidden labels inside are clipped by the scroll area too. */
+    position: relative;
+    overflow-x: auto;
+  }
+
+  .diff__output:empty {
+    display: none;
+  }
+
+  .diff__output :global(table) {
+    width: 100%;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-sm);
+    border-collapse: separate;
+    border-spacing: 0;
+    overflow: hidden;
+    font: 400 var(--text-step--1) / 1.55 var(--mono);
+    table-layout: fixed;
+  }
+
+  /* Too narrow to read side by side, so the table scrolls instead. */
+  .diff__output :global(.diff__table--split) {
+    min-width: 36rem;
+  }
+
+  .diff__output :global(thead th) {
+    padding: 0.5rem 0.75rem;
+    border-block-end: 1px solid var(--rule);
+    background: var(--paper-sunken);
+    color: var(--ink-muted);
+    font: 500 var(--text-step--2) / 1.3 var(--sans);
+    text-align: start;
+  }
+
+  .diff__output :global(thead th + th) {
+    border-inline-start: 1px solid var(--rule);
+  }
+
+  .diff__output :global(td) {
+    padding: 0.1rem 0.5rem;
+    vertical-align: top;
+  }
+
+  .diff__output :global(.diff__col-number) {
+    width: 3.25rem;
+  }
+
+  .diff__output :global(.diff__col-sign) {
+    width: 1.75rem;
+  }
+
+  .diff__output :global(.diff__number) {
+    color: var(--ink-faint);
+    text-align: end;
+    font-variant-numeric: tabular-nums;
+    user-select: none;
+  }
+
+  .diff__output :global(.diff__sign) {
+    padding-inline: 0.25rem;
+    font-weight: 700;
+    text-align: center;
+    user-select: none;
+  }
+
+  .diff__output :global(.diff__text) {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .diff__output :global(.diff__table--split td:nth-child(4)) {
+    border-inline-start: 1px solid var(--rule);
+  }
+
+  .diff__output :global([data-type="add"]),
+  .diff__output :global(tr[data-type="add"] td) {
+    background: color-mix(in oklch, var(--success) 16%, transparent);
+  }
+
+  .diff__output :global([data-type="remove"]),
+  .diff__output :global(tr[data-type="remove"] td) {
+    background: var(--warning-soft);
+  }
+
+  .diff__output :global(.diff__blank) {
+    background: repeating-linear-gradient(
+      -45deg,
+      transparent 0 6px,
+      color-mix(in oklch, var(--rule) 60%, transparent) 6px 7px
+    );
+  }
+
+  .diff__output :global(.diff__skip td) {
+    padding: 0.35rem 0.75rem;
+    border-block: 1px solid var(--rule);
+    background: var(--paper-sunken);
+    color: var(--ink-muted);
+    font: 400 var(--text-step--2) / 1.4 var(--sans);
+    text-align: center;
+  }
+
+  @media (width < 48rem) {
+    .diff__inputs {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .diff__output :global(.diff__col-number) {
+      width: 2.25rem;
+    }
+
+    .diff__output :global(.diff__col-sign) {
+      width: 1.25rem;
+    }
+
+    .diff__output :global(.diff__number) {
+      padding-inline: 0.25rem;
+    }
+  }
+</style>

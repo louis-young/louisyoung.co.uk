@@ -1,0 +1,313 @@
+---
+import PageHero from "../../components/sections/PageHero.astro";
+import { useTranslations } from "../../i18n";
+import { localeOf } from "../../i18n/astro";
+import Base from "../../layouts/Base.astro";
+import { toolPageProps } from "../../lib/tool-catalogue";
+
+const t = useTranslations(localeOf(Astro));
+const formats = [
+  { format: "seconds", label: t("tools.timestamp.seconds") },
+  { format: "milliseconds", label: t("tools.timestamp.milliseconds") },
+  { format: "iso", label: t("tools.timestamp.iso") },
+  { format: "rfc2822", label: t("tools.timestamp.rfc2822") },
+];
+const zones = [
+  { zone: "local", label: t("tools.timestamp.local") },
+  { zone: "UTC", label: t("tools.timestamp.utc") },
+  { zone: "Europe/London", label: t("tools.timestamp.london") },
+  { zone: "America/New_York", label: t("tools.timestamp.newYork") },
+  { zone: "Asia/Tokyo", label: t("tools.timestamp.tokyo") },
+];
+---
+
+<Base {...toolPageProps("timestamp", t)}>
+  <PageHero label={t("nav.tools")} title={t("tools.timestamp.title")} lede={t("tools.timestamp.summary")} />
+  <div
+    class="container-page stamp"
+    data-timestamp
+    data-read-as={t("tools.timestamp.readAs")}
+    data-assumed-utc={t("tools.timestamp.assumedUtc")}
+    data-seconds={t("tools.timestamp.seconds")}
+    data-milliseconds={t("tools.timestamp.milliseconds")}
+    data-iso={t("tools.timestamp.iso")}
+    data-rfc2822={t("tools.timestamp.rfc2822")}
+    data-unavailable={t("tools.timestamp.unavailable")}
+    data-error-empty={t("tools.timestamp.errorEmpty")}
+    data-error-invalid={t("tools.timestamp.errorInvalid")}
+    data-error-range={t("tools.timestamp.errorRange")}
+    data-error-weekday={t("tools.timestamp.errorWeekday")}
+    data-copied={t("tools.copied")}
+  >
+    <div class="stamp__input card">
+      <label class="stamp__label" for="stamp-input">
+        {t("tools.timestamp.input")}
+      </label>
+      <div class="stamp__row">
+        <input
+          id="stamp-input"
+          type="text"
+          class="stamp__control"
+          autocomplete="off"
+          autocapitalize="off"
+          spellcheck="false"
+          aria-describedby="stamp-hint stamp-status"
+          data-input
+        />
+        <button type="button" class="button" data-now>
+          {t("tools.timestamp.now")}
+        </button>
+      </div>
+      <p id="stamp-hint" class="stamp__hint">
+        {t("tools.timestamp.hint")}
+      </p>
+      <p id="stamp-status" class="stamp__status" role="status" data-status></p>
+    </div>
+
+    <div class="stamp__results" data-results>
+      <section class="stamp__card card" aria-labelledby="stamp-formats">
+        <h2 id="stamp-formats" class="label">
+          {t("tools.timestamp.formats")}
+        </h2>
+        <div class="stamp__table" aria-live="polite">
+          <table>
+            <tbody>
+              {formats.map((item) => (
+                <tr data-format={item.format}>
+                  <th scope="row">{item.label}</th>
+                  <td>
+                    <code data-value />
+                  </td>
+                  <td>
+                    <button type="button" class="button button--small" data-copy={item.format}>
+                      <span data-copy-label>{t("tools.copy")}</span>
+                      <span class="visually-hidden">{item.label}</span>
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p class="stamp__relative">
+          <span class="stamp__muted">{t("tools.timestamp.relative")}</span>
+          <output data-relative></output>
+        </p>
+      </section>
+      <section class="stamp__card card" aria-labelledby="stamp-zones">
+        <h2 id="stamp-zones" class="label">
+          {t("tools.timestamp.zones")}
+        </h2>
+        <div class="stamp__table">
+          <table>
+            <tbody>
+              {zones.map((item) => (
+                <tr data-zone={item.zone}>
+                  <th scope="row">
+                    {item.label}
+                    {item.zone === "local" && <span class="stamp__muted" data-local-zone />}
+                  </th>
+                  <td data-value />
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </div>
+</Base>
+
+<script>
+  import { initTimestamp } from "../../scripts/tool-timestamp";
+
+  initTimestamp();
+</script>
+
+<style>
+  .stamp {
+    display: grid;
+    gap: 1rem;
+    padding-block-end: var(--spacing-section);
+  }
+
+  .stamp .card {
+    display: grid;
+    gap: 0.75rem;
+    min-width: 0;
+    padding: clamp(1.25rem, 1rem + 1vw, 2rem);
+  }
+
+  .stamp__label {
+    font-weight: 500;
+    font-size: var(--text-step--1);
+  }
+
+  .stamp__row {
+    display: flex;
+    gap: 0.75rem;
+  }
+
+  .stamp__control {
+    flex: 1;
+    width: 100%;
+    min-width: 0;
+    min-height: 3rem;
+    padding: 0.5rem 0.9rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+    color: var(--ink);
+    font: 500 var(--text-step-0) / 1.4 var(--mono);
+  }
+
+  .stamp__control[aria-invalid="true"] {
+    border-color: var(--warning);
+  }
+
+  .stamp__control:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .stamp__hint,
+  .stamp__muted {
+    color: var(--ink-muted);
+    font-size: var(--text-step--1);
+  }
+
+  .stamp__muted {
+    font-weight: 400;
+  }
+
+  .stamp__status {
+    padding: 0.6rem 0.9rem;
+    border-radius: var(--radius-sm);
+    background: color-mix(in oklch, var(--success) 14%, transparent);
+    color: var(--ink);
+    font-size: var(--text-step--1);
+    overflow-wrap: anywhere;
+  }
+
+  .stamp__status[data-invalid] {
+    background: var(--warning-soft);
+  }
+
+  .stamp__results {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 1rem;
+    align-items: start;
+  }
+
+  .stamp__results[hidden] {
+    display: none;
+  }
+
+  .stamp__table {
+    overflow-x: auto;
+  }
+
+  .stamp__table table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--text-step--1);
+  }
+
+  .stamp__table th,
+  .stamp__table td {
+    padding: 0.6rem 0.75rem 0.6rem 0;
+    border-block-start: 1px solid var(--rule);
+    text-align: start;
+    vertical-align: middle;
+  }
+
+  .stamp__table tr:first-child th,
+  .stamp__table tr:first-child td {
+    border-block-start: 0;
+  }
+
+  .stamp__table th {
+    width: 1%;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .stamp__table th .stamp__muted {
+    display: block;
+    font-size: var(--text-step--2);
+  }
+
+  .stamp__table td {
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+  }
+
+  .stamp__table td:last-child:has(button) {
+    width: 1%;
+    padding-inline-end: 0;
+    text-align: end;
+    white-space: nowrap;
+  }
+
+  .stamp__table code {
+    font: 500 var(--text-step--1) / 1.4 var(--mono);
+    overflow-wrap: anywhere;
+  }
+
+  .stamp__relative {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+    padding-block-start: 0.75rem;
+    border-block-start: 1px solid var(--rule);
+  }
+
+  .stamp__relative output {
+    font-weight: 600;
+  }
+
+  @media (width < 56rem) {
+    .stamp__results {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  @media (width < 36rem) {
+    .stamp__table tr {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 0.3rem 0.75rem;
+      padding-block: 0.65rem;
+      border-block-start: 1px solid var(--rule);
+    }
+
+    .stamp__table tr:first-child {
+      border-block-start: 0;
+    }
+
+    .stamp__table th,
+    .stamp__table td,
+    .stamp__table td:last-child:has(button) {
+      width: auto;
+      padding: 0;
+      border: 0;
+    }
+
+    .stamp__table th {
+      grid-column: 1 / -1;
+      white-space: normal;
+    }
+
+    .stamp__table th .stamp__muted {
+      display: inline;
+      margin-inline-start: 0.35rem;
+    }
+
+    .stamp__table td:only-of-type {
+      grid-column: 1 / -1;
+    }
+  }
+</style>
