@@ -1,0 +1,395 @@
+---
+import PageHero from "../../components/sections/PageHero.astro";
+import { useTranslations } from "../../i18n";
+import type { MessageKey } from "../../i18n/en-GB";
+import { localeOf } from "../../i18n/astro";
+import Base from "../../layouts/Base.astro";
+import { httpStatuses, statusClass, statusClasses } from "../../lib/http-status-tool";
+import { toolPageProps } from "../../lib/tool-catalogue";
+
+const t = useTranslations(localeOf(Astro));
+const classText: Record<number, { name: MessageKey; about: MessageKey }> = {
+  1: { name: "tools.http.class1", about: "tools.http.about1" },
+  2: { name: "tools.http.class2", about: "tools.http.about2" },
+  3: { name: "tools.http.class3", about: "tools.http.about3" },
+  4: { name: "tools.http.class4", about: "tools.http.about4" },
+  5: { name: "tools.http.class5", about: "tools.http.about5" },
+};
+const groups = statusClasses.map((group) => ({
+  group,
+  name: t(classText[group]!.name),
+  about: t(classText[group]!.about),
+  statuses: httpStatuses
+    .filter((status) => statusClass(status.code) === group)
+    .map((status) => ({ ...status, meaning: t(status.meaning), use: t(status.use) })),
+}));
+const filters = [
+  { value: "all", label: t("tools.http.all") },
+  ...statusClasses.map((group) => ({ value: String(group), label: `${group}xx` })),
+];
+---
+
+<Base {...toolPageProps("http-status", t)}>
+  <PageHero label={t("nav.tools")} title={t("tools.http.title")} lede={t("tools.http.summary")} />
+  <div
+    class="container-page http"
+    data-http
+    data-count-none={t("tools.http.countNone")}
+    data-count-one={t("tools.http.countOne")}
+    data-count-other={t("tools.http.countOther")}
+  >
+    <div class="http__controls card" role="search">
+      <div class="http__field">
+        <label class="http__label" for="http-search">
+          {t("tools.http.search")}
+        </label>
+        <input
+          id="http-search"
+          type="search"
+          class="http__input"
+          autocomplete="off"
+          autocapitalize="off"
+          spellcheck="false"
+          aria-describedby="http-hint"
+          aria-controls="http-list"
+          data-search
+        />
+        <p id="http-hint" class="http__hint">
+          {t("tools.http.hint")}
+        </p>
+      </div>
+      <fieldset class="http__field">
+        <legend class="http__label">{t("tools.http.filter")}</legend>
+        <div class="http__segmented">
+          {filters.map((filter, i) => (
+            <label class="http__segment">
+              <input type="radio" name="http-class" value={filter.value} checked={i === 0} />
+              <span>{filter.label}</span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+      <p class="http__status" role="status" data-status>
+        {t("tools.http.countOther", { count: httpStatuses.length })}
+      </p>
+    </div>
+
+    <div id="http-list" class="http__groups">
+      {groups.map(({ group, name, about, statuses }) => (
+        <section class="http__group card" aria-labelledby={`http-class-${group}`} data-group={group}>
+          <header class="http__group-head">
+            <h2 id={`http-class-${group}`} class="http__group-title">
+              <span class="http__class" data-class={group}>
+                {group}xx
+              </span>
+              {name}
+            </h2>
+            <p class="http__about">{about}</p>
+          </header>
+          <ul class="http__list" role="list">
+            {statuses.map((status) => (
+              <li id={`status-${status.code}`} class="http__item" data-code={status.code}>
+                <h3 class="http__name">
+                  <span class="http__code" data-class={group}>
+                    {status.code}
+                  </span>
+                  <span>{status.name}</span>
+                  <a
+                    class="http__anchor"
+                    href={`#status-${status.code}`}
+                    aria-label={t("tools.http.link", { code: `${status.code} ${status.name}` })}
+                  >
+                    #
+                  </a>
+                </h3>
+                <p class="http__meaning">{status.meaning}</p>
+                <p class="http__use">
+                  <span class="http__when">{t("tools.http.when")}</span>
+                  {status.use}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+    </div>
+  </div>
+</Base>
+
+<script>
+  import { initHttpStatus } from "../../scripts/tool-http-status";
+
+  initHttpStatus();
+</script>
+
+<style>
+  .http {
+    display: grid;
+    gap: 1rem;
+    padding-block-end: var(--spacing-section);
+  }
+
+  .http .card {
+    min-width: 0;
+    padding: clamp(1.25rem, 1rem + 1vw, 2rem);
+  }
+
+  .http__controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    align-items: start;
+    gap: 1.25rem 1.5rem;
+  }
+
+  .http__field {
+    display: grid;
+    gap: 0.6rem;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .http__label {
+    padding: 0;
+    font-weight: 500;
+    font-size: var(--text-step--1);
+  }
+
+  .http__input {
+    width: 100%;
+    min-width: 0;
+    min-height: 3rem;
+    padding: 0.5rem 0.9rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+    color: var(--ink);
+    font: 500 var(--text-step-0) / 1.4 var(--sans);
+  }
+
+  .http__hint {
+    color: var(--ink-muted);
+    font-size: var(--text-step--1);
+  }
+
+  .http__segmented {
+    display: flex;
+    flex-wrap: wrap;
+    justify-self: start;
+    gap: 0.25rem;
+    max-width: 100%;
+    padding: 0.25rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-md);
+    background: var(--paper-sunken);
+  }
+
+  .http__segment {
+    position: relative;
+    display: grid;
+  }
+
+  .http__segment input {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .http__segment span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.25rem;
+    padding-inline: 0.75rem;
+    border: 1px solid transparent;
+    border-radius: calc(var(--radius-md) - 0.25rem);
+    color: var(--ink-muted);
+    font: 500 var(--text-step--1) / 1 var(--mono);
+    pointer-events: none;
+  }
+
+  .http__segment input:checked + span {
+    border-color: var(--rule-strong);
+    background: var(--paper-raised);
+    color: var(--ink);
+    box-shadow: 0 1px 2px oklch(0% 0 0 / 0.08);
+  }
+
+  .http__input:focus-visible,
+  .http__segment input:focus-visible + span {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  @media (forced-colors: active) {
+    .http__segment input:checked + span {
+      border-color: Highlight;
+      outline: 2px solid Highlight;
+    }
+  }
+
+  .http__status {
+    grid-column: 1 / -1;
+    color: var(--ink-muted);
+    font-size: var(--text-step--1);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .http__groups {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .http__group {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .http__group[hidden] {
+    display: none;
+  }
+
+  .http__group-head {
+    display: grid;
+    gap: 0.35rem;
+  }
+
+  .http__group-title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+    font-weight: 600;
+    font-size: var(--text-step-1);
+    letter-spacing: -0.02em;
+  }
+
+  .http__about {
+    color: var(--ink-muted);
+    font-size: var(--text-step--1);
+  }
+
+  .http__class,
+  .http__code {
+    --dot: var(--ink-faint);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .http__class::before,
+  .http__code::before {
+    content: "";
+    flex: none;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: var(--dot);
+  }
+
+  .http__class {
+    padding: 0.2rem 0.55rem;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    background: var(--paper-sunken);
+    font-size: var(--text-step--1);
+    font-weight: 500;
+  }
+
+  [data-class="2"] {
+    --dot: var(--success);
+  }
+
+  [data-class="3"] {
+    --dot: var(--accent);
+  }
+
+  [data-class="4"] {
+    --dot: var(--warning);
+  }
+
+  [data-class="5"] {
+    --dot: var(--danger);
+  }
+
+  .http__list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr));
+    gap: 0;
+    border-block-start: 1px solid var(--rule);
+  }
+
+  .http__item {
+    display: grid;
+    align-content: start;
+    gap: 0.4rem;
+    min-width: 0;
+    padding: 1rem 1rem 1rem 0;
+    border-block-end: 1px solid var(--rule);
+    scroll-margin-block-start: 6rem;
+  }
+
+  .http__item[hidden] {
+    display: none;
+  }
+
+  .http__item:target {
+    padding-inline-start: 0.85rem;
+    box-shadow: inset 3px 0 0 var(--accent);
+  }
+
+  .http__name {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25rem 0.75rem;
+    font-weight: 600;
+    font-size: var(--text-step-0);
+  }
+
+  .http__code {
+    font-weight: 600;
+  }
+
+  .http__anchor {
+    margin-inline-start: auto;
+    padding-inline: 0.35rem;
+    border-radius: var(--radius-sm);
+    color: var(--ink-faint);
+    font: 500 var(--text-step--1) / 1.4 var(--mono);
+    text-decoration: none;
+  }
+
+  .http__anchor:hover,
+  .http__anchor:focus-visible {
+    color: var(--accent);
+  }
+
+  .http__meaning {
+    font-size: var(--text-step--1);
+  }
+
+  .http__use {
+    color: var(--ink-muted);
+    font-size: var(--text-step--1);
+  }
+
+  .http__when {
+    display: block;
+    margin-block-end: 0.15rem;
+    color: var(--ink-faint);
+    font: 500 var(--text-step--2) / 1.4 var(--mono);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  @media (width < 48rem) {
+    .http__controls {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

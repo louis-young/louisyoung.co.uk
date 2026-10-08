@@ -26,6 +26,8 @@ const pairs: [string, string, number][] = [
   ["accent", "paper", 4.5],
   ["accent", "paper-sunken", 4.5],
   ["accent", "accent-soft", 4.5],
+  // Tool result panels and the chmod calculator's ticked permissions set ink on the soft accent.
+  ["ink", "accent-soft", 7],
   ["on-accent", "signal", 4.5],
   ["signal-text", "paper", 4.5],
   ["signal-text", "paper-sunken", 4.5],

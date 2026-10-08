@@ -183,4 +183,78 @@ test.describe("tools", () => {
     await expect(uuids).toHaveCount(3);
     await expect(uuids.first()).toHaveText(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u);
   });
+
+  test("the HTTP status reference filters codes as you search", async ({ page }) => {
+    await page.goto("/tools/http-status/");
+    const status = page.locator("[data-status]");
+    await expect(status).toHaveText("Showing 62 codes");
+    await page.getByLabel("Search codes").fill("40");
+    await expect(status).toHaveText("Showing 10 codes");
+    await expect(page.locator('[data-group="2"]')).toBeHidden();
+    await page.getByLabel("Search codes").fill("teapot");
+    await expect(page.locator("[data-code]:visible")).toHaveText([/418/u]);
+    await page.getByLabel("Search codes").fill("");
+    await page.getByRole("radio", { name: "5xx" }).check();
+    await expect(status).toHaveText("Showing 11 codes");
+    await page.getByRole("link", { name: "Link to 503 Service Unavailable" }).click();
+    await expect(page).toHaveURL(/#status-503$/u);
+  });
+
+  test("the semver checker explains a range and marks each version", async ({ page }) => {
+    await page.goto("/tools/semver/");
+    await page.getByLabel("Range").fill("~1.2 || ^2.1.0");
+    await page.getByLabel("Versions, one per line").fill("1.2.9\n1.3.0\n2.4.1\n2.5.0-beta\nnope");
+    await expect(page.locator("#semver-status")).toHaveText(
+      "Matches at least 1.2.0 and below 1.3.0, or at least 2.1.0 and below 3.0.0.",
+    );
+    await expect(page.locator("[data-expanded]")).toHaveText(">=1.2.0 <1.3.0 || >=2.1.0 <3.0.0");
+    await expect(page.locator("[data-highest]")).toHaveText("2.4.1");
+    await expect(page.locator("[data-count-status]")).toHaveText("2 of 5 match");
+    await expect(page.locator('[data-results] [data-result="prerelease"] code')).toHaveText("2.5.0-beta");
+    await page.getByLabel("Range").fill("^1 || banana");
+    await expect(page.getByLabel("Range")).toHaveAttribute("aria-invalid", "true");
+  });
+
+  test("the chmod calculator keeps the boxes, octal and symbolic forms in step", async ({ page }) => {
+    await page.goto("/tools/chmod/");
+    await expect(page.locator("[data-command]")).toHaveText("chmod 755 deploy.sh");
+    await page
+      .getByRole("group", { name: /Others/u })
+      .getByLabel("Execute")
+      .uncheck();
+    await expect(page.getByLabel("Octal")).toHaveValue("754");
+    await expect(page.getByLabel("Symbolic")).toHaveValue("rwxr-xr--");
+    await page.getByLabel("Octal").fill("4711");
+    await expect(page.getByLabel("Symbolic")).toHaveValue("rws--x--x");
+    await expect(page.getByLabel("Setuid")).toBeChecked();
+    await page.getByLabel("Symbolic").fill("rw-r--r--");
+    await expect(page.getByLabel("Octal")).toHaveValue("644");
+    await page.getByLabel("File or directory").fill("notes.txt");
+    await expect(page.locator("[data-command]")).toHaveText("chmod 644 notes.txt");
+    await expect(page.locator("[data-status]")).toHaveText(
+      "Owner can read and write. Group can read. Others can read.",
+    );
+  });
+
+  test("the shadow and gradient generator writes CSS for its layers and stops", async ({ page }) => {
+    await page.goto("/tools/css-generator/");
+    const output = page.locator("[data-output]");
+    await expect(output).toContainText("linear-gradient(135deg, #7c6cf0 0%, #22d3ee 100%)");
+    await page.getByRole("button", { name: "Add layer" }).click();
+    const layer = page.getByRole("group", { name: "Layer 3" });
+    await expect(layer.getByRole("slider", { name: "X offset (px)" })).toBeFocused();
+    const y = layer.getByRole("spinbutton", { name: "Y offset (px)" });
+    await y.fill("20");
+    await y.press("Tab");
+    await expect(layer.getByRole("slider", { name: "Y offset (px)" })).toHaveValue("20");
+    await expect(output).toContainText("0 20px 12px 0 rgb(0 0 0 / 0.2)");
+    await page
+      .getByRole("group", { name: "Layer 1" })
+      .getByRole("button", { name: /Remove/u })
+      .click();
+    await expect(page.locator("[data-layers] fieldset")).toHaveCount(2);
+    await page.getByRole("radio", { name: "Radial" }).check();
+    await expect(output).toContainText("radial-gradient(circle, #7c6cf0 0%, #22d3ee 100%)");
+    await expect(page.getByRole("slider", { name: "Angle (degrees)" })).toBeHidden();
+  });
 });

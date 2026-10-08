@@ -1,0 +1,498 @@
+---
+import PageHero from "../../components/sections/PageHero.astro";
+import { useTranslations } from "../../i18n";
+import { localeOf } from "../../i18n/astro";
+import Base from "../../layouts/Base.astro";
+import { cssRule, defaultGradient, defaultLayers, gradientCss, limits, shadowCss } from "../../lib/css-generator-tool";
+import { toolPageProps } from "../../lib/tool-catalogue";
+
+const t = useTranslations(localeOf(Astro));
+const layers = defaultLayers();
+const gradient = defaultGradient();
+const sliders = [
+  { prop: "x", label: t("tools.css.x") },
+  { prop: "y", label: t("tools.css.y") },
+  { prop: "blur", label: t("tools.css.blur") },
+  { prop: "spread", label: t("tools.css.spread") },
+  { prop: "opacity", label: t("tools.css.opacity") },
+] as const;
+const types = [
+  { value: "linear", label: t("tools.css.linear") },
+  { value: "radial", label: t("tools.css.radial") },
+];
+---
+
+<Base {...toolPageProps("css-generator", t)}>
+  <PageHero label={t("nav.tools")} title={t("tools.css.title")} lede={t("tools.css.summary")} />
+  <div
+    class="container-page css-gen"
+    data-css-gen
+    data-layer={t("tools.css.layer")}
+    data-stop={t("tools.css.stop")}
+    data-added={t("tools.css.added")}
+    data-removed={t("tools.css.removed")}
+    data-copied={t("tools.copied")}
+  >
+    <div class="css-gen__controls">
+      <section class="css-gen__card card" aria-labelledby="css-gen-shadow">
+        <h2 id="css-gen-shadow" class="label">
+          {t("tools.css.shadow")}
+        </h2>
+        <div class="css-gen__stack" data-layers></div>
+        <p class="css-gen__empty" data-no-layers hidden>
+          {t("tools.css.noLayers")}
+        </p>
+        <button type="button" class="button button--small css-gen__add" data-add-layer>
+          <span aria-hidden="true">+</span>
+          {t("tools.css.addLayer")}
+        </button>
+      </section>
+
+      <section class="css-gen__card card" aria-labelledby="css-gen-gradient">
+        <h2 id="css-gen-gradient" class="label">
+          {t("tools.css.gradient")}
+        </h2>
+        <fieldset class="css-gen__group">
+          <legend class="css-gen__label">{t("tools.css.type")}</legend>
+          <div class="css-gen__segmented">
+            {types.map((type) => (
+              <label class="css-gen__segment">
+                <input type="radio" name="css-gen-type" value={type.value} checked={type.value === gradient.type} />
+                <span>{type.label}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+        <div class="css-gen__slider" data-angle-field>
+          <label>
+            <span class="css-gen__label">{t("tools.css.angle")}</span>
+            <input
+              type="range"
+              min={limits.angle.min}
+              max={limits.angle.max}
+              step="1"
+              value={gradient.angle}
+              data-angle
+            />
+          </label>
+          <input
+            type="number"
+            class="css-gen__number"
+            min={limits.angle.min}
+            max={limits.angle.max}
+            step="1"
+            value={gradient.angle}
+            aria-label={t("tools.css.angle")}
+            data-angle
+          />
+        </div>
+        <div class="css-gen__stack" data-stops></div>
+        <button type="button" class="button button--small css-gen__add" data-add-stop>
+          <span aria-hidden="true">+</span>
+          {t("tools.css.addStop")}
+        </button>
+      </section>
+    </div>
+
+    <div class="css-gen__output">
+      <section class="css-gen__card card" aria-labelledby="css-gen-preview">
+        <h2 id="css-gen-preview" class="label">
+          {t("tools.css.preview")}
+        </h2>
+        <div class="css-gen__surface">
+          <div
+            class="css-gen__box"
+            data-preview
+            style={`background: ${gradientCss(gradient)}; box-shadow: ${shadowCss(layers)}`}
+          ></div>
+        </div>
+      </section>
+      <section class="css-gen__card card" aria-labelledby="css-gen-css">
+        <div class="css-gen__heading">
+          <h2 id="css-gen-css" class="label">
+            {t("tools.css.css")}
+          </h2>
+          <button type="button" class="button button--small" data-copy>
+            <span data-copy-label>{t("tools.copy")}</span>
+            <span class="visually-hidden">{t("tools.css.css")}</span>
+          </button>
+        </div>
+        <pre class="css-gen__code"><code data-output>{cssRule(layers, gradient)}</code></pre>
+      </section>
+    </div>
+    <p class="visually-hidden" role="status" data-announce></p>
+
+    <template data-layer-template>
+      <fieldset class="css-gen__item" data-layer>
+        <legend class="css-gen__legend" data-name></legend>
+        <div class="css-gen__sliders">
+          {sliders.map(({ prop, label }) => (
+            <div class="css-gen__slider" data-pair>
+              <label>
+                <span class="css-gen__label">{label}</span>
+                <input type="range" min={limits[prop].min} max={limits[prop].max} step="1" data-prop={prop} />
+              </label>
+              <input
+                type="number"
+                class="css-gen__number"
+                min={limits[prop].min}
+                max={limits[prop].max}
+                step="1"
+                aria-label={label}
+                data-prop={prop}
+              />
+            </div>
+          ))}
+        </div>
+        <div class="css-gen__row">
+          <label class="css-gen__colour">
+            <input type="color" data-prop="colour" />
+            <span>{t("tools.css.colour")}</span>
+          </label>
+          <label class="css-gen__check">
+            <input type="checkbox" data-prop="inset" />
+            <span>{t("tools.css.inset")}</span>
+          </label>
+          <button type="button" class="button button--small css-gen__remove" data-remove>
+            {t("tools.css.remove")}
+            <span class="visually-hidden" data-name></span>
+          </button>
+        </div>
+      </fieldset>
+    </template>
+
+    <template data-stop-template>
+      <fieldset class="css-gen__item css-gen__item--stop" data-stop>
+        <legend class="css-gen__legend" data-name></legend>
+        <label class="css-gen__colour">
+          <input type="color" data-prop="colour" />
+          <span>{t("tools.css.colour")}</span>
+        </label>
+        <div class="css-gen__slider" data-pair>
+          <label>
+            <span class="css-gen__label">{t("tools.css.position")}</span>
+            <input type="range" min={limits.position.min} max={limits.position.max} step="1" data-prop="position" />
+          </label>
+          <input
+            type="number"
+            class="css-gen__number"
+            min={limits.position.min}
+            max={limits.position.max}
+            step="1"
+            aria-label={t("tools.css.position")}
+            data-prop="position"
+          />
+        </div>
+        <button type="button" class="button button--small css-gen__remove" data-remove>
+          {t("tools.css.remove")}
+          <span class="visually-hidden" data-name></span>
+        </button>
+      </fieldset>
+    </template>
+  </div>
+</Base>
+
+<script>
+  import { initCssGenerator } from "../../scripts/tool-css-generator";
+
+  initCssGenerator();
+</script>
+
+<style>
+  .css-gen {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    gap: 1rem;
+    align-items: start;
+    padding-block-end: var(--spacing-section);
+  }
+
+  .css-gen__controls,
+  .css-gen__output {
+    display: grid;
+    gap: 1rem;
+    min-width: 0;
+  }
+
+  .css-gen__output {
+    position: sticky;
+    top: 5rem;
+  }
+
+  .css-gen__card {
+    display: grid;
+    gap: 1.25rem;
+    min-width: 0;
+    padding: clamp(1.25rem, 1rem + 1vw, 2rem);
+  }
+
+  .css-gen__stack {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .css-gen__stack:empty {
+    display: none;
+  }
+
+  .css-gen__item,
+  .css-gen__group {
+    display: grid;
+    gap: 1rem;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .css-gen__item {
+    padding: 1rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-md);
+    background: var(--paper-sunken);
+  }
+
+  .css-gen__item--stop {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: end;
+  }
+
+  /* Floating the legend lays it out inside the fieldset as a grid item, not across its border. */
+  .css-gen__legend {
+    float: left;
+    width: 100%;
+    padding: 0;
+    font-weight: 600;
+    font-size: var(--text-step--1);
+  }
+
+  .css-gen__item--stop .css-gen__legend {
+    grid-column: 1 / -1;
+  }
+
+  .css-gen__label {
+    font-weight: 500;
+    font-size: var(--text-step--1);
+  }
+
+  .css-gen__group legend {
+    margin-block-end: 0.6rem;
+    padding: 0;
+  }
+
+  .css-gen__sliders {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+    gap: 0.9rem 1.25rem;
+  }
+
+  .css-gen__slider {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 4.75rem;
+    align-items: center;
+    gap: 0.35rem 0.75rem;
+    min-width: 0;
+  }
+
+  .css-gen__slider[hidden] {
+    display: none;
+  }
+
+  .css-gen__slider label {
+    display: contents;
+  }
+
+  .css-gen__slider .css-gen__label {
+    grid-column: 1 / -1;
+  }
+
+  .css-gen__slider input[type="range"] {
+    width: 100%;
+    min-width: 0;
+    height: 2.75rem;
+    margin: 0;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+
+  .css-gen__number {
+    width: 100%;
+    min-width: 0;
+    min-height: 2.5rem;
+    padding: 0.35rem 0.5rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper-raised);
+    color: var(--ink);
+    font: 500 var(--text-step--1) / 1 var(--mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .css-gen__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1.25rem;
+  }
+
+  .css-gen__colour,
+  .css-gen__check {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-height: 2.75rem;
+    font-weight: 500;
+    font-size: var(--text-step--1);
+    cursor: pointer;
+  }
+
+  .css-gen__colour input {
+    width: 2.75rem;
+    height: 2.25rem;
+    padding: 0.15rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper-raised);
+    cursor: pointer;
+  }
+
+  .css-gen__check input {
+    width: 1.1rem;
+    height: 1.1rem;
+    margin: 0;
+    accent-color: var(--accent);
+  }
+
+  .css-gen__remove {
+    margin-inline-start: auto;
+  }
+
+  .css-gen__add {
+    justify-self: start;
+  }
+
+  .css-gen__empty {
+    color: var(--ink-muted);
+    font-size: var(--text-step--1);
+  }
+
+  .css-gen__segmented {
+    display: flex;
+    flex-wrap: wrap;
+    justify-self: start;
+    gap: 0.25rem;
+    max-width: 100%;
+    padding: 0.25rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-md);
+    background: var(--paper-sunken);
+  }
+
+  .css-gen__segment {
+    position: relative;
+    display: grid;
+  }
+
+  .css-gen__segment input {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .css-gen__segment span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.25rem;
+    padding-inline: 0.9rem;
+    border: 1px solid transparent;
+    border-radius: calc(var(--radius-md) - 0.25rem);
+    color: var(--ink-muted);
+    font-size: var(--text-step--1);
+    font-weight: 500;
+    pointer-events: none;
+  }
+
+  .css-gen__segment input:checked + span {
+    border-color: var(--rule-strong);
+    background: var(--paper-raised);
+    color: var(--ink);
+    box-shadow: 0 1px 2px oklch(0% 0 0 / 0.08);
+  }
+
+  .css-gen__slider input:focus-visible,
+  .css-gen__number:focus-visible,
+  .css-gen__colour input:focus-visible,
+  .css-gen__check input:focus-visible,
+  .css-gen__segment input:focus-visible + span {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  @media (forced-colors: active) {
+    .css-gen__segment input:checked + span {
+      border-color: Highlight;
+      outline: 2px solid Highlight;
+    }
+  }
+
+  .css-gen__surface {
+    display: grid;
+    place-items: center;
+    min-height: 18rem;
+    padding: 3rem 1.5rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-md);
+    background-color: var(--paper);
+    background-image: radial-gradient(color-mix(in oklch, var(--ink) 12%, transparent) 1px, transparent 1px);
+    background-size: 1.25rem 1.25rem;
+    overflow: hidden;
+  }
+
+  .css-gen__box {
+    width: min(100%, 14rem);
+    aspect-ratio: 4 / 3;
+    border-radius: var(--radius-lg);
+  }
+
+  .css-gen__heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .css-gen__code {
+    margin: 0;
+    padding: 1rem 1.1rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+    font: 400 var(--text-step--1) / 1.6 var(--mono);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  @media (width < 60rem) {
+    .css-gen {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .css-gen__output {
+      position: static;
+    }
+  }
+
+  @media (width < 30rem) {
+    .css-gen__item--stop {
+      grid-template-columns: minmax(0, 1fr);
+      align-items: start;
+    }
+
+    .css-gen__remove {
+      justify-self: start;
+      margin-inline-start: 0;
+    }
+  }
+</style>

@@ -1,0 +1,342 @@
+---
+import PageHero from "../../components/sections/PageHero.astro";
+import { useTranslations } from "../../i18n";
+import { localeOf } from "../../i18n/astro";
+import Base from "../../layouts/Base.astro";
+import { toolPageProps } from "../../lib/tool-catalogue";
+
+const t = useTranslations(localeOf(Astro));
+const examples = ["^1.2.3", "~1.2", "1.x || >=2.5.0", "1.2.3 - 2.3", ">=1.0.0-beta <1.0.0", "^0.0.3"];
+const versions = ["1.2.2", "1.2.3", "1.4.0", "1.9.9-rc.1", "2.0.0", "v1.10.1", "latest"].join("\n");
+---
+
+<Base {...toolPageProps("semver", t)}>
+  <PageHero label={t("nav.tools")} title={t("tools.semver.title")} lede={t("tools.semver.summary")} />
+  <div
+    class="container-page semver"
+    data-semver
+    data-describe={t("tools.semver.describe")}
+    data-at-least={t("tools.semver.atLeast")}
+    data-above={t("tools.semver.above")}
+    data-at-most={t("tools.semver.atMost")}
+    data-below={t("tools.semver.below")}
+    data-exactly={t("tools.semver.exactly")}
+    data-any={t("tools.semver.any")}
+    data-none={t("tools.semver.none")}
+    data-or={t("tools.semver.or")}
+    data-count={t("tools.semver.count")}
+    data-no-versions={t("tools.semver.noVersions")}
+    data-no-match={t("tools.semver.noMatch")}
+    data-match={t("tools.semver.match")}
+    data-miss={t("tools.semver.miss")}
+    data-prerelease={t("tools.semver.prerelease")}
+    data-invalid={t("tools.semver.invalid")}
+    data-error-empty={t("tools.semver.errorEmpty")}
+    data-error-syntax={t("tools.semver.errorSyntax")}
+  >
+    <div class="semver__inputs card">
+      <div class="semver__field">
+        <label class="semver__label" for="semver-range">
+          {t("tools.semver.range")}
+        </label>
+        <input
+          id="semver-range"
+          type="text"
+          class="semver__input"
+          value={examples[0]}
+          autocomplete="off"
+          autocapitalize="off"
+          spellcheck="false"
+          aria-describedby="semver-range-hint semver-status"
+          data-range
+        />
+        <p id="semver-range-hint" class="semver__hint">
+          {t("tools.semver.rangeHint")}
+        </p>
+      </div>
+      <div class="semver__field">
+        <p id="semver-examples" class="semver__label">
+          {t("tools.semver.examples")}
+        </p>
+        <ul class="semver__examples" role="list" aria-labelledby="semver-examples">
+          {examples.map((example) => (
+            <li>
+              <button type="button" class="semver__example" data-example={example}>
+                {example}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div class="semver__field">
+        <label class="semver__label" for="semver-versions">
+          {t("tools.semver.versions")}
+        </label>
+        <textarea
+          id="semver-versions"
+          class="semver__area"
+          rows="8"
+          autocomplete="off"
+          autocapitalize="off"
+          spellcheck="false"
+          aria-describedby="semver-versions-hint"
+          data-versions
+        >{versions}</textarea>
+        <p id="semver-versions-hint" class="semver__hint">
+          {t("tools.semver.versionsHint")}
+        </p>
+      </div>
+    </div>
+
+    <div class="semver__result card">
+      <section class="semver__section" aria-labelledby="semver-meaning">
+        <h2 id="semver-meaning" class="label">
+          {t("tools.semver.meaning")}
+        </h2>
+        <p id="semver-status" class="semver__status" role="status" data-status></p>
+      </section>
+      <div class="semver__facts" data-facts>
+        <section class="semver__section" aria-labelledby="semver-expanded">
+          <h2 id="semver-expanded" class="label">
+            {t("tools.semver.expanded")}
+          </h2>
+          <code class="semver__code" data-expanded></code>
+        </section>
+        <section class="semver__section" aria-labelledby="semver-highest">
+          <h2 id="semver-highest" class="label">
+            {t("tools.semver.highest")}
+          </h2>
+          <p class="semver__highest" data-highest></p>
+        </section>
+      </div>
+      <section class="semver__section" aria-labelledby="semver-results" data-results-section>
+        <div class="semver__heading">
+          <h2 id="semver-results" class="label">
+            {t("tools.semver.results")}
+          </h2>
+          <p class="semver__count" role="status" data-count-status></p>
+        </div>
+        <ul class="semver__list" role="list" data-results></ul>
+      </section>
+    </div>
+  </div>
+</Base>
+
+<script>
+  import { initSemver } from "../../scripts/tool-semver";
+
+  initSemver();
+</script>
+
+<style>
+  .semver {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+    gap: 1rem;
+    align-items: start;
+    padding-block-end: var(--spacing-section);
+  }
+
+  .semver > .card {
+    display: grid;
+    gap: 1.5rem;
+    min-width: 0;
+    padding: clamp(1.25rem, 1rem + 1vw, 2rem);
+  }
+
+  .semver__field,
+  .semver__section {
+    display: grid;
+    align-content: start;
+    gap: 0.6rem;
+    min-width: 0;
+  }
+
+  .semver__label {
+    font-weight: 500;
+    font-size: var(--text-step--1);
+  }
+
+  .semver__input,
+  .semver__area {
+    width: 100%;
+    min-width: 0;
+    padding: 0.5rem 0.9rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+    color: var(--ink);
+  }
+
+  .semver__input {
+    min-height: 3rem;
+    font: 500 var(--text-step-0) / 1.4 var(--mono);
+  }
+
+  .semver__area {
+    min-height: 10rem;
+    padding-block: 0.75rem;
+    font: 400 var(--text-step--1) / 1.6 var(--mono);
+    resize: vertical;
+  }
+
+  .semver__input[aria-invalid="true"] {
+    border-color: var(--warning);
+  }
+
+  .semver__hint {
+    color: var(--ink-muted);
+    font-size: var(--text-step--1);
+  }
+
+  .semver__examples {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .semver__example {
+    min-height: 2.25rem;
+    padding: 0.35rem 0.7rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+    color: var(--ink);
+    font: 500 var(--text-step--1) / 1.3 var(--mono);
+    cursor: pointer;
+  }
+
+  .semver__example:hover {
+    border-color: var(--accent);
+  }
+
+  .semver__input:focus-visible,
+  .semver__area:focus-visible,
+  .semver__example:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .semver__status {
+    padding: 0.9rem 1.1rem;
+    border-radius: var(--radius-sm);
+    background: var(--accent-soft);
+    color: var(--ink);
+    font-weight: 500;
+    font-size: var(--text-step-1);
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+    overflow-wrap: anywhere;
+  }
+
+  .semver__status[data-invalid] {
+    background: var(--warning-soft);
+    font-weight: 400;
+    font-size: var(--text-step--1);
+  }
+
+  .semver__facts {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    gap: 1rem 1.5rem;
+  }
+
+  .semver__facts[hidden] {
+    display: none;
+  }
+
+  .semver__code,
+  .semver__highest {
+    padding: 0.55rem 0.8rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+    font: 500 var(--text-step--1) / 1.5 var(--mono);
+    overflow-wrap: anywhere;
+  }
+
+  .semver__heading {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.5rem 1rem;
+  }
+
+  .semver__count {
+    color: var(--ink-muted);
+    font-size: var(--text-step--1);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .semver__list {
+    display: grid;
+  }
+
+  .semver__list :global(li) {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.4rem 1rem;
+    min-width: 0;
+    padding-block: 0.6rem;
+    border-block-start: 1px solid var(--rule);
+  }
+
+  .semver__list :global(code) {
+    min-width: 0;
+    font: 500 var(--text-step--1) / 1.4 var(--mono);
+    overflow-wrap: anywhere;
+  }
+
+  .semver__list :global(.semver__badge) {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    color: var(--ink-muted);
+    font-size: var(--text-step--1);
+  }
+
+  .semver__list :global(.semver__badge)::before {
+    content: "";
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: var(--rule-strong);
+  }
+
+  .semver__list :global([data-result="match"] .semver__badge) {
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  .semver__list :global([data-result="match"] .semver__badge)::before {
+    background: var(--success);
+  }
+
+  .semver__list :global([data-result="prerelease"] .semver__badge)::before {
+    background: var(--warning);
+  }
+
+  .semver__list :global([data-result="invalid"] .semver__badge)::before {
+    background: var(--danger);
+  }
+
+  .semver__list :global([data-result="miss"] code),
+  .semver__list :global([data-result="invalid"] code) {
+    color: var(--ink-muted);
+  }
+
+  @media (width < 56rem) {
+    .semver {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  @media (width < 30rem) {
+    .semver__facts {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>
