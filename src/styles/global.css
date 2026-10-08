@@ -353,6 +353,7 @@
   /* Surfaces: hairline border, raised fill, soft inner highlight. */
   .card {
     position: relative;
+    isolation: isolate;
     border: 1px solid var(--rule);
     border-radius: var(--radius-lg);
     background: color-mix(in oklch, var(--paper-raised) 85%, transparent);
@@ -361,6 +362,27 @@
       border-color var(--duration-base) ease,
       translate var(--duration-base) var(--ease-out-expo),
       background-color var(--duration-base) ease;
+  }
+
+  /* The pointer spotlight (src/scripts/spotlight.ts sets --spot-x/--spot-y). Purely decorative. */
+  .card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: radial-gradient(
+      28rem circle at var(--spot-x, 50%) var(--spot-y, -20%),
+      color-mix(in oklch, var(--accent) 14%, transparent),
+      transparent 60%
+    );
+    opacity: 0;
+    transition: opacity var(--duration-slow) ease;
+    pointer-events: none;
+  }
+
+  .card:hover::before {
+    opacity: 1;
   }
 
   .card--interactive:hover {
@@ -578,7 +600,8 @@
     border: 1px solid CanvasText;
   }
 
-  .backdrop {
+  .backdrop,
+  .card::before {
     display: none;
   }
 
