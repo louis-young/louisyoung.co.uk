@@ -34,6 +34,7 @@ export const pages = [
   "/tools/units/",
   "/tools/easing/",
   "/stats/",
+  "/changelog/",
   "/colophon/",
   ...articleSlugs.map((slug) => `/${slug}/`),
 ];

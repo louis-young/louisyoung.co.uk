@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { formatDate, formatMessage, isoDate, useTranslations } from "../../src/i18n";
+import { formatDate, formatDay, formatMessage, formatMonth, isoDate, useTranslations } from "../../src/i18n";
 import { enGB } from "../../src/i18n/en-GB";
 import { pseudoLocalise, pseudoMessages } from "../../src/i18n/pseudo";
 
@@ -81,6 +81,11 @@ describe("dates", () => {
 
   it("uses British formatting for the pseudo-locale", () => {
     expect(formatDate(date, "en-XA")).toBe("15 February 2021");
+  });
+
+  it("formats months and short days for grouped lists", () => {
+    expect(formatMonth(new Date("2026-10-31T23:30:00Z"))).toBe("October 2026");
+    expect(formatDay(new Date("2026-10-08T23:30:00Z"), "en-XA")).toBe("8 Oct");
   });
 
   it("produces ISO calendar dates for datetime attributes", () => {

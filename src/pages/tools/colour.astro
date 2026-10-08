@@ -3,6 +3,7 @@ import PageHero from "../../components/sections/PageHero.astro";
 import { useTranslations } from "../../i18n";
 import { localeOf } from "../../i18n/astro";
 import Base from "../../layouts/Base.astro";
+import { toolPageProps } from "../../lib/tool-catalogue";
 import { formats, parseAnyColour, ratioText, scaleCss, tonalScale } from "../../lib/colour-convert";
 
 const t = useTranslations(localeOf(Astro));
@@ -19,7 +20,7 @@ const rows = [
 ] as const;
 ---
 
-<Base title={t("tools.colour.title")} description={t("tools.colour.summary")} image="/og/tools.png">
+<Base {...toolPageProps("colour", t)}>
   <PageHero label={t("nav.tools")} title={t("tools.colour.title")} lede={t("tools.colour.summary")} />
   <div class="container-page colour" data-colour data-copied={t("tools.copied")}>
     <div class="colour__input card">

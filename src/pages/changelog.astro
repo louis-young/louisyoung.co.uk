@@ -1,0 +1,252 @@
+---
+import Icon from "../components/Icon.astro";
+import PageHero from "../components/sections/PageHero.astro";
+import { formatDay, formatMonth, isoDate, useTranslations } from "../i18n";
+import { localeOf } from "../i18n/astro";
+import Base from "../layouts/Base.astro";
+import { changeUrl, commitsUrl, getHistory, groupByMonth, type ChangeKind } from "../lib/changelog";
+import { breadcrumbSchema } from "../lib/seo";
+import { site } from "../site.config";
+
+const locale = localeOf(Astro);
+const t = useTranslations(locale);
+const history = getHistory();
+const months = groupByMonth(history.changes);
+const labels: Record<ChangeKind, string> = {
+  feature: t("changelog.feature"),
+  fix: t("changelog.fix"),
+  performance: t("changelog.performance"),
+  accessibility: t("changelog.accessibility"),
+};
+---
+
+<Base
+  title={t("changelog.title")}
+  description={t("changelog.description")}
+  image="/og/changelog.png"
+  schema={breadcrumbSchema([{ name: t("changelog.title"), path: "/changelog/" }])}
+>
+  <link
+    slot="head"
+    rel="alternate"
+    type="application/atom+xml"
+    title={`${site.name} · ${t("changelog.title")}`}
+    href="/changelog.xml"
+  />
+  <PageHero label={t("changelog.title")} title={t("changelog.heading")} lede={t("changelog.lede")}>
+    <a href="/changelog.xml" class="button button--small">
+      <Icon name="rss" size={14} />
+      {t("changelog.feed")}
+    </a>
+    <a href={commitsUrl} class="button button--small">
+      <Icon name="github" size={14} />
+      {t("changelog.allCommits")}
+    </a>
+  </PageHero>
+
+  <div class="container-page changelog">
+    {!history.complete && (
+      <p class="changelog__notice card">
+        <Icon name="info" size={18} class="changelog__notice-icon" />
+        <span>
+          {months.length > 0 ? t("changelog.partial") : t("changelog.empty")}{" "}
+          <a href={commitsUrl}>{t("changelog.allCommits")}</a>
+        </span>
+      </p>
+    )}
+
+    {months.map((month) => (
+      <section class="month" aria-labelledby={`month-${month.key}`}>
+        <div class="month__aside">
+          <h2 id={`month-${month.key}`} class="month__title">
+            <time datetime={month.key}>{formatMonth(month.date, locale)}</time>
+          </h2>
+          <p class="meta">{t("changelog.count", { count: month.changes.length })}</p>
+        </div>
+        <ol class="month__list card" role="list">
+          {month.changes.map((change) => (
+            <li class="change">
+              <span class={`badge badge--${change.kind}`}>{labels[change.kind]}</span>
+              <p class="change__subject">
+                {change.scope && <span class="change__scope">{change.scope}</span>}
+                {change.subject}
+                {change.breaking && <span class="badge badge--breaking">{t("changelog.breaking")}</span>}
+              </p>
+              <p class="change__meta meta">
+                <time datetime={isoDate(change.date)}>{formatDay(change.date, locale)}</time>
+                <a href={changeUrl(change)} class="change__link">
+                  <span class="visually-hidden">
+                    {change.pullRequest === undefined ? t("changelog.commit") : t("changelog.pullRequest")}
+                  </span>
+                  {change.pullRequest === undefined ? change.hash.slice(0, 7) : `#${change.pullRequest}`}
+                </a>
+              </p>
+            </li>
+          ))}
+        </ol>
+      </section>
+    ))}
+  </div>
+</Base>
+
+<style>
+  .changelog {
+    display: grid;
+    gap: clamp(2.5rem, 2rem + 2vw, 4rem);
+    padding-block-end: var(--spacing-section);
+  }
+
+  .changelog__notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    color: var(--ink-muted);
+    font-size: var(--text-step--1);
+  }
+
+  .changelog__notice :global(.changelog__notice-icon) {
+    flex: none;
+    margin-block-start: 0.1rem;
+    color: var(--accent);
+  }
+
+  .changelog__notice a {
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .month {
+    display: grid;
+    grid-template-columns: 12rem minmax(0, 1fr);
+    align-items: start;
+    gap: 2rem;
+  }
+
+  .month__aside {
+    position: sticky;
+    top: 6rem;
+    display: grid;
+    gap: 0.35rem;
+    padding-block-start: 1.1rem;
+  }
+
+  .month__title {
+    font-weight: 600;
+    font-size: var(--text-step-1);
+    letter-spacing: -0.02em;
+  }
+
+  .month__list {
+    display: grid;
+    padding-inline: clamp(1rem, 0.5rem + 1.5vw, 1.75rem);
+  }
+
+  .change {
+    display: grid;
+    grid-template-columns: 8.5rem minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: 0.5rem 1rem;
+    padding-block: 1.05rem;
+    border-block-start: 1px solid var(--rule);
+  }
+
+  .change:first-child {
+    border-block-start: 0;
+  }
+
+  .badge {
+    justify-self: start;
+    display: inline-flex;
+    align-items: center;
+    min-height: 1.5rem;
+    padding: 0.1rem 0.6rem;
+    border: 1px solid color-mix(in oklch, currentColor 30%, transparent);
+    border-radius: 999px;
+    background: var(--paper-sunken);
+    font: 500 var(--text-step--2) / 1 var(--mono);
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+
+  .badge--feature {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  .badge--fix {
+    color: var(--syntax-type);
+  }
+
+  .badge--performance {
+    color: var(--syntax-string);
+  }
+
+  .badge--accessibility {
+    background: var(--warning-soft);
+    color: var(--warning);
+  }
+
+  .badge--breaking {
+    margin-inline-start: 0.5rem;
+    background: var(--warning-soft);
+    color: var(--ink);
+    vertical-align: 0.1em;
+  }
+
+  .change__subject {
+    font-weight: 500;
+    overflow-wrap: anywhere;
+  }
+
+  .change__scope {
+    margin-inline-end: 0.6rem;
+    font: 500 var(--text-step--2) / 1 var(--mono);
+    color: var(--ink-faint);
+  }
+
+  .change__meta {
+    display: flex;
+    gap: 0.85rem;
+    justify-content: flex-end;
+    font-size: var(--text-step--2);
+    white-space: nowrap;
+  }
+
+  .change__link {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .change__link:hover {
+    text-decoration: underline;
+  }
+
+  @media (width < 52rem) {
+    .month {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 1rem;
+    }
+
+    .month__aside {
+      position: static;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.5rem 1rem;
+      padding-block-start: 0;
+    }
+  }
+
+  @media (width < 36rem) {
+    .change {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .change__subject {
+      grid-column: 1 / -1;
+      grid-row: 2;
+    }
+  }
+</style>

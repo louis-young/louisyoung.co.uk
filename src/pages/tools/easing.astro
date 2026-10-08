@@ -3,6 +3,7 @@ import PageHero from "../../components/sections/PageHero.astro";
 import { useTranslations } from "../../i18n";
 import { localeOf } from "../../i18n/astro";
 import Base from "../../layouts/Base.astro";
+import { toolPageProps } from "../../lib/tool-catalogue";
 import { curvePath, formatBezier, graph, presetFor, presets, toGraph, type Bezier } from "../../lib/easing-tool";
 
 const t = useTranslations(localeOf(Astro));
@@ -24,7 +25,7 @@ const percent = (value: number, of: number) => `${(value / of) * 100}%`;
 const css = formatBezier(start);
 ---
 
-<Base title={t("tools.easing.title")} description={t("tools.easing.summary")} image="/og/tools.png">
+<Base {...toolPageProps("easing", t)}>
   <PageHero label={t("nav.tools")} title={t("tools.easing.title")} lede={t("tools.easing.summary")} />
   <div class="container-page easing" data-easing data-value-text={valueText} data-copied={t("tools.copied")}>
     <div class="easing__graph card">

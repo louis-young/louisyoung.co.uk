@@ -3,6 +3,7 @@ import PageHero from "../../components/sections/PageHero.astro";
 import { useTranslations } from "../../i18n";
 import { localeOf } from "../../i18n/astro";
 import Base from "../../layouts/Base.astro";
+import { toolPageProps } from "../../lib/tool-catalogue";
 
 const t = useTranslations(localeOf(Astro));
 const stats = [
@@ -12,7 +13,7 @@ const stats = [
 ];
 ---
 
-<Base title={t("tools.reading.title")} description={t("tools.reading.summary")} image="/og/tools.png">
+<Base {...toolPageProps("reading-time", t)}>
   <PageHero label={t("nav.tools")} title={t("tools.reading.title")} lede={t("tools.reading.summary")} />
   <div class="container-page reading" data-reading>
     <label class="reading__field card">

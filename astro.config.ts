@@ -10,6 +10,9 @@ import rehypeSlug from "rehype-slug";
 
 import { site } from "./src/site.config";
 import { rehypeExternalLinks } from "./src/lib/rehype-external-links";
+import { isListed, readContentIndex, withLastmod } from "./src/lib/sitemap";
+
+const content = readContentIndex(new URL("./content/", import.meta.url));
 
 const fontsource = (pkg: string, file: string) => `./node_modules/@fontsource-variable/${pkg}/files/${file}`;
 
@@ -87,7 +90,10 @@ export default defineConfig({
     expressiveCode(),
     mdx(),
     react({ include: ["**/demos/**", "content/**/components/**"] }),
-    sitemap({ filter: (page) => !page.includes("/design/") }),
+    sitemap({
+      filter: (page) => isListed(content, page),
+      serialize: (item) => withLastmod(content, item),
+    }),
   ],
   vite: {
     plugins: [tailwindcss()],

@@ -61,6 +61,7 @@ const editUrl = `${site.repository}/edit/${site.defaultBranch}/content/articles/
     published: data.date,
     updated: data.updated,
     tags: data.tags,
+    section: { name: t("nav.writing"), path: "/writing/" },
   })}
 >
   <ReadingProgress minutes={minutes} />

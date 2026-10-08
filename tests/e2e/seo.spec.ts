@@ -35,10 +35,63 @@ test.describe("machine-readable endpoints", () => {
     expect(json.items).toHaveLength(count);
   });
 
+  test("the changelog has an Atom feed of user-facing changes", async ({ request }) => {
+    const response = await request.get("/changelog.xml");
+    expect(response.ok()).toBe(true);
+    const atom = await response.text();
+    expect(atom).toContain('<feed xmlns="http://www.w3.org/2005/Atom"');
+    expect(atom).toContain('<link href="https://louisyoung.co.uk/changelog.xml" rel="self"/>');
+    expect(atom).not.toMatch(/<title>(?:chore|test|ci|build|docs|style)\b/u);
+  });
+
+  test("every page in the sitemap has a unique title and description", async ({ request }) => {
+    const sitemap = await (await request.get("/sitemap-0.xml")).text();
+    const paths = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/gu)].map((match) => new URL(match[1]!).pathname);
+    expect(paths.length).toBeGreaterThan(30);
+    const titles = new Map<string, string>();
+    const descriptions = new Map<string, string>();
+    for (const path of paths) {
+      const html = await (await request.get(path)).text();
+      const title = /<title>([^<]+)<\/title>/u.exec(html)?.[1];
+      const description = /<meta name="description" content="([^"]+)"/u.exec(html)?.[1];
+      expect(title, `${path} has a title`).toBeTruthy();
+      expect(description, `${path} has a description`).toBeTruthy();
+      expect(titles.get(title!), `${path} repeats the title "${title!}"`).toBeUndefined();
+      expect(descriptions.get(description!), `${path} repeats its description`).toBeUndefined();
+      titles.set(title!, path);
+      descriptions.set(description!, path);
+    }
+  });
+
+  test("tool pages describe themselves as free web applications", async ({ page }) => {
+    await page.goto("/tools/json/");
+    const [app, breadcrumb] = JSON.parse(
+      (await page.locator('script[type="application/ld+json"]').textContent()) ?? "[]",
+    ) as Record<string, unknown>[];
+    expect(app).toMatchObject({
+      "@type": "WebApplication",
+      applicationCategory: "DeveloperApplication",
+      isAccessibleForFree: true,
+      offers: { price: "0" },
+    });
+    expect(breadcrumb).toMatchObject({ "@type": "BreadcrumbList" });
+    await expect(page.locator('meta[property="og:image"]')).toHaveAttribute(
+      "content",
+      "https://louisyoung.co.uk/og/tools-json.png",
+    );
+    await page.goto("/tools/");
+    expect(await page.locator('script[type="application/ld+json"]').textContent()).toContain('"@type":"ItemList"');
+  });
+
   test("sitemap, robots, security.txt and manifest exist", async ({ request }) => {
     const sitemap = await (await request.get("/sitemap-0.xml")).text();
     expect(sitemap).toContain("https://louisyoung.co.uk/why-functional-state-updates-are-important/");
     expect(sitemap).not.toContain("/404");
+    for (const path of ["/changelog/", "/tools/json/", "/tags/react/"]) {
+      expect(sitemap).toContain(`<loc>https://louisyoung.co.uk${path}</loc>`);
+    }
+    expect(sitemap).not.toContain("/design/");
+    expect(sitemap).toMatch(/<lastmod>2026-10-07T00:00:00\.000Z<\/lastmod>/u);
     expect(await (await request.get("/robots.txt")).text()).toContain(
       "Sitemap: https://louisyoung.co.uk/sitemap-index.xml",
     );
