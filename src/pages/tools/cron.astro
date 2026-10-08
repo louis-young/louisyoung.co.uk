@@ -1,0 +1,378 @@
+---
+import PageHero from "../../components/sections/PageHero.astro";
+import { useTranslations } from "../../i18n";
+import { localeOf } from "../../i18n/astro";
+import Base from "../../layouts/Base.astro";
+import { toolPageProps } from "../../lib/tool-catalogue";
+
+const t = useTranslations(localeOf(Astro));
+const fields = [
+  { field: "minute", label: t("tools.cron.minute") },
+  { field: "hour", label: t("tools.cron.hour") },
+  { field: "dayOfMonth", label: t("tools.cron.dayOfMonth") },
+  { field: "month", label: t("tools.cron.month") },
+  { field: "dayOfWeek", label: t("tools.cron.dayOfWeek") },
+];
+const examples = ["0 9 * * 1-5", "*/15 9-17 * * *", "30 2 1 * *", "0 0 * * SAT,SUN", "0 12 1 JAN,JUL *", "@hourly"];
+const zones = [
+  { value: "utc", label: t("tools.cron.zoneUtc") },
+  { value: "local", label: t("tools.cron.zoneLocal") },
+];
+---
+
+<Base {...toolPageProps("cron", t)}>
+  <PageHero label={t("nav.tools")} title={t("tools.cron.title")} lede={t("tools.cron.summary")} />
+  <div
+    class="container-page cron"
+    data-cron
+    data-at={t("tools.cron.at")}
+    data-every-minute={t("tools.cron.everyMinute")}
+    data-every-minutes={t("tools.cron.everyMinutes")}
+    data-minute-one={t("tools.cron.minuteOne")}
+    data-minute-other={t("tools.cron.minuteOther")}
+    data-during={t("tools.cron.during")}
+    data-day-one={t("tools.cron.dayOne")}
+    data-day-other={t("tools.cron.dayOther")}
+    data-months={t("tools.cron.months")}
+    data-days={t("tools.cron.days")}
+    data-weekdays={t("tools.cron.weekdays")}
+    data-weekends={t("tools.cron.weekends")}
+    data-either={t("tools.cron.either")}
+    data-every={t("tools.cron.every")}
+    data-error-blank={t("tools.cron.errorBlank")}
+    data-error-count={t("tools.cron.errorCount")}
+    data-error-fields={t("tools.cron.errorFields")}
+    data-error-empty={t("tools.cron.errorEmpty")}
+    data-error-syntax={t("tools.cron.errorSyntax")}
+    data-error-range={t("tools.cron.errorRange")}
+    data-error-order={t("tools.cron.errorOrder")}
+    data-error-step={t("tools.cron.errorStep")}
+  >
+    <div class="cron__inputs card">
+      <div class="cron__field">
+        <label class="cron__label" for="cron-input">
+          {t("tools.cron.expression")}
+        </label>
+        <input
+          id="cron-input"
+          type="text"
+          class="cron__input"
+          value={examples[0]}
+          autocomplete="off"
+          autocapitalize="off"
+          spellcheck="false"
+          aria-describedby="cron-hint cron-status"
+          data-input
+        />
+        <p id="cron-hint" class="cron__hint">
+          {t("tools.cron.hint")}
+        </p>
+      </div>
+      <div class="cron__field">
+        <p id="cron-examples" class="cron__label">
+          {t("tools.cron.examples")}
+        </p>
+        <ul class="cron__examples" role="list" aria-labelledby="cron-examples">
+          {examples.map((example) => (
+            <li>
+              <button type="button" class="cron__example" data-example={example}>
+                {example}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div class="cron__field">
+        <p id="cron-zone" class="cron__label">
+          {t("tools.cron.zone")}
+        </p>
+        <div class="cron__segmented" role="radiogroup" aria-labelledby="cron-zone">
+          {zones.map((zone, i) => (
+            <label class="cron__segment">
+              <input type="radio" name="zone" value={zone.value} checked={i === 0} />
+              <span>{zone.label}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <div class="cron__result card">
+      <section class="cron__section" aria-labelledby="cron-meaning">
+        <h2 id="cron-meaning" class="label">
+          {t("tools.cron.meaning")}
+        </h2>
+        <p id="cron-status" class="cron__status" role="status" data-status></p>
+      </section>
+      <section class="cron__section" aria-labelledby="cron-fields">
+        <h2 id="cron-fields" class="label">
+          {t("tools.cron.fields")}
+        </h2>
+        <div class="cron__table">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">{t("tools.cron.field")}</th>
+                <th scope="col">{t("tools.cron.written")}</th>
+                <th scope="col">{t("tools.cron.matches")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {fields.map((item) => (
+                <tr data-field={item.field}>
+                  <th scope="row">{item.label}</th>
+                  <td>
+                    <code data-written />
+                  </td>
+                  <td data-detail />
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+      <section class="cron__section" aria-labelledby="cron-next" data-runs-section>
+        <h2 id="cron-next" class="label">
+          {t("tools.cron.next")}
+        </h2>
+        <p class="cron__never" data-never hidden>
+          {t("tools.cron.never")}
+        </p>
+        <div class="cron__table" aria-live="polite">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">
+                  {t("tools.cron.yourTime")} <span class="cron__zone" data-zone-name />
+                </th>
+                <th scope="col">{t("tools.cron.utc")}</th>
+              </tr>
+            </thead>
+            <tbody data-runs></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </div>
+</Base>
+
+<script>
+  import { initCron } from "../../scripts/tool-cron";
+
+  initCron();
+</script>
+
+<style>
+  .cron {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+    gap: 1rem;
+    align-items: start;
+    padding-block-end: var(--spacing-section);
+  }
+
+  .cron > .card {
+    display: grid;
+    gap: 1.5rem;
+    min-width: 0;
+    padding: clamp(1.25rem, 1rem + 1vw, 2rem);
+  }
+
+  .cron__field,
+  .cron__section {
+    display: grid;
+    gap: 0.6rem;
+    min-width: 0;
+  }
+
+  .cron__label {
+    font-weight: 500;
+    font-size: var(--text-step--1);
+  }
+
+  .cron__input {
+    width: 100%;
+    min-width: 0;
+    min-height: 3rem;
+    padding: 0.5rem 0.9rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+    color: var(--ink);
+    font: 500 var(--text-step-0) / 1.4 var(--mono);
+  }
+
+  .cron__input[aria-invalid="true"] {
+    border-color: var(--warning);
+  }
+
+  .cron__hint {
+    color: var(--ink-muted);
+    font-size: var(--text-step--1);
+  }
+
+  .cron__examples {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .cron__example {
+    min-height: 2.25rem;
+    padding: 0.35rem 0.7rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+    color: var(--ink);
+    font: 500 var(--text-step--1) / 1.3 var(--mono);
+    cursor: pointer;
+  }
+
+  .cron__example:hover {
+    border-color: var(--accent);
+  }
+
+  .cron__segmented {
+    display: flex;
+    flex-wrap: wrap;
+    justify-self: start;
+    gap: 0.25rem;
+    max-width: 100%;
+    padding: 0.25rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-md);
+    background: var(--paper-sunken);
+  }
+
+  .cron__segment {
+    position: relative;
+    display: grid;
+  }
+
+  .cron__segment input {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .cron__segment span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.25rem;
+    padding-inline: 0.9rem;
+    border: 1px solid transparent;
+    border-radius: calc(var(--radius-md) - 0.25rem);
+    color: var(--ink-muted);
+    font-size: var(--text-step--1);
+    font-weight: 500;
+    pointer-events: none;
+  }
+
+  .cron__segment input:checked + span {
+    border-color: var(--rule-strong);
+    background: var(--paper-raised);
+    color: var(--ink);
+    box-shadow: 0 1px 2px oklch(0% 0 0 / 0.08);
+  }
+
+  .cron__input:focus-visible,
+  .cron__example:focus-visible,
+  .cron__segment input:focus-visible + span {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  @media (forced-colors: active) {
+    .cron__segment input:checked + span {
+      border-color: Highlight;
+      outline: 2px solid Highlight;
+    }
+  }
+
+  .cron__status {
+    padding: 0.9rem 1.1rem;
+    border-radius: var(--radius-sm);
+    background: var(--accent-soft);
+    color: var(--ink);
+    font-weight: 500;
+    font-size: var(--text-step-1);
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+    overflow-wrap: anywhere;
+  }
+
+  .cron__status[data-invalid] {
+    background: var(--warning-soft);
+    font-weight: 400;
+    font-size: var(--text-step--1);
+  }
+
+  .cron__never {
+    padding: 0.6rem 0.9rem;
+    border-radius: var(--radius-sm);
+    background: var(--warning-soft);
+    font-size: var(--text-step--1);
+  }
+
+  .cron__table {
+    overflow-x: auto;
+  }
+
+  .cron__table table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--text-step--1);
+  }
+
+  .cron__table thead th {
+    padding-block: 0 0.5rem;
+    color: var(--ink-muted);
+    font-weight: 500;
+    font-size: var(--text-step--2);
+    text-align: start;
+  }
+
+  .cron__table tbody th,
+  .cron__table :global(td) {
+    padding: 0.55rem 0.75rem 0.55rem 0;
+    border-block-start: 1px solid var(--rule);
+    text-align: start;
+    vertical-align: top;
+    overflow-wrap: anywhere;
+  }
+
+  .cron__table tbody th {
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .cron__table code {
+    font: 600 var(--text-step--1) / 1.4 var(--mono);
+  }
+
+  .cron__table tr[data-invalid] th,
+  .cron__table tr[data-invalid] td {
+    background: var(--warning-soft);
+  }
+
+  .cron__table tr[data-invalid] th {
+    padding-inline-start: 0.5rem;
+  }
+
+  .cron__table :global(tbody[data-runs] td) {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .cron__zone {
+    color: var(--ink-faint);
+    font-weight: 400;
+  }
+
+  @media (width < 56rem) {
+    .cron {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

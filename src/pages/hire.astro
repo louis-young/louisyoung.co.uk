@@ -2,54 +2,105 @@
 import { hire } from "../../content/data/hire";
 import { profile } from "../../content/data/profile";
 import Availability from "../components/sections/Availability.astro";
-import PageHero from "../components/sections/PageHero.astro";
+import EnquiryForm from "../components/sections/EnquiryForm.astro";
+import Principles from "../components/sections/Principles.astro";
 import SectionHeading from "../components/sections/SectionHeading.astro";
 import Services from "../components/sections/Services.astro";
 import { useTranslations } from "../i18n";
 import { localeOf } from "../i18n/astro";
 import Base from "../layouts/Base.astro";
 import { bookingHref } from "../lib/hire";
-import { isPlaceholder } from "../lib/placeholders";
+import { filled, isPlaceholder } from "../lib/placeholders";
 
 const t = useTranslations(localeOf(Astro));
 const booking = bookingHref(profile.bookingUrl, profile.email, t("hire.bookingSubject"));
 const testimonials = hire.testimonials.filter((item) => !isPlaceholder(`${item.quote} ${item.name} ${item.role}`));
 const terms = hire.terms.filter((term) => !isPlaceholder(term.value));
-const fields = {
-  name: t("hire.field.name"),
-  email: t("hire.field.email"),
-  company: t("hire.field.company"),
-  service: t("hire.field.service"),
-  budget: t("hire.field.budget"),
-  start: t("hire.field.start"),
-  message: t("hire.field.message"),
-};
+const note = filled(profile.availability.note);
+const step = (index: number) => String(index + 1).padStart(2, "0");
 ---
 
 <Base title={t("hire.title")} description={t("hire.description")} image="/og/hire.png">
-  <PageHero label={t("nav.hire")} title={t("hire.heading")} lede={profile.intro}>
-    <Availability />
-    <a href={booking} class="button button--primary" id="book">
-      {t("hire.book")}
-    </a>
-  </PageHero>
+  <header class="container-page hero">
+    <div class="hero__copy">
+      <p class="label hero__label reveal">{t("nav.hire")}</p>
+      <h1 class="page-title hero__title reveal" style="--reveal-index: 1">
+        {t("hire.heading")}
+      </h1>
+      <p class="page-lede hero__lede reveal" style="--reveal-index: 2">
+        {profile.intro}
+      </p>
+      <div class="hero__chip reveal" style="--reveal-index: 3">
+        <Availability />
+      </div>
+      <div class="hero__actions reveal" style="--reveal-index: 4">
+        <a href={booking} class="button button--signal" id="book">
+          {t("hire.book")}
+        </a>
+        <a href="#enquiry-title" class="button">
+          {t("hire.enquire")} <span aria-hidden="true">↓</span>
+        </a>
+      </div>
+    </div>
+
+    <aside class="glance card reveal" style="--reveal-index: 3" aria-labelledby="glance-title">
+      <div class="glance__head">
+        <h2 id="glance-title" class="label">
+          {t("hire.glance")}
+        </h2>
+        {note && <p class="glance__note">{note}</p>}
+      </div>
+      <ul class="glance__services" role="list">
+        {hire.services.map((service) => (
+          <li>
+            <a href={`#service-${service.id}`} class="glance__service">
+              <span>{service.name}</span>
+              <span class="glance__arrow" aria-hidden="true">
+                →
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+      {terms.length > 0 && (
+        <dl class="glance__terms">
+          {terms.map((term) => (
+            <div class="glance__term">
+              <dt class="label">{term.label}</dt>
+              <dd>{term.value}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
+    </aside>
+  </header>
 
   <section class="container-page section" aria-labelledby="services-title">
-    <SectionHeading id="services-title" title={t("hire.services")} />
+    <SectionHeading id="services-title" number={step(0)} title={t("hire.services")} />
+    <p class="section__intro">{t("hire.servicesIntro")}</p>
     <Services detailed />
   </section>
 
   <section class="container-page section" aria-labelledby="process-title">
-    <SectionHeading id="process-title" title={t("hire.process")} />
-    <ol class="process" role="list">
-      {hire.process.map((step, index) => (
-        <li class="process__step card">
-          <span class="process__number">{String(index + 1).padStart(2, "0")}</span>
-          <h3 class="process__title">{step.title}</h3>
-          <p>{step.body}</p>
+    <SectionHeading id="process-title" number={step(1)} title={t("hire.process")} />
+    <p class="section__intro">{t("hire.processIntro")}</p>
+    <ol class="timeline" role="list" style={`--steps: ${hire.process.length}`}>
+      {hire.process.map((item, index) => (
+        <li class="timeline__step">
+          <span class="timeline__node" aria-hidden="true">
+            {step(index)}
+          </span>
+          <h3 class="timeline__title">{item.title}</h3>
+          <p class="timeline__body">{item.body}</p>
         </li>
       ))}
     </ol>
+  </section>
+
+  <section class="container-page section" aria-labelledby="why-title">
+    <SectionHeading id="why-title" number={step(2)} title={t("hire.why")} />
+    <p class="section__intro">{t("hire.whyIntro")}</p>
+    <Principles />
   </section>
 
   {testimonials.length > 0 && (
@@ -73,156 +124,280 @@ const fields = {
     </section>
   )}
 
-  <section class="container-page section split" aria-labelledby="terms-title">
-    <div>
-      <SectionHeading id="terms-title" title={t("hire.terms")} />
-      <dl class="terms">
-        {terms.map((term) => (
-          <div class="terms__row">
-            <dt class="label">{term.label}</dt>
-            <dd>{term.value}</dd>
-          </div>
-        ))}
-      </dl>
+  <section class="container-page section split" aria-labelledby="faq-title">
+    <div class="split__aside">
+      <SectionHeading id="faq-title" number={step(3)} title={t("hire.faq")} />
+      <p class="split__intro">{t("hire.faqIntro")}</p>
+      <a href={`mailto:${profile.email}`} class="link">
+        {profile.email}
+      </a>
     </div>
-    <div>
-      <SectionHeading id="faq-title" title={t("hire.faq")} />
-      <div class="faq">
-        {hire.faq.map((item) => (
-          <details class="faq__item">
-            <summary class="faq__question">{item.question}</summary>
-            <p class="faq__answer">{item.answer}</p>
-          </details>
-        ))}
-      </div>
+    <div class="faq card">
+      {hire.faq.map((item) => (
+        <details class="faq__item">
+          <summary class="faq__question">
+            <span>{item.question}</span>
+            <span class="faq__icon" aria-hidden="true"></span>
+          </summary>
+          <p class="faq__answer">{item.answer}</p>
+        </details>
+      ))}
     </div>
   </section>
 
   <section class="container-page section" aria-labelledby="enquiry-title">
-    <SectionHeading id="enquiry-title" title={t("hire.enquiry")} />
     <div class="enquiry card">
-      <p class="enquiry__intro">{t("hire.enquiryIntro")}</p>
-      <form
-        class="enquiry__form"
-        action={`mailto:${profile.email}`}
-        method="post"
-        enctype="text/plain"
-        data-enquiry
-        data-to={profile.email}
-        data-subject={t("hire.enquirySubject")}
-        data-labels={JSON.stringify(fields)}
-      >
-        <label class="field">
-          <span class="field__label">{fields.name}</span>
-          <input type="text" name="name" autocomplete="name" required />
-        </label>
-        <label class="field">
-          <span class="field__label">{fields.email}</span>
-          <input name="email" type="email" autocomplete="email" required />
-        </label>
-        <label class="field">
-          <span class="field__label">
-            {fields.company} <span class="field__optional">{t("hire.field.optional")}</span>
-          </span>
-          <input type="text" name="company" autocomplete="organization" />
-        </label>
-        <label class="field">
-          <span class="field__label">{fields.service}</span>
-          <select name="service">
-            {hire.services.map((service) => (
-              <option>{service.name}</option>
-            ))}
-            <option>{t("hire.serviceOther")}</option>
-          </select>
-        </label>
-        <label class="field">
-          <span class="field__label">
-            {fields.budget} <span class="field__optional">{t("hire.field.optional")}</span>
-          </span>
-          <input type="text" name="budget" />
-        </label>
-        <label class="field">
-          <span class="field__label">
-            {fields.start} <span class="field__optional">{t("hire.field.optional")}</span>
-          </span>
-          <input type="text" name="start" />
-        </label>
-        <label class="field field--wide">
-          <span class="field__label">{fields.message}</span>
-          <textarea name="message" rows="6" required></textarea>
-        </label>
-        <div class="field--wide enquiry__actions">
-          <button type="submit" class="button button--signal">
-            {t("hire.send")} <span aria-hidden="true">→</span>
-          </button>
-          <a href={`mailto:${profile.email}`} class="link">
-            {profile.email}
-          </a>
-        </div>
-      </form>
+      <div class="enquiry__aside">
+        <SectionHeading id="enquiry-title" number={step(4)} title={t("hire.enquiry")} />
+        <p class="enquiry__intro">{t("hire.enquiryIntro")}</p>
+        <p class="label enquiry__next-title">{t("hire.next")}</p>
+        <ol class="enquiry__next" role="list">
+          {hire.process.map((item, index) => (
+            <li>
+              <span class="enquiry__next-number" aria-hidden="true">
+                {index + 1}
+              </span>
+              {item.title}
+            </li>
+          ))}
+        </ol>
+      </div>
+      <EnquiryForm />
     </div>
   </section>
 </Base>
 
-<script>
-  import { enquiryMailto, type Enquiry } from "../lib/hire";
-
-  const form = document.querySelector<HTMLFormElement>("[data-enquiry]");
-  form?.addEventListener("submit", (event) => {
-    event.preventDefault();
-    const data = Object.fromEntries(new FormData(form)) as unknown as Enquiry;
-    const labels = JSON.parse(form.dataset["labels"] ?? "{}") as Record<keyof Enquiry, string>;
-    const href = enquiryMailto(form.dataset["to"] ?? "", data, labels, form.dataset["subject"] ?? "");
-    // Kept on the form too, so the composed email can be inspected (and tested) without a mail client.
-    form.dataset["mailto"] = href;
-    window.location.href = href;
-  });
-</script>
-
 <style>
+  /* Hero: the pitch and both calls to action on the left, the short version on the right. */
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    gap: clamp(2rem, 1rem + 4vw, 4.5rem);
+    align-items: end;
+    padding-block: clamp(3.5rem, 2rem + 6vw, 7rem) clamp(2.5rem, 1rem + 4vw, 4.5rem);
+  }
+
+  .hero__label {
+    margin-block-end: 1rem;
+    color: var(--accent);
+  }
+
+  .hero__title {
+    font-size: var(--text-display);
+    line-height: 1;
+  }
+
+  .hero__lede {
+    margin-block-start: 1.5rem;
+  }
+
+  .hero__chip {
+    margin-block-start: 2rem;
+  }
+
+  .hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-block-start: 1rem;
+  }
+
+  .glance {
+    display: grid;
+    gap: 1.25rem;
+    padding: clamp(1.25rem, 1rem + 1vw, 1.75rem);
+  }
+
+  .glance__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+  }
+
+  .glance__note {
+    font: 500 var(--text-step--2) / 1.3 var(--mono);
+    color: var(--ink-muted);
+  }
+
+  .glance__services {
+    display: grid;
+    gap: 0.4rem;
+  }
+
+  .glance__service {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.75rem 0.9rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-md);
+    background: var(--paper-sunken);
+    font-weight: 550;
+    text-decoration: none;
+    transition:
+      border-color var(--duration-fast) ease,
+      color var(--duration-fast) ease;
+  }
+
+  .glance__service:hover {
+    border-color: color-mix(in oklch, var(--accent) 50%, var(--rule));
+  }
+
+  .glance__arrow {
+    color: var(--ink-faint);
+    transition:
+      translate var(--duration-base) var(--ease-out-expo),
+      color var(--duration-fast) ease;
+  }
+
+  .glance__service:hover .glance__arrow {
+    translate: 3px 0;
+    color: var(--accent);
+  }
+
+  .glance__terms {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    padding-block-start: 1.25rem;
+    border-block-start: 1px solid var(--rule);
+  }
+
+  .glance__term {
+    display: grid;
+    gap: 0.3rem;
+  }
+
+  .glance__term dd {
+    font-size: var(--text-step--1);
+    font-weight: 500;
+  }
+
+  @media (width < 56rem) {
+    .hero {
+      grid-template-columns: 1fr;
+    }
+  }
+
   .section {
-    padding-block: clamp(2rem, 1rem + 3vw, 3.5rem);
+    padding-block: clamp(2.5rem, 1.5rem + 3vw, 4.5rem);
   }
 
   .section:last-child {
     padding-block-end: var(--spacing-section);
   }
 
-  .process {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
-    gap: 1rem;
-    counter-reset: step;
+  .section__intro {
+    max-width: 56ch;
+    margin-block: calc(-1 * clamp(0.75rem, 0.5rem + 1vw, 1.25rem)) clamp(1.5rem, 1rem + 1.5vw, 2.25rem);
+    color: var(--ink-muted);
   }
 
-  .process__step {
+  /* How it works: numbered nodes joined by a line, across on wide screens and down on narrow ones. */
+  .timeline {
+    --node: 2.75rem;
+    --gap: clamp(1rem, 0.5rem + 1.5vw, 2rem);
+
+    display: grid;
+    grid-template-columns: repeat(var(--steps), minmax(0, 1fr));
+    gap: var(--gap);
+  }
+
+  .timeline__step {
+    position: relative;
     display: grid;
     align-content: start;
-    gap: 0.6rem;
-    padding: 1.5rem;
+    gap: 0.5rem;
+    padding-block-start: calc(var(--node) + 1.25rem);
   }
 
-  .process__number {
-    display: inline-grid;
+  .timeline__step:not(:last-child)::before {
+    content: "";
+    position: absolute;
+    top: calc(var(--node) / 2);
+    left: calc(var(--node) + 0.5rem);
+    right: calc(-1 * var(--gap) + 0.5rem);
+    height: 1px;
+    background: linear-gradient(90deg, color-mix(in oklch, var(--accent) 70%, transparent), var(--rule-strong));
+    transform-origin: left;
+  }
+
+  .timeline__node {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: grid;
     place-items: center;
-    width: 2rem;
-    height: 2rem;
-    margin-block-end: 0.5rem;
-    border: 1px solid var(--rule-strong);
-    border-radius: 999px;
-    font: 500 var(--text-step--2) / 1 var(--mono);
+    width: var(--node);
+    height: var(--node);
+    border: 1px solid color-mix(in oklch, var(--accent) 45%, var(--rule));
+    border-radius: 50%;
+    background: var(--paper-raised);
+    box-shadow:
+      0 0 0 6px var(--paper),
+      0 10px 24px -10px var(--glow-1);
+    font: 600 var(--text-step--1) / 1 var(--mono);
     color: var(--accent);
   }
 
-  .process__title {
+  .timeline__title {
     font-weight: 600;
-    font-size: var(--text-step-0);
-    letter-spacing: -0.01em;
+    font-size: var(--text-step-1);
+    letter-spacing: -0.02em;
   }
 
-  .process__step p {
-    color: var(--ink-muted);
+  .timeline__body {
+    max-width: 34ch;
     font-size: var(--text-step--1);
+    color: var(--ink-muted);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      .timeline__step::before {
+        animation: draw linear both;
+        animation-timeline: view();
+        animation-range: entry 20% cover 40%;
+      }
+    }
+  }
+
+  @keyframes draw {
+    from {
+      scale: 0 1;
+    }
+  }
+
+  @media (width < 48rem) {
+    .timeline {
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+
+    .timeline__step {
+      padding-block: 0.4rem 2rem;
+      padding-inline-start: calc(var(--node) + 1.25rem);
+    }
+
+    .timeline__step:not(:last-child)::before {
+      top: calc(var(--node) + 0.5rem);
+      bottom: 0.5rem;
+      left: calc(var(--node) / 2);
+      right: auto;
+      width: 1px;
+      height: auto;
+      background: linear-gradient(180deg, color-mix(in oklch, var(--accent) 70%, transparent), var(--rule-strong));
+      transform-origin: top;
+    }
+
+    @keyframes draw {
+      from {
+        scale: 1 0;
+      }
+    }
   }
 
   .quotes {
@@ -262,10 +437,18 @@ const fields = {
     font-weight: 600;
   }
 
+  /* Questions: a short intro beside the accordion. */
   .split {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
     gap: clamp(2rem, 1rem + 3vw, 4rem);
+    align-items: start;
+  }
+
+  .split__intro {
+    max-width: 36ch;
+    margin-block: -0.5rem 1rem;
+    color: var(--ink-muted);
   }
 
   @media (width < 56rem) {
@@ -274,138 +457,168 @@ const fields = {
     }
   }
 
-  .terms {
-    display: grid;
-  }
-
-  .terms__row {
-    display: grid;
-    grid-template-columns: minmax(7rem, 1fr) 2fr;
-    gap: 1rem;
-    align-items: baseline;
-    padding-block: 0.9rem;
-    border-block-start: 1px solid var(--rule);
-  }
-
-  .terms__row dd {
-    color: var(--ink);
-  }
-
   .faq {
     display: grid;
+    padding-inline: clamp(1.25rem, 1rem + 1vw, 1.75rem);
   }
 
-  .faq__item {
+  .faq__item + .faq__item {
     border-block-start: 1px solid var(--rule);
   }
 
   .faq__question {
     display: flex;
+    align-items: center;
     justify-content: space-between;
     gap: 1rem;
-    padding-block: 1rem;
+    padding-block: 1.15rem;
     font-weight: 550;
     cursor: pointer;
     list-style: none;
+    transition: color var(--duration-fast) ease;
   }
 
   .faq__question::-webkit-details-marker {
     display: none;
   }
 
-  .faq__question::after {
-    content: "+";
-    color: var(--ink-faint);
-    font-family: var(--mono);
+  .faq__question:hover {
+    color: var(--accent);
+  }
+
+  .faq__question:focus-visible {
+    outline-offset: 4px;
+    border-radius: var(--radius-sm);
+  }
+
+  /* A plus drawn in CSS that turns into a minus. */
+  .faq__icon {
+    position: relative;
+    flex: none;
+    width: 1.75rem;
+    height: 1.75rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: 50%;
+    color: var(--ink-muted);
+    transition:
+      rotate var(--duration-base) var(--ease-out-expo),
+      background-color var(--duration-fast) ease,
+      border-color var(--duration-fast) ease;
+  }
+
+  .faq__icon::before,
+  .faq__icon::after {
+    content: "";
+    position: absolute;
+    inset: 50% auto auto 50%;
+    width: 0.65rem;
+    height: 1.5px;
+    background: currentColor;
+    translate: -50% -50%;
     transition: rotate var(--duration-base) var(--ease-out-expo);
   }
 
-  .faq__item[open] .faq__question::after {
-    rotate: 45deg;
+  .faq__icon::after {
+    rotate: 90deg;
+  }
+
+  .faq__item[open] .faq__icon {
+    border-color: color-mix(in oklch, var(--accent) 50%, transparent);
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  .faq__item[open] .faq__icon::after {
+    rotate: 0deg;
   }
 
   .faq__answer {
-    padding-block-end: 1.1rem;
+    max-width: 60ch;
+    padding-block-end: 1.25rem;
     color: var(--ink-muted);
   }
 
+  /* Smooth open and close where the browser can animate to `auto`; elsewhere it simply snaps. */
+  @supports (interpolate-size: allow-keywords) and selector(::details-content) {
+    .faq {
+      interpolate-size: allow-keywords;
+    }
+
+    .faq__item::details-content {
+      block-size: 0;
+      overflow: clip;
+      transition:
+        block-size var(--duration-base) var(--ease-out-expo),
+        content-visibility var(--duration-base) allow-discrete;
+    }
+
+    .faq__item[open]::details-content {
+      block-size: auto;
+    }
+  }
+
+  /* Start a project: what happens next beside the form. */
   .enquiry {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
-    gap: 2rem;
-    padding: clamp(1.5rem, 1rem + 2vw, 2.5rem);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.7fr);
+    gap: clamp(2rem, 1rem + 3vw, 4rem);
+    padding: clamp(1.5rem, 1rem + 2.5vw, 3rem);
+    background:
+      radial-gradient(30rem 18rem at 0% 0%, color-mix(in oklch, var(--glow-1) 45%, transparent), transparent 70%),
+      color-mix(in oklch, var(--paper-raised) 92%, transparent);
   }
 
   .enquiry__intro {
-    max-width: 32ch;
+    max-width: 36ch;
+    margin-block-start: -0.5rem;
     color: var(--ink-muted);
   }
 
-  .enquiry__form {
+  .enquiry__next-title {
+    margin-block: 2rem 0.9rem;
+  }
+
+  .enquiry__next {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 1rem;
-  }
-
-  .field {
-    display: grid;
-    gap: 0.45rem;
-    min-width: 0;
-  }
-
-  .field--wide {
-    grid-column: 1 / -1;
-  }
-
-  .field__label {
+    gap: 0.65rem;
     font-size: var(--text-step--1);
     font-weight: 500;
   }
 
-  .field__optional {
-    margin-inline-start: 0.35rem;
-    color: var(--ink-faint);
-    font-weight: 400;
-  }
-
-  .field input,
-  .field select,
-  .field textarea {
-    width: 100%;
-    min-width: 0;
-    min-height: 2.75rem;
-    padding: 0.55rem 0.8rem;
-    border: 1px solid var(--rule-strong);
-    border-radius: var(--radius-sm);
-    background: var(--paper-sunken);
-    color: var(--ink);
-    font: inherit;
-    transition:
-      border-color var(--duration-fast) ease,
-      box-shadow var(--duration-fast) ease;
-  }
-
-  .field textarea {
-    resize: vertical;
-  }
-
-  .field :focus-visible {
-    outline: none;
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px color-mix(in oklch, var(--accent) 30%, transparent);
-  }
-
-  .enquiry__actions {
+  .enquiry__next li {
     display: flex;
-    flex-wrap: wrap;
     align-items: center;
-    gap: 1rem 1.5rem;
+    gap: 0.75rem;
+  }
+
+  .enquiry__next-number {
+    display: inline-grid;
+    flex: none;
+    place-items: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: 50%;
+    font: 500 var(--text-step--2) / 1 var(--mono);
+    color: var(--accent);
   }
 
   @media (width < 56rem) {
-    .enquiry,
-    .enquiry__form {
+    .enquiry {
       grid-template-columns: 1fr;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .timeline__node,
+    .faq__icon,
+    .glance__service {
+      border: 1px solid CanvasText;
+    }
+
+    .timeline__step::before {
+      forced-color-adjust: none;
+      background: CanvasText;
     }
   }
 </style>

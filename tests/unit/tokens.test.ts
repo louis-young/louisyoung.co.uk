@@ -45,6 +45,14 @@ const pairs: [string, string, number][] = [
   ["syntax-string", "paper-raised", 4.5],
   ["syntax-type", "paper-sunken", 4.5],
   ["syntax-type", "paper-raised", 4.5],
+  // The /hire/ enquiry form: inline errors on its card, and the error and success notices.
+  ["danger", "paper", 4.5],
+  ["danger", "paper-raised", 4.5],
+  ["danger", "paper-sunken", 4.5],
+  ["ink", "danger-soft", 7],
+  ["ink", "success-soft", 7],
+  ["paper", "danger", 4.5],
+  ["paper", "success", 3],
 ];
 
 describe.each(Object.entries(themes))("%s theme tokens", (_theme, tokens) => {

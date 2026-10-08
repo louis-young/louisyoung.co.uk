@@ -26,6 +26,19 @@ test.describe("hire", () => {
     );
   });
 
+  test("invalid fields explain themselves inline", async ({ page }) => {
+    await page.goto("/hire/");
+    const email = page.getByLabel("Your email");
+    await email.fill("ada");
+    await page.getByRole("button", { name: /Compose email/u }).click();
+    await expect(page.getByLabel("Your name")).toBeFocused();
+    await expect(email).toHaveAttribute("aria-invalid", "true");
+    await expect(email).toHaveAccessibleDescription(/doesn’t look like an email address/u);
+    await expect(page.getByRole("alert")).toContainText("A few details are missing");
+    await email.fill("ada@example.com");
+    await expect(email).not.toHaveAttribute("aria-invalid");
+  });
+
   test("FAQ answers expand", async ({ page }) => {
     await page.goto("/hire/");
     const question = page.locator(".faq__question").first();

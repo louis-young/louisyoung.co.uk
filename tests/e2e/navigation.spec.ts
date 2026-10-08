@@ -71,6 +71,15 @@ test.describe("navigation", () => {
     await expect(page.locator(".article-row")).toHaveCount(3);
     consoleErrors.length = 0; // The browser logs the 404 response itself.
   });
+
+  test("the 404 page offers the missing URL as a search", async ({ page, consoleErrors }) => {
+    await page.goto("/context-api-react/");
+    consoleErrors.length = 0;
+    const search = page.getByRole("searchbox", { name: "Search the site" });
+    await expect(search).toHaveValue("context api react");
+    await search.press("Enter");
+    await expect(page).toHaveURL("/search/?q=context+api+react");
+  });
 });
 
 test.describe("legacy URLs", () => {

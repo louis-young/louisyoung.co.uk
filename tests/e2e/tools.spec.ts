@@ -127,4 +127,60 @@ test.describe("tools", () => {
     await page.mouse.up();
     await expect(output).toHaveText("cubic-bezier(0.5, 0, 1, 1)");
   });
+
+  test("the cron explainer describes a schedule and flags bad fields", async ({ page }) => {
+    await page.goto("/tools/cron/");
+    const input = page.getByLabel("Cron expression");
+    await input.fill("*/15 9-17 * * mon-fri");
+    await expect(page.locator("#cron-status")).toHaveText("Every 15 minutes during 09:00–17:59 on weekdays");
+    await expect(page.locator('[data-field="dayOfWeek"] [data-detail]')).toHaveText("Monday–Friday");
+    await expect(page.locator("[data-runs] tr")).toHaveCount(5);
+    await page.getByRole("button", { name: "@hourly" }).click();
+    await expect(page.locator("#cron-status")).toHaveText("At minute 0");
+    await input.fill("61 * * * *");
+    await expect(page.locator('[data-field="minute"] [data-detail]')).toHaveText("“61” is outside 0 to 59.");
+    await expect(input).toHaveAttribute("aria-invalid", "true");
+  });
+
+  test("the timestamp converter reads every format", async ({ page }) => {
+    await page.goto("/tools/timestamp/");
+    const input = page.getByLabel("Timestamp or date");
+    await expect(input).toHaveValue(/^\d{10}$/u);
+    await input.fill("1791450000");
+    await expect(page.locator('[data-format="iso"] [data-value]')).toHaveText("2026-10-08T09:00:00.000Z");
+    await expect(page.locator('[data-format="rfc2822"] [data-value]')).toHaveText("Thu, 08 Oct 2026 09:00:00 +0000");
+    await expect(page.locator('[data-zone="Asia/Tokyo"] [data-value]')).toContainText("18:00:00");
+    await input.fill("Thu, 08 Oct 2026 10:00:00 +0100");
+    await expect(page.locator('[data-format="milliseconds"] [data-value]')).toHaveText("1791450000000");
+    await page.getByRole("button", { name: "Now" }).click();
+    await expect(page.locator("[data-relative]")).toHaveText(/now|seconds? ago/u);
+  });
+
+  test("the text diff counts and marks changes in both views", async ({ page }) => {
+    await page.goto("/tools/diff/");
+    await page.getByLabel("Original").fill("one\ntwo\nthree");
+    await page.getByLabel("Changed").fill("one\n2\nthree\nfour");
+    await expect(page.locator("[data-status]")).toHaveText("2 added, 1 removed, 2 unchanged");
+    // Phones start on the unified view, so pick side by side explicitly.
+    await page.getByRole("radio", { name: "Side by side" }).check();
+    await expect(page.locator('[data-output] td.diff__sign[data-type="remove"]')).toHaveText("−Removed");
+    await page.getByRole("radio", { name: "Unified" }).check();
+    await expect(page.locator('[data-output] tr[data-type="add"] .diff__text')).toHaveText(["2", "four"]);
+  });
+
+  test("the hash generator hashes text and makes UUIDs", async ({ page }) => {
+    await page.goto("/tools/hash/");
+    await page.getByLabel("Text to hash").fill("abc");
+    await expect(page.locator('[data-algorithm="SHA-256"] [data-value="hex"]')).toHaveText(
+      "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+    );
+    await expect(page.locator('[data-algorithm="SHA-1"] [data-value="base64"]')).toHaveText(
+      "qZk+NkcGgWq6PiVxeFDCbJzQ2J0=",
+    );
+    await page.getByLabel("How many (1 to 20)").fill("3");
+    await page.getByRole("button", { name: "Generate" }).click();
+    const uuids = page.locator("[data-uuids] code");
+    await expect(uuids).toHaveCount(3);
+    await expect(uuids.first()).toHaveText(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u);
+  });
 });

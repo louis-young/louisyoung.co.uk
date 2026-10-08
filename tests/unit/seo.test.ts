@@ -10,7 +10,7 @@ import {
   toolSchema,
   websiteSchema,
 } from "../../src/lib/seo";
-import { emphasise } from "../../src/lib/text";
+import { emphasise, queryFromPath } from "../../src/lib/text";
 
 describe("seo", () => {
   it("builds absolute URLs on the canonical origin", () => {
@@ -126,5 +126,18 @@ describe("seo", () => {
 describe("emphasise", () => {
   it("escapes HTML and converts *markers* to <em>", () => {
     expect(emphasise("Notes on *React* & <b>")).toBe("Notes on <em>React</em> &amp; &lt;b&gt;");
+  });
+});
+
+describe("queryFromPath", () => {
+  it.each([
+    ["/react-hooks_guide/", "react hooks guide"],
+    ["/writing/old-post.html", "old post"],
+    ["/caf%C3%A9-notes", "café notes"],
+    ["/%E0%A4%A", "%E0%A4%A"],
+    ["/404/", ""],
+    ["/", ""],
+  ])("%s searches for “%s”", (path, query) => {
+    expect(queryFromPath(path)).toBe(query);
   });
 });

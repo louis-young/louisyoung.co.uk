@@ -20,6 +20,10 @@ export const tools = [
   { slug: "colour", title: "tools.colour.title", summary: "tools.colour.summary", icon: "#" },
   { slug: "units", title: "tools.units.title", summary: "tools.units.summary", icon: "px" },
   { slug: "easing", title: "tools.easing.title", summary: "tools.easing.summary", icon: "∿" },
+  { slug: "cron", title: "tools.cron.title", summary: "tools.cron.summary", icon: "*/5" },
+  { slug: "timestamp", title: "tools.timestamp.title", summary: "tools.timestamp.summary", icon: "UTC" },
+  { slug: "diff", title: "tools.diff.title", summary: "tools.diff.summary", icon: "±" },
+  { slug: "hash", title: "tools.hash.title", summary: "tools.hash.summary", icon: "0x" },
 ] as const satisfies readonly Tool[];
 
 type ToolSlug = (typeof tools)[number]["slug"];

@@ -1,35 +1,61 @@
 ---
 import { hire } from "../../../content/data/hire";
+import { translatorFor } from "../../i18n/astro";
 import { filled, withoutPlaceholders } from "../../lib/placeholders";
 
 interface Props {
-  /** Show each service's bullet-point details, as on `/hire/`. */
+  /** Show each service's bullet-point details and a price footer, as on `/hire/`. */
   detailed?: boolean;
   headingLevel?: "h2" | "h3";
 }
 
+const t = translatorFor(Astro);
 const { detailed = false, headingLevel: Heading = "h3" } = Astro.props;
 const icons = ["◇", "◎", "△", "□"];
 ---
 
-<ul class="services" role="list">
-  {hire.services.map((service, index) => (
-    <li class="service card" id={`service-${service.id}`}>
-      <span class="service__icon" aria-hidden="true">
-        {icons[index % icons.length]}
-      </span>
-      <Heading class="service__name">{service.name}</Heading>
-      <p class="service__summary">{service.summary}</p>
-      {detailed && (
-        <ul class="service__details" role="list">
-          {withoutPlaceholders(service.details).map((detail) => (
-            <li>{detail}</li>
-          ))}
-        </ul>
-      )}
-      {filled(service.price) && <p class="service__price">{service.price}</p>}
-    </li>
-  ))}
+<ul class:list={["services", { "services--detailed": detailed }]} role="list">
+  {hire.services.map((service, index) => {
+    const details = withoutPlaceholders(service.details);
+    const price = filled(service.price);
+    return (
+      <li class:list={["service card", { rise: detailed }]} id={`service-${service.id}`}>
+        <div class="service__top">
+          <span class="service__icon" aria-hidden="true">
+            {icons[index % icons.length]}
+          </span>
+          {detailed && (
+            <span class="service__number" aria-hidden="true">
+              {String(index + 1).padStart(2, "0")}
+            </span>
+          )}
+        </div>
+        <Heading class="service__name">{service.name}</Heading>
+        <p class="service__summary">{service.summary}</p>
+        {detailed && details.length > 0 && (
+          <div class="service__includes">
+            <p class="label">{t("hire.includes")}</p>
+            <ul class="service__details" role="list">
+              {details.map((detail) => (
+                <li>{detail}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {price ? (
+          <p class="service__price">{price}</p>
+        ) : (
+          detailed && (
+            <p class="service__price">
+              <a href="#enquiry-title" class="service__ask">
+                {t("hire.askRates")} <span aria-hidden="true">→</span>
+              </a>
+            </p>
+          )
+        )}
+      </li>
+    );
+  })}
 </ul>
 
 <style>
@@ -46,6 +72,12 @@ const icons = ["◇", "◎", "△", "□"];
     padding: 1.5rem;
   }
 
+  .service__top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+
   .service__icon {
     display: grid;
     place-items: center;
@@ -56,6 +88,12 @@ const icons = ["◇", "◎", "△", "□"];
     background: var(--accent-soft);
     color: var(--accent);
     font-size: 1.1rem;
+  }
+
+  .service__number {
+    font: 500 var(--text-step--2) / 1 var(--mono);
+    color: var(--ink-faint);
+    font-variant-numeric: tabular-nums;
   }
 
   .service__name {
@@ -91,5 +129,67 @@ const icons = ["◇", "◎", "△", "□"];
     border-block-start: 1px solid var(--rule);
     font: 500 var(--text-step--1) / 1.3 var(--mono);
     color: var(--ink);
+  }
+
+  /* The /hire/ variant: roomier cards, a labelled list of what's included, and a price footer. */
+  .services--detailed {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+    gap: 1.25rem;
+  }
+
+  .services--detailed .service {
+    gap: 1rem;
+    padding: clamp(1.5rem, 1.2rem + 1vw, 2rem);
+  }
+
+  .services--detailed .service__icon {
+    width: 3rem;
+    height: 3rem;
+    border-color: color-mix(in oklch, var(--accent) 30%, var(--rule));
+    box-shadow: 0 8px 24px -10px var(--glow-1);
+    font-size: 1.25rem;
+  }
+
+  .services--detailed .service__name {
+    margin-block-start: 0.5rem;
+    font-size: var(--text-step-2);
+    letter-spacing: -0.03em;
+  }
+
+  .services--detailed .service__summary {
+    font-size: var(--text-step-0);
+  }
+
+  .service__includes {
+    display: grid;
+    gap: 0.75rem;
+    padding-block-start: 1rem;
+    border-block-start: 1px dashed var(--rule-strong);
+  }
+
+  .services--detailed .service__price {
+    margin-inline: calc(-1 * clamp(1.5rem, 1.2rem + 1vw, 2rem));
+    margin-block-end: calc(-1 * clamp(1.5rem, 1.2rem + 1vw, 2rem));
+    padding: 1rem clamp(1.5rem, 1.2rem + 1vw, 2rem);
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    background: color-mix(in oklch, var(--paper-sunken) 70%, transparent);
+  }
+
+  .service__ask {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .service__ask:hover {
+    text-decoration: underline;
+  }
+
+  .service__ask span {
+    display: inline-block;
+    transition: translate var(--duration-base) var(--ease-out-expo);
+  }
+
+  .service__ask:hover span {
+    translate: 3px 0;
   }
 </style>
