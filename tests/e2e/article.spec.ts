@@ -112,6 +112,9 @@ test.describe("layout", () => {
   for (const width of [320, 390, 768]) {
     test(`nothing overflows horizontally at ${width}px`, async ({ page }) => {
       await page.setViewportSize({ width, height: 800 });
+      // Measure settled layout: reduced motion also turns off cross-document view transitions,
+      // which would otherwise still be animating when the next page is measured.
+      await page.emulateMedia({ reducedMotion: "reduce" });
       for (const path of pages) {
         await page.goto(path);
         const { overflow, culprits } = await page.evaluate(() => {
