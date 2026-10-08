@@ -1,6 +1,7 @@
 import { cycleTheme } from "./theme";
 
-export type Shortcut = "palette" | "search" | "theme" | "next" | "previous" | "terminal";
+export type Shortcut =
+  "palette" | "search" | "theme" | "next" | "previous" | "terminal" | "nextArticle" | "previousArticle";
 
 const isTyping = (target: EventTarget | null) =>
   target instanceof HTMLElement && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/u.test(target.tagName));
@@ -16,6 +17,8 @@ export const shortcutFor = (
   if (event.key === "`") return "terminal";
   if (event.key === "j") return "next";
   if (event.key === "k") return "previous";
+  if (event.key === "[") return "previousArticle";
+  if (event.key === "]") return "nextArticle";
   return undefined;
 };
 
@@ -24,12 +27,18 @@ const LIST_LINKS = ".article-row__link, .work-row__link";
 
 /** Moves focus to the next or previous list row, starting from the first or last. */
 export const stepList = (delta: 1 | -1) => {
-  const links = [...document.querySelectorAll<HTMLAnchorElement>(LIST_LINKS)];
+  // Rows hidden by the archive's topic filter are skipped.
+  const links = [...document.querySelectorAll<HTMLAnchorElement>(LIST_LINKS)].filter(
+    (link) => !link.closest("[hidden]"),
+  );
   if (links.length === 0) return;
   const target = links[clampStep(links.indexOf(document.activeElement as HTMLAnchorElement), delta, links.length)];
   target?.focus();
   target?.scrollIntoView({ block: "nearest" });
 };
+
+/** Follows the page's rel="prev" or rel="next" link (an article's pager), if it has one. */
+const follow = (rel: "prev" | "next") => document.querySelector<HTMLAnchorElement>(`a[rel~="${rel}"]`)?.click();
 
 /** From nowhere (-1), j goes to the first item and k to the last; otherwise step and stop at the ends. */
 export const clampStep = (current: number, delta: 1 | -1, length: number) => {
@@ -58,6 +67,8 @@ export const initShortcuts = (openPalette: () => void, signal?: AbortSignal, ope
       if (shortcut === "terminal") openTerminal?.();
       if (shortcut === "next") stepList(1);
       if (shortcut === "previous") stepList(-1);
+      if (shortcut === "previousArticle") follow("prev");
+      if (shortcut === "nextArticle") follow("next");
     },
     { signal } as AddEventListenerOptions,
   );
