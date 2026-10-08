@@ -36,11 +36,17 @@ for (const [name, path] of Object.entries(routes)) {
         await page.clock.setFixedTime(new Date("2026-01-15T10:05:00Z"));
         await page.goto(path);
         await page.evaluate(() => document.fonts.ready);
-        await page
-          .locator("img")
-          .evaluateAll((images) =>
-            Promise.all(images.map((image) => (image as HTMLImageElement).decode().catch(() => undefined))),
-          );
+        // A lazy image below the fold never loads (so never decodes) in a full-page screenshot;
+        // load every image eagerly so the capture is complete and deterministic.
+        await page.locator("img").evaluateAll((images) =>
+          Promise.all(
+            images.map((image) => {
+              const img = image as HTMLImageElement;
+              img.loading = "eager";
+              return img.decode().catch(() => undefined);
+            }),
+          ),
+        );
         await expect(page).toHaveScreenshot(`${name}-${viewportName}-${theme}.png`, { fullPage: true });
       });
     }

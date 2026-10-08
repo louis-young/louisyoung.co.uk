@@ -1,72 +1,120 @@
 ---
-import { useTranslations } from "../../i18n";
+import PageHero from "../../components/sections/PageHero.astro";
+import { formatDate, isoDate, useTranslations } from "../../i18n";
 import { localeOf } from "../../i18n/astro";
 import Base from "../../layouts/Base.astro";
 import { getArticles, getTags } from "../../lib/articles";
 
-const t = useTranslations(localeOf(Astro));
-const tags = getTags(await getArticles());
+const locale = localeOf(Astro);
+const t = useTranslations(locale);
+const articles = await getArticles();
+// Articles are newest first, so the first match is each topic's latest.
+const topics = getTags(articles).flatMap(({ tag, count }) => {
+  const latest = articles.find((article) => article.data.tags.includes(tag));
+  return latest ? [{ tag, count, latest }] : [];
+});
 ---
 
-<Base title={t("tags.title")}>
-  <section class="container-page page">
-    <h1 class="page-title">{t("tags.title")}</h1>
+<Base title={t("tags.title")} description={t("tags.description")}>
+  <PageHero label={t("nav.writing")} title={t("tags.title")} lede={t("tags.description")} />
+  <div class="container-page topics-wrap">
     <ul class="topics" role="list">
-      {tags.map(({ tag, count }) => (
-        <li>
-          <a class="topic" href={`/tags/${tag}/`}>
-            <span class="topic__name">{tag}</span>
-            <span class="meta">{t("tags.count", { count })}</span>
-          </a>
+      {topics.map(({ tag, count, latest }) => (
+        <li class="card card--interactive topic">
+          <div class="topic__head">
+            <h2 class="topic__name">
+              <a class="stretched-link" href={`/tags/${tag}/`}>
+                <span class="topic__hash" aria-hidden="true">
+                  #
+                </span>
+                {tag}
+              </a>
+            </h2>
+            <span class="topic__count meta">{t("tags.count", { count })}</span>
+          </div>
+          <p class="topic__latest">
+            <span class="eyebrow">{t("tags.latest")}</span>
+            <span class="topic__title">{latest.data.title}</span>
+            <time class="topic__date" datetime={isoDate(latest.data.date)}>
+              {formatDate(latest.data.date, locale)}
+            </time>
+          </p>
         </li>
       ))}
     </ul>
-  </section>
+  </div>
 </Base>
 
 <style>
-  .page {
-    padding-block: clamp(3rem, 2rem + 5vw, 6rem) var(--spacing-section);
+  .topics-wrap {
+    padding-block: 0 var(--spacing-section);
   }
 
   .topics {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
     gap: 0.75rem;
-    margin-block-start: 2.5rem;
   }
 
   .topic {
-    display: flex;
-    align-items: baseline;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 0.5rem 1rem;
-    height: 100%;
-    padding: 1.25rem;
-    border: 1px solid var(--rule);
+    display: grid;
+    grid-template-rows: auto 1fr;
+    gap: 1.5rem;
+    padding: 1.25rem 1.25rem 1.1rem;
     border-radius: var(--radius-md);
-    background: color-mix(in oklch, var(--paper-raised) 85%, transparent);
-    text-decoration: none;
-    transition:
-      border-color var(--duration-fast) ease,
-      translate var(--duration-base) var(--ease-out-expo);
   }
 
-  .topic:hover {
-    border-color: var(--rule-strong);
-    translate: 0 -2px;
-  }
-
-  .topic:hover .topic__name {
-    color: var(--accent);
+  .topic__head {
+    display: grid;
+    align-content: start;
+    gap: 0.5rem;
   }
 
   .topic__name {
     font-weight: 600;
-    font-size: var(--text-step-1);
+    font-size: var(--text-step-2);
     line-height: 1.1;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.03em;
     overflow-wrap: anywhere;
+  }
+
+  .topic__name a {
+    text-decoration: none;
+    transition: color var(--duration-fast) ease;
+  }
+
+  .topic:hover .topic__name a {
+    color: var(--accent);
+  }
+
+  .topic__hash {
+    color: var(--accent);
+    font-weight: 400;
+  }
+
+  .topic__count {
+    font-size: var(--text-step--2);
+    color: var(--ink-faint);
+  }
+
+  .topic__latest {
+    display: grid;
+    align-content: end;
+    gap: 0.35rem;
+    padding-block-start: 1rem;
+    border-block-start: 1px solid var(--rule);
+  }
+
+  .topic__title {
+    font-size: var(--text-step--1);
+    font-weight: 500;
+    line-height: 1.4;
+    color: var(--ink-muted);
+    text-wrap: balance;
+  }
+
+  .topic__date {
+    font: 500 var(--text-step--2) / 1 var(--mono);
+    color: var(--ink-faint);
   }
 </style>

@@ -1,0 +1,317 @@
+---
+import PageHero from "../../components/sections/PageHero.astro";
+import { useTranslations } from "../../i18n";
+import { localeOf } from "../../i18n/astro";
+import Base from "../../layouts/Base.astro";
+
+const t = useTranslations(localeOf(Astro));
+const flags = [
+  { flag: "g", label: t("tools.regex.flagG"), checked: true },
+  { flag: "i", label: t("tools.regex.flagI"), checked: false },
+  { flag: "m", label: t("tools.regex.flagM"), checked: false },
+  { flag: "s", label: t("tools.regex.flagS"), checked: false },
+  { flag: "u", label: t("tools.regex.flagU"), checked: false },
+  { flag: "y", label: t("tools.regex.flagY"), checked: false },
+];
+const pattern = String.raw`(?<year>\d{4})-(?<month>\d{2})-(\d{2})`;
+---
+
+<Base title={t("tools.regex.title")} description={t("tools.regex.summary")} image="/og/tools.png">
+  <PageHero label={t("nav.tools")} title={t("tools.regex.title")} lede={t("tools.regex.summary")} />
+  <div
+    class="container-page regex"
+    data-regex
+    data-count-none={t("tools.regex.countNone")}
+    data-count-one={t("tools.regex.countOne")}
+    data-count-other={t("tools.regex.countOther")}
+    data-truncated={t("tools.regex.truncated")}
+    data-error-pattern={t("tools.regex.invalid")}
+    data-match-at={t("tools.regex.matchAt")}
+    data-group={t("tools.regex.group")}
+    data-group-named={t("tools.regex.groupNamed")}
+    data-unmatched={t("tools.regex.unmatched")}
+    data-empty-match={t("tools.regex.emptyMatch")}
+  >
+    <div class="regex__inputs card">
+      <div class="regex__field">
+        <label class="regex__label" for="regex-pattern">
+          {t("tools.regex.pattern")}
+        </label>
+        <div class="regex__pattern">
+          <span aria-hidden="true">/</span>
+          <input
+            id="regex-pattern"
+            type="text"
+            class="regex__control"
+            value={pattern}
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck="false"
+            aria-describedby="regex-pattern-hint regex-status"
+            data-pattern
+          />
+          <span aria-hidden="true">/</span>
+        </div>
+        <p id="regex-pattern-hint" class="regex__hint">
+          {t("tools.regex.patternHint")}
+        </p>
+      </div>
+      <div class="regex__flags" role="group" aria-labelledby="regex-flags">
+        <p id="regex-flags" class="regex__label">
+          {t("tools.regex.flags")}
+        </p>
+        <div class="regex__flag-list">
+          {flags.map((item) => (
+            <label class="regex__flag">
+              <input type="checkbox" checked={item.checked} data-flag={item.flag} />
+              <code>{item.flag}</code>
+              <span>{item.label}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+      <div class="regex__field">
+        <label class="regex__label" for="regex-text">
+          {t("tools.regex.text")}
+        </label>
+        <textarea
+          id="regex-text"
+          class="regex__control regex__text"
+          rows="8"
+          spellcheck="false"
+          data-text
+        >{t("tools.regex.sample")}</textarea>
+      </div>
+    </div>
+
+    <div class="regex__result card">
+      <p id="regex-status" class="regex__status" role="status" data-status></p>
+      <section class="regex__section" aria-labelledby="regex-highlighted">
+        <h2 id="regex-highlighted" class="label">
+          {t("tools.regex.highlighted")}
+        </h2>
+        <div class="regex__highlight" data-highlight></div>
+      </section>
+      <section class="regex__section" aria-labelledby="regex-matches">
+        <h2 id="regex-matches" class="label">
+          {t("tools.regex.matches")}
+        </h2>
+        <ol class="regex__matches" role="list" data-matches></ol>
+      </section>
+    </div>
+  </div>
+</Base>
+
+<script>
+  import { initRegex } from "../../scripts/tool-regex";
+
+  initRegex();
+</script>
+
+<style>
+  .regex {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 1rem;
+    align-items: start;
+    padding-block-end: var(--spacing-section);
+  }
+
+  .regex > .card {
+    display: grid;
+    gap: 1.5rem;
+    min-width: 0;
+    padding: clamp(1.25rem, 1rem + 1vw, 2rem);
+  }
+
+  .regex__field {
+    display: grid;
+    gap: 0.45rem;
+  }
+
+  .regex__label {
+    font-weight: 500;
+    font-size: var(--text-step--1);
+  }
+
+  .regex__pattern {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--ink-faint);
+    font: 500 var(--text-step-0) / 1 var(--mono);
+  }
+
+  .regex__control {
+    flex: 1;
+    width: 100%;
+    min-width: 0;
+    min-height: 2.75rem;
+    padding: 0.5rem 0.8rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+    color: var(--ink);
+    font: 400 var(--text-step--1) / 1.6 var(--mono);
+  }
+
+  .regex__text {
+    min-height: 10rem;
+    resize: vertical;
+  }
+
+  .regex__control[aria-invalid="true"] {
+    border-color: var(--warning);
+  }
+
+  .regex__control:focus-visible,
+  .regex__flag input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .regex__hint {
+    font-size: var(--text-step--2);
+    color: var(--ink-faint);
+  }
+
+  .regex__flags {
+    display: grid;
+    gap: 0.6rem;
+  }
+
+  .regex__flag-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 11rem), 1fr));
+    gap: 0.25rem 1rem;
+  }
+
+  .regex__flag {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-height: 2.25rem;
+    font-size: var(--text-step--1);
+    cursor: pointer;
+  }
+
+  .regex__flag input {
+    flex-shrink: 0;
+    width: 1.1rem;
+    height: 1.1rem;
+    accent-color: var(--accent);
+  }
+
+  .regex__flag code {
+    color: var(--accent);
+    font: 600 var(--text-step--1) / 1 var(--mono);
+  }
+
+  .regex__flag span {
+    color: var(--ink-muted);
+  }
+
+  .regex__status {
+    padding: 0.6rem 0.9rem;
+    border-radius: var(--radius-sm);
+    background: var(--accent-soft);
+    color: var(--ink);
+    font-size: var(--text-step--1);
+    overflow-wrap: anywhere;
+  }
+
+  .regex__status[data-invalid] {
+    background: var(--warning-soft);
+  }
+
+  .regex__section {
+    display: grid;
+    gap: 0.6rem;
+    min-width: 0;
+  }
+
+  .regex__highlight {
+    padding: 0.8rem 1rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+    font: 400 var(--text-step--1) / 1.7 var(--mono);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .regex__highlight:empty {
+    display: none;
+  }
+
+  .regex__highlight :global(.regex__mark) {
+    padding-block: 0.1em;
+    border-radius: 0.2em;
+    background: var(--selection);
+    color: var(--ink);
+    box-shadow: inset 0 -2px 0 var(--accent);
+  }
+
+  .regex__highlight :global(.regex__mark[data-alternate]) {
+    background: color-mix(in oklch, var(--selection) 55%, var(--paper-sunken));
+  }
+
+  .regex__matches {
+    display: grid;
+  }
+
+  .regex__matches :global(.regex__match) {
+    display: grid;
+    gap: 0.4rem;
+    padding-block: 0.75rem;
+    border-block-start: 1px solid var(--rule);
+  }
+
+  .regex__matches :global(.regex__match-head) {
+    color: var(--ink-muted);
+    font: 500 var(--text-step--2) / 1.4 var(--mono);
+  }
+
+  .regex__matches :global(.regex__match-text) {
+    justify-self: start;
+    max-width: 100%;
+    padding: 0.15rem 0.45rem;
+    border-radius: 0.3rem;
+    background: var(--paper-sunken);
+    font: 500 var(--text-step--1) / 1.5 var(--mono);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .regex__matches :global(.regex__groups) {
+    display: grid;
+    gap: 0.25rem;
+    font-size: var(--text-step--1);
+  }
+
+  .regex__matches :global(.regex__group) {
+    display: grid;
+    grid-template-columns: minmax(0, 11rem) minmax(0, 1fr);
+    gap: 0.75rem;
+  }
+
+  .regex__matches :global(.regex__group dt) {
+    color: var(--ink-muted);
+  }
+
+  .regex__matches :global(.regex__group dd) {
+    font-family: var(--mono);
+    overflow-wrap: anywhere;
+  }
+
+  .regex__matches :global(.regex__unmatched) {
+    color: var(--ink-faint);
+    font-style: italic;
+  }
+
+  @media (width < 56rem) {
+    .regex {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

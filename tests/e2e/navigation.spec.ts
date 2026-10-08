@@ -4,7 +4,7 @@ test.describe("navigation", () => {
   test("home introduces Louis and links to every section", async ({ page }) => {
     await page.goto("/");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(/Louis\s*Young/iu);
-    for (const name of ["Selected work", "More writing", "Work with me", "Toolbox", "How I work"]) {
+    for (const name of ["Selected work", "More writing", "Work with me", "Toolbox", "Keyboard first", "How I work"]) {
       await expect(page.getByRole("heading", { level: 2, name: new RegExp(name, "iu") })).toBeVisible();
     }
     await expect(page.locator(".work-row")).toHaveCount(workSlugs.length);

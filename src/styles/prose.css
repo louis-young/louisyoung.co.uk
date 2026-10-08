@@ -35,29 +35,80 @@
 .prose h3 {
   margin-block-start: 2em;
   font-size: var(--text-step-1);
+  letter-spacing: -0.025em;
+  line-height: 1.2;
 }
 
-.prose :where(h2, h3) + * {
+.prose h4 {
+  margin-block-start: 1.75em;
+  font-size: var(--text-step-0);
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+
+.prose :where(h2, h3, h4) + * {
   margin-block-start: 0.75em;
 }
 
+/*
+ * Headings link to themselves. A "#" appears in the margin on hover or focus, and clicking
+ * also copies the section's URL (src/scripts/reading.ts), confirmed by a brief badge.
+ */
 .prose .heading-anchor {
+  color: inherit;
   text-decoration: none;
+  border-radius: 0.25rem;
 }
 
 .prose .heading-anchor::before {
   content: "#";
   position: absolute;
-  inset-inline-start: -1.1em;
-  color: var(--ink-faint);
+  inset-inline-start: -1em;
+  padding-inline-end: 0.3em;
+  color: var(--accent);
+  font-family: var(--mono);
   font-weight: 400;
   opacity: 0;
-  transition: opacity var(--duration-fast) ease;
+  translate: 0.25em 0;
+  transition:
+    opacity var(--duration-fast) ease,
+    translate var(--duration-base) var(--ease-out-expo);
 }
 
-.prose :where(h2, h3):hover .heading-anchor::before,
+.prose :where(h2, h3, h4):hover .heading-anchor::before,
 .prose .heading-anchor:focus-visible::before {
   opacity: 1;
+  translate: 0 0;
+}
+
+/* No margin to hang it in on narrow screens; the heading itself is still the link. */
+@media (width < 48rem) {
+  .prose .heading-anchor::before {
+    content: none;
+  }
+}
+
+.prose :where(h2, h3, h4)[data-copied]::after {
+  content: attr(data-copied);
+  display: inline-flex;
+  align-items: center;
+  margin-inline-start: 0.6rem;
+  padding: 0.3rem 0.55rem;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font: 500 var(--text-step--2) / 1 var(--mono);
+  letter-spacing: 0.02em;
+  vertical-align: 0.3em;
+  white-space: nowrap;
+  animation: copied-in var(--duration-base) var(--ease-out-expo);
+}
+
+@keyframes copied-in {
+  from {
+    opacity: 0;
+    translate: -0.25rem 0;
+  }
 }
 
 .prose a:not(.heading-anchor) {
@@ -91,6 +142,14 @@
   padding-inline-start: 1.4em;
 }
 
+.prose li > :where(ul, ol) {
+  margin-block-start: 0.4em;
+}
+
+.prose li > p + p {
+  margin-block-start: 0.6em;
+}
+
 .prose ul {
   list-style: none;
 }
@@ -114,9 +173,14 @@
   list-style: decimal;
 }
 
+.prose ol > li {
+  padding-inline-start: 0.25em;
+}
+
 .prose ol > li::marker {
   font-family: var(--mono);
   font-size: 0.8em;
+  font-variant-numeric: tabular-nums;
   color: var(--ink-muted);
 }
 
@@ -136,12 +200,47 @@
 }
 
 .prose blockquote {
-  padding-inline-start: 1.25em;
+  margin-block: 1.75em;
+  padding: 0.15em 0 0.15em 1.25em;
   border-inline-start: 2px solid var(--accent);
-  font-size: 1.1em;
+  font-size: 1.05em;
   font-weight: 450;
-  letter-spacing: -0.015em;
+  line-height: 1.6;
+  letter-spacing: -0.01em;
   color: var(--ink);
+}
+
+.prose blockquote > * + * {
+  margin-block-start: 0.75em;
+}
+
+.prose blockquote cite {
+  display: block;
+  font-size: var(--text-step--1);
+  font-style: normal;
+  color: var(--ink-muted);
+}
+
+.prose kbd {
+  font-size: 0.8em;
+  vertical-align: 0.1em;
+}
+
+.prose mark {
+  padding-inline: 0.15em;
+  border-radius: 0.2em;
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+
+.prose :where(sup, sub) {
+  font-size: 0.7em;
+  line-height: 0;
+}
+
+.prose :where(p, figure) > :where(img, video) {
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-md);
 }
 
 .prose hr {
@@ -165,23 +264,91 @@
   font-size: var(--text-step--1);
 }
 
+/* Untitled frames get a slim header naming the language (see ec.config.mjs). */
+.prose .expressive-code .frame.has-language {
+  --button-spacing: 0.3rem;
+}
+
+.prose .expressive-code .frame.has-language > .header {
+  display: flex;
+  align-items: center;
+  min-height: 2.6rem;
+  padding-inline: 1.25rem 3.5rem;
+  border: 1px solid var(--rule);
+  border-block-end: 0;
+  border-start-start-radius: 0.875rem;
+  border-start-end-radius: 0.875rem;
+  background: var(--paper-sunken);
+}
+
+.prose .expressive-code .frame.has-language pre {
+  border-start-start-radius: 0;
+  border-start-end-radius: 0;
+}
+
+.prose .expressive-code .language {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font: 500 var(--text-step--2) / 1 var(--mono);
+  letter-spacing: 0.02em;
+  color: var(--ink-faint);
+}
+
+.prose .expressive-code .language::before {
+  content: "";
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--accent) 22%, transparent);
+}
+
+/* The copy button lives in the header, so it can stay visible instead of appearing on hover. */
+.prose .expressive-code .frame.has-language .copy button {
+  opacity: 0.75;
+  border-radius: var(--radius-sm);
+  background: transparent;
+}
+
+.prose .expressive-code .frame.has-language .copy button::before {
+  border-color: transparent;
+}
+
+.prose .expressive-code .frame.has-language .copy button:is(:hover, :focus-visible) {
+  opacity: 1;
+}
+
 .prose table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-md);
+  overflow: hidden;
   font-family: var(--sans);
   font-size: var(--text-step--1);
+  line-height: 1.5;
   font-variant-numeric: tabular-nums;
 }
 
 .prose :where(th, td) {
-  padding: 0.6em 0.8em;
+  padding: 0.7em 1em;
   border-block-end: 1px solid var(--rule);
   text-align: start;
+  vertical-align: top;
+}
+
+.prose tr:last-child > td {
+  border-block-end: 0;
 }
 
 .prose th {
-  font-weight: 600;
-  border-block-end-color: var(--rule-strong);
+  background: var(--paper-sunken);
+  font: 500 var(--text-step--2) / 1.4 var(--mono);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
 }
 
 .prose figcaption {

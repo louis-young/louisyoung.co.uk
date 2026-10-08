@@ -4,6 +4,7 @@ import { render } from "astro:content";
 
 import ArticleMeta from "../components/ArticleMeta.astro";
 import ArticleRow from "../components/ArticleRow.astro";
+import AuthorCard from "../components/AuthorCard.astro";
 import CopyLink from "../components/CopyLink.astro";
 import Icon from "../components/Icon.astro";
 import Callout from "../components/mdx/Callout.astro";
@@ -40,6 +41,8 @@ const toc = buildToc(headings);
 const { previous, next } = getAdjacent(articles, article.id);
 const related = getRelated(articles, article, 2);
 const ogImage = `/og/${article.id}.png`;
+const [hintBefore = "", , hintMiddle = "", , hintAfter = ""] =
+  t("article.shortcutHint").split(/(\{previous\}|\{next\})/u);
 const editUrl = `${site.repository}/edit/${site.defaultBranch}/content/articles/${article.id}/index.mdx`;
 ---
 
@@ -60,7 +63,7 @@ const editUrl = `${site.repository}/edit/${site.defaultBranch}/content/articles/
     tags: data.tags,
   })}
 >
-  <ReadingProgress />
+  <ReadingProgress minutes={minutes} />
   <article class="article" data-pagefind-body>
     <header class="article__header container-page">
       <div class="article__aside" data-pagefind-ignore>
@@ -106,10 +109,18 @@ const editUrl = `${site.repository}/edit/${site.defaultBranch}/content/articles/
       <div class="article__toc" data-pagefind-ignore>
         <Toc items={toc} />
       </div>
-      <div class="article__body prose" data-code-label={t("article.codeLabel")}>
+      <div class="article__body prose" data-code-label={t("article.codeLabel")} data-reading-body>
         <Content components={{ Callout, Demo, Sandbox }} />
       </div>
     </div>
+
+    <p
+      class="visually-hidden"
+      role="status"
+      data-anchor-status
+      data-message={t("article.sectionCopied")}
+      data-copied-label={t("article.copiedShort")}
+    ></p>
 
     <footer class="article__footer container-text" data-pagefind-ignore>
       <div class="article__actions">
@@ -124,12 +135,17 @@ const editUrl = `${site.repository}/edit/${site.defaultBranch}/content/articles/
         </a>
       </div>
 
+      <AuthorCard />
+
       {(previous || next) && (
         <nav class="pager" aria-label={`${t("article.previous")} / ${t("article.next")}`}>
           {previous ? (
             <a class="pager__link" href={articlePath(previous)} rel="prev">
               <span class="eyebrow">
                 <Icon name="arrow-left" size={14} /> {t("article.previous")}
+                <kbd class="pager__key" aria-hidden="true">
+                  [
+                </kbd>
               </span>
               <span class="pager__title">{previous.data.title}</span>
             </a>
@@ -139,12 +155,24 @@ const editUrl = `${site.repository}/edit/${site.defaultBranch}/content/articles/
           {next && (
             <a class="pager__link pager__link--next" href={articlePath(next)} rel="next">
               <span class="eyebrow">
+                <kbd class="pager__key" aria-hidden="true">
+                  ]
+                </kbd>
                 {t("article.next")} <Icon name="arrow-right" size={14} />
               </span>
               <span class="pager__title">{next.data.title}</span>
             </a>
           )}
         </nav>
+      )}
+      {(previous || next) && (
+        <p class="pager__hint" aria-hidden="true">
+          {hintBefore}
+          <kbd>[</kbd>
+          {hintMiddle}
+          <kbd>]</kbd>
+          {hintAfter}
+        </p>
       )}
     </footer>
   </article>
@@ -162,6 +190,11 @@ const editUrl = `${site.repository}/edit/${site.defaultBranch}/content/articles/
 </Base>
 
 <script>
+  import { initHeadingLinks, initTimeLeft } from "../scripts/reading";
+
+  initTimeLeft();
+  initHeadingLinks();
+
   /**
    * Expressive Code turns overflowing code blocks into focusable `role="region"` elements so
    * keyboard users can scroll them. Regions need distinct names, so number each one.
@@ -357,9 +390,19 @@ const editUrl = `${site.repository}/edit/${site.defaultBranch}/content/articles/
   }
 
   .article__footer {
-    margin-block-start: var(--spacing-section);
-    padding-block-start: 2rem;
-    border-block-start: 1px solid var(--rule);
+    display: grid;
+    gap: 1.5rem;
+    margin-block-start: clamp(3rem, 2rem + 4vw, 5rem);
+  }
+
+  /* A quiet end mark: the text is over, the furniture begins. */
+  .article__footer::before {
+    content: "";
+    justify-self: center;
+    width: 2.5rem;
+    height: 1px;
+    margin-block-end: 1rem;
+    background: var(--rule-strong);
   }
 
   .article__actions {
@@ -372,12 +415,12 @@ const editUrl = `${site.repository}/edit/${site.defaultBranch}/content/articles/
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1rem;
-    margin-block-start: 2.5rem;
+    margin-block-start: 1rem;
   }
 
   .pager__link {
     display: grid;
-    gap: 0.5rem;
+    gap: 0.6rem;
     align-content: start;
     padding: 1.25rem;
     border: 1px solid var(--rule);
@@ -386,6 +429,7 @@ const editUrl = `${site.repository}/edit/${site.defaultBranch}/content/articles/
     text-decoration: none;
     transition:
       border-color var(--duration-fast) ease,
+      background-color var(--duration-fast) ease,
       translate var(--duration-base) var(--ease-out-expo);
   }
 
@@ -401,7 +445,7 @@ const editUrl = `${site.repository}/edit/${site.defaultBranch}/content/articles/
   .pager__link .eyebrow {
     display: inline-flex;
     align-items: center;
-    gap: 0.35rem;
+    gap: 0.4rem;
   }
 
   .pager__link--next {
@@ -414,6 +458,36 @@ const editUrl = `${site.repository}/edit/${site.defaultBranch}/content/articles/
     font-size: var(--text-step-0);
     line-height: 1.3;
     letter-spacing: -0.015em;
+    text-wrap: balance;
+    transition: color var(--duration-fast) ease;
+  }
+
+  .pager__key {
+    font-size: 0.95em;
+  }
+
+  .pager__hint {
+    display: none;
+    font-size: var(--text-step--2);
+    color: var(--ink-faint);
+    text-align: center;
+  }
+
+  .pager__hint kbd {
+    margin-inline: 0.3em;
+  }
+
+  /* Keyboard hints only where a keyboard is likely. */
+  @media (hover: none), (pointer: coarse) {
+    .pager__key {
+      display: none;
+    }
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .pager__hint {
+      display: block;
+    }
   }
 
   .related {

@@ -1,4 +1,29 @@
+---
+import { translatorFor } from "../i18n/astro";
+
+interface Props {
+  /** Estimated reading time for the whole article; enables the "N min left" pill. */
+  minutes?: number;
+}
+
+const { minutes } = Astro.props;
+const t = translatorFor(Astro);
+---
+
 <div class="reading-progress" aria-hidden="true"></div>
+{minutes !== undefined && (
+  <p
+    class="time-left"
+    data-time-left
+    data-minutes={minutes}
+    data-template={t("article.timeLeft")}
+    data-done={t("article.finished")}
+    hidden
+  >
+    <span class="time-left__ring" aria-hidden="true" />
+    <span data-time-left-label>{t("article.timeLeft", { minutes })}</span>
+  </p>
+)}
 
 <style>
   .reading-progress {
@@ -30,6 +55,77 @@
     }
     to {
       transform: scaleX(1);
+    }
+  }
+
+  /* A quiet pill in the corner: a progress ring and the minutes still to read. */
+  .time-left {
+    position: fixed;
+    inset-block-end: max(1rem, env(safe-area-inset-bottom));
+    inset-inline-end: max(1rem, env(safe-area-inset-right));
+    z-index: 20;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.25rem;
+    padding: 0.35rem 0.85rem 0.35rem 0.45rem;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    /* Solid rather than a backdrop blur: it is fixed, so a blur would re-render on every scroll frame. */
+    background: color-mix(in oklch, var(--paper-raised) 96%, transparent);
+    box-shadow: var(--shadow-raised);
+    font: 500 var(--text-step--2) / 1 var(--mono);
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-muted);
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    translate: 0 0.5rem;
+    visibility: hidden;
+    transition:
+      opacity var(--duration-base) ease,
+      translate var(--duration-base) var(--ease-out-expo),
+      visibility 0s linear var(--duration-base);
+  }
+
+  .time-left[data-shown] {
+    opacity: 1;
+    translate: 0 0;
+    visibility: visible;
+    transition-delay: 0s;
+  }
+
+  .time-left__ring {
+    --size: 1.35rem;
+    position: relative;
+    width: var(--size);
+    height: var(--size);
+    border-radius: 50%;
+    background: conic-gradient(var(--signal) calc(var(--progress, 0) * 1turn), var(--rule-strong) 0);
+    mask: radial-gradient(circle at center, transparent 54%, black 56%);
+  }
+
+  @media (width >= 80rem) {
+    .time-left {
+      inset-inline-end: 1.5rem;
+      inset-block-end: 1.5rem;
+    }
+  }
+
+  @media print {
+    .time-left {
+      display: none;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .time-left {
+      border-color: CanvasText;
+    }
+
+    .time-left__ring {
+      forced-color-adjust: none;
+      background: conic-gradient(CanvasText calc(var(--progress, 0) * 1turn), Canvas 0);
     }
   }
 </style>

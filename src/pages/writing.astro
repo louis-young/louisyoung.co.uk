@@ -1,5 +1,6 @@
 ---
 import ArticleRow from "../components/ArticleRow.astro";
+import Icon from "../components/Icon.astro";
 import PageHero from "../components/sections/PageHero.astro";
 import { useTranslations } from "../i18n";
 import { localeOf } from "../i18n/astro";
@@ -9,34 +10,74 @@ import { getArticles, getTags, groupByYear } from "../lib/articles";
 const t = useTranslations(localeOf(Astro));
 const articles = await getArticles();
 const tags = getTags(articles);
+const years = groupByYear(articles);
 ---
 
 <Base title={t("writing.title")} description={t("writing.description")} image="/og/writing.png">
   <PageHero label={t("nav.writing")} title={t("writing.title")} lede={t("home.writingIntro")}>
     <a href="/search/" class="button button--small">
+      <Icon name="search" size={14} />
       {t("nav.search")} <kbd aria-hidden="true">/</kbd>
     </a>
     <a href="/rss.xml" class="button button--small">
+      <Icon name="rss" size={14} />
       RSS
     </a>
   </PageHero>
 
   <div class="container-page archive">
-    <aside class="archive__aside" aria-label={t("tags.title")}>
-      <p class="label">{t("writing.count", { count: articles.length })}</p>
-      <ul class="archive__tags" role="list">
-        {tags.map(({ tag, count }) => (
+    <div class="archive__aside">
+      <p class="label archive__status" aria-live="polite" data-filter-status>
+        {t("writing.count", { count: articles.length })}
+      </p>
+      <nav class="archive__filter" aria-label={t("writing.filter")} data-filter>
+        <ul class="archive__chips" role="list">
           <li>
-            <a class="tag" href={`/tags/${tag}/`}>
-              {tag} <span class="archive__count">{count}</span>
+            <a
+              class="chip-filter"
+              href="/writing/"
+              aria-current="true"
+              data-topic=""
+              data-announce={t("writing.count", { count: articles.length })}
+            >
+              {t("writing.allTopics")}
+              <span class="chip-filter__count">{articles.length}</span>
             </a>
           </li>
-        ))}
-      </ul>
-    </aside>
+          {tags.map(({ tag, count }) => (
+            <li>
+              <a
+                class="chip-filter"
+                href={`/tags/${tag}/`}
+                data-topic={tag}
+                data-announce={t("writing.filtered", { count, tag })}
+              >
+                {tag}
+                <span class="chip-filter__count">{count}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+      <nav class="archive__years" aria-label={t("writing.years")}>
+        <p class="label" aria-hidden="true">
+          {t("writing.years")}
+        </p>
+        <ul role="list">
+          {years.map(([year, group]) => (
+            <li>
+              <a href={`#year-${year}`} class="archive__year-link" data-year-link={year}>
+                <span>{year}</span>
+                <span class="archive__year-count">{group.length}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    </div>
     <div>
-      {groupByYear(articles).map(([year, group]) => (
-        <section class="archive__year" aria-labelledby={`year-${year}`}>
+      {years.map(([year, group]) => (
+        <section class="archive__year" aria-labelledby={`year-${year}`} data-year={year}>
           <h2 id={`year-${year}`} class="archive__year-label">
             {year}
           </h2>
@@ -50,6 +91,12 @@ const tags = getTags(articles);
     </div>
   </div>
 </Base>
+
+<script>
+  import { initArchiveFilter } from "../scripts/archive";
+
+  initArchiveFilter();
+</script>
 
 <style>
   .archive {
@@ -65,18 +112,55 @@ const tags = getTags(articles);
     top: 6rem;
     align-self: start;
     display: grid;
-    gap: 1rem;
+    gap: 1.25rem;
     padding-block-start: 1.25rem;
   }
 
-  .archive__tags {
+  .archive__status {
+    min-height: 1.4em;
+  }
+
+  .archive__chips {
     display: flex;
     flex-wrap: wrap;
     gap: 0.4rem;
   }
 
-  .archive__count {
-    margin-inline-start: 0.4em;
+  .archive__years {
+    display: grid;
+    gap: 0.6rem;
+    padding-block-start: 1.25rem;
+    border-block-start: 1px solid var(--rule);
+  }
+
+  .archive__years ul {
+    display: grid;
+    gap: 0.1rem;
+  }
+
+  .archive__year-link {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 0.35rem 0.6rem;
+    margin-inline: -0.6rem;
+    border-radius: var(--radius-sm);
+    font: 500 var(--text-step--1) / 1.2 var(--sans);
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-muted);
+    text-decoration: none;
+    transition:
+      color var(--duration-fast) ease,
+      background-color var(--duration-fast) ease;
+  }
+
+  .archive__year-link:hover {
+    color: var(--ink);
+    background: var(--paper-sunken);
+  }
+
+  .archive__year-count {
+    font: 500 var(--text-step--2) / 1 var(--mono);
     color: var(--ink-faint);
   }
 
@@ -84,6 +168,11 @@ const tags = getTags(articles);
     display: grid;
     grid-template-columns: 6rem minmax(0, 1fr);
     gap: 1.5rem;
+    scroll-margin-top: 6rem;
+  }
+
+  .archive__year + .archive__year {
+    margin-block-start: 2.5rem;
   }
 
   .archive__year-label {
@@ -93,6 +182,7 @@ const tags = getTags(articles);
     padding-block-start: 1.4rem;
     font-weight: 600;
     font-size: var(--text-step-2);
+    font-variant-numeric: tabular-nums;
     letter-spacing: -0.04em;
   }
 
@@ -100,18 +190,18 @@ const tags = getTags(articles);
     border-block-end: 1px solid var(--rule-strong);
   }
 
-  kbd {
-    padding: 0.1em 0.4em;
-    border: 1px solid currentColor;
-  }
-
   @media (width < 56rem) {
     .archive {
       grid-template-columns: 1fr;
+      gap: 1.5rem;
     }
 
     .archive__aside {
       position: static;
+    }
+
+    .archive__years {
+      display: none;
     }
 
     .archive__year {
@@ -121,6 +211,7 @@ const tags = getTags(articles);
 
     .archive__year-label {
       position: static;
+      padding-block-end: 0.25rem;
     }
   }
 </style>

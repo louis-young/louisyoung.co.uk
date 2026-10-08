@@ -1,0 +1,122 @@
+---
+import { Image } from "astro:assets";
+
+import { profile } from "../../content/data/profile";
+import portrait from "../assets/author.jpg";
+import { translatorFor } from "../i18n/astro";
+import { site } from "../site.config";
+import Icon from "./Icon.astro";
+
+const t = translatorFor(Astro);
+---
+
+<div class="author card">
+  <Image src={portrait} alt="" width={128} height={128} class="author__avatar" />
+  <div class="author__text">
+    <p class="eyebrow">{t("article.writtenBy")}</p>
+    <p class="author__name">
+      {profile.name}
+      <span class="author__headline">{profile.headline}</span>
+    </p>
+    <p class="author__intro">{profile.intro}</p>
+  </div>
+  <div class="author__links">
+    <ul class="author__social" role="list" aria-label={t("article.authorLinks")}>
+      {site.social.map((item) => (
+        <li>
+          <a class="icon-button author__icon" href={item.href} rel="me noopener" aria-label={item.label}>
+            <Icon name={item.id} size={16} />
+          </a>
+        </li>
+      ))}
+    </ul>
+    <a class="button button--small" href="/hire/">
+      {t("home.hireTitle")}
+      <Icon name="arrow-right" size={14} />
+    </a>
+  </div>
+</div>
+
+<style>
+  .author {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      "avatar text"
+      "avatar links";
+    gap: 1rem 1.25rem;
+    padding: 1.5rem;
+  }
+
+  .author :global(.author__avatar) {
+    grid-area: avatar;
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: 55% 30%;
+    box-shadow:
+      0 0 0 1px var(--rule-strong),
+      0 0 0 4px var(--paper),
+      0 0 0 5px color-mix(in oklch, var(--accent) 45%, transparent);
+  }
+
+  .author__text {
+    grid-area: text;
+    display: grid;
+    gap: 0.4rem;
+  }
+
+  .author__name {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.1rem 0.6rem;
+    font-weight: 600;
+    font-size: var(--text-step-1);
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+  }
+
+  .author__headline {
+    font-weight: 450;
+    font-size: var(--text-step--1);
+    letter-spacing: 0;
+    color: var(--ink-muted);
+  }
+
+  .author__intro {
+    max-width: 52ch;
+    font-size: var(--text-step--1);
+    line-height: 1.6;
+    color: var(--ink-muted);
+  }
+
+  .author__links {
+    grid-area: links;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding-block-start: 1rem;
+    border-block-start: 1px solid var(--rule);
+  }
+
+  .author__social {
+    display: flex;
+    gap: 0.25rem;
+    margin-inline-start: -0.6rem;
+  }
+
+  @media (width < 30rem) {
+    .author {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas:
+        "avatar"
+        "text"
+        "links";
+      padding: 1.25rem;
+    }
+  }
+</style>

@@ -1,5 +1,6 @@
 ---
 import ArticleRow from "../../components/ArticleRow.astro";
+import Icon from "../../components/Icon.astro";
 import { useTranslations } from "../../i18n";
 import { localeOf } from "../../i18n/astro";
 import Base from "../../layouts/Base.astro";
@@ -7,70 +8,171 @@ import { getArticles, getTags, type Article } from "../../lib/articles";
 
 export const getStaticPaths = async () => {
   const articles = await getArticles();
-  return getTags(articles).map(({ tag }) => ({
+  const tags = getTags(articles);
+  return tags.map(({ tag }) => ({
     params: { tag },
-    props: { articles: articles.filter((article) => article.data.tags.includes(tag)) },
+    props: { articles: articles.filter((article) => article.data.tags.includes(tag)), tags },
   }));
 };
 
 interface Props {
   articles: Article[];
+  tags: { tag: string; count: number }[];
 }
 
 const { tag } = Astro.params;
-const { articles } = Astro.props;
+const { articles, tags } = Astro.props;
 const t = useTranslations(localeOf(Astro));
 ---
 
 <Base title={t("tags.heading", { tag })}>
-  <section class="container-page page">
-    <p class="label">
+  <header class="container-page topic-hero">
+    <p class="label topic-hero__trail">
       <a href="/writing/">{t("nav.writing")}</a>
       <span aria-hidden="true">/</span>
       <a href="/tags/">{t("tags.title")}</a>
     </p>
-    <h1 class="page__title">
-      <span class="label page__prefix">{t("tags.prefix")}</span>
-      <span class="page-title page__tag">{tag}</span>
+    <h1 class="topic-hero__title">
+      <span class="label topic-hero__prefix">{t("tags.prefix")}</span>
+      <span class="page-title topic-hero__tag">{tag}</span>
     </h1>
-    <p class="meta page__count">{t("tags.count", { count: articles.length })}</p>
-    <div class="page__list">
+    <p class="meta topic-hero__count">{t("tags.count", { count: articles.length })}</p>
+  </header>
+
+  <div class="container-page topic">
+    <div class="topic__aside">
+      <nav class="topic__others" aria-label={t("tags.title")}>
+        <p class="label" aria-hidden="true">
+          {t("tags.title")}
+        </p>
+        <ul class="topic__chips" role="list">
+          {tags.map((item) => (
+            <li>
+              <a class="chip-filter" href={`/tags/${item.tag}/`} aria-current={item.tag === tag ? "page" : undefined}>
+                {item.tag}
+                <span class="chip-filter__count">{item.count}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+      <a class="topic__all" href="/tags/">
+        {t("tags.all")}
+        <Icon name="arrow-right" size={14} />
+      </a>
+    </div>
+    <div class="topic__list">
       {articles.map((article) => (
         <ArticleRow article={article} headingLevel="h2" />
       ))}
     </div>
-  </section>
+  </div>
 </Base>
 
 <style>
-  .page {
-    padding-block: clamp(3rem, 2rem + 5vw, 6rem) var(--spacing-section);
+  .topic-hero {
+    padding-block: clamp(3.5rem, 2rem + 6vw, 7rem) clamp(2rem, 1rem + 3vw, 3.5rem);
   }
 
-  .page__title {
+  .topic-hero__trail {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .topic-hero__trail a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .topic-hero__trail a:hover {
+    text-decoration: underline;
+  }
+
+  .topic-hero__title {
     display: grid;
-    gap: 0.75rem;
-    margin-block-start: 1.5rem;
+    gap: 0.9rem;
+    margin-block-start: 1.75rem;
   }
 
-  .page__prefix {
-    color: var(--ink);
+  .topic-hero__prefix {
+    color: var(--ink-muted);
   }
 
-  .page__tag {
+  .topic-hero__tag {
     display: block;
   }
 
-  .label a {
-    color: var(--ink);
+  /* Decorative, so it stays out of the heading's text. */
+  .topic-hero__tag::before {
+    content: "#";
+    content: "#" / "";
+    margin-inline-end: 0.04em;
+    color: var(--accent);
+    font-weight: 400;
   }
 
-  .page__count {
+  .topic-hero__count {
     margin-block-start: 1rem;
   }
 
-  .page__list {
-    margin-block-start: 2.5rem;
+  .topic {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 3fr);
+    gap: 2.5rem;
+    padding-block: 1rem var(--spacing-section);
+    border-block-start: 1px solid var(--rule);
+  }
+
+  .topic__aside {
+    position: sticky;
+    top: 6rem;
+    align-self: start;
+    display: grid;
+    gap: 1.25rem;
+    padding-block-start: 1.25rem;
+  }
+
+  .topic__others {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .topic__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .topic__all {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    justify-self: start;
+    font-size: var(--text-step--1);
+    font-weight: 500;
+    color: var(--ink-muted);
+    text-decoration: none;
+    transition: color var(--duration-fast) ease;
+  }
+
+  .topic__all:hover {
+    color: var(--accent);
+  }
+
+  .topic__list {
     border-block-end: 1px solid var(--rule-strong);
+    align-self: start;
+  }
+
+  @media (width < 56rem) {
+    .topic {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+
+    .topic__aside {
+      position: static;
+      order: 2;
+    }
   }
 </style>

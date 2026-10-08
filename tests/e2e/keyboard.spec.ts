@@ -12,6 +12,16 @@ test.describe("keyboard", () => {
     await expect(page.locator("main")).toBeFocused();
   });
 
+  test("the home page's shortcut card lights the caps of the key just pressed", async ({ page }) => {
+    await page.goto("/");
+    // Caps stay lit for a moment only, so check in the same task as the keypress.
+    const lit = await page.evaluate(() => {
+      document.dispatchEvent(new KeyboardEvent("keydown", { key: "K", bubbles: true }));
+      return [...document.querySelectorAll<HTMLElement>("kbd[data-lit]")].map((cap) => cap.dataset["key"]);
+    });
+    expect(lit).toEqual(["k", "k"]);
+  });
+
   test("⌘K opens the command palette, which filters and navigates", async ({ page }) => {
     await page.goto("/");
     await page.keyboard.press("ControlOrMeta+k");

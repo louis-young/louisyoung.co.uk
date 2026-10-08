@@ -1,0 +1,315 @@
+---
+import PageHero from "../../components/sections/PageHero.astro";
+import { useTranslations } from "../../i18n";
+import { localeOf } from "../../i18n/astro";
+import Base from "../../layouts/Base.astro";
+
+const t = useTranslations(localeOf(Astro));
+const formats = [
+  { value: "base64", label: t("tools.encode.base64") },
+  { value: "url", label: t("tools.encode.url") },
+  { value: "html", label: t("tools.encode.html") },
+  { value: "jwt", label: t("tools.encode.jwt") },
+];
+const directions = [
+  { value: "encode", label: t("tools.encode.encode") },
+  { value: "decode", label: t("tools.encode.decode") },
+];
+---
+
+<Base title={t("tools.encode.title")} description={t("tools.encode.summary")} image="/og/tools.png">
+  <PageHero label={t("nav.tools")} title={t("tools.encode.title")} lede={t("tools.encode.summary")} />
+  <div
+    class="container-page encode"
+    data-encode
+    data-error-base64={t("tools.encode.errorBase64")}
+    data-error-utf8={t("tools.encode.errorUtf8")}
+    data-error-url={t("tools.encode.errorUrl")}
+    data-error-jwt-parts={t("tools.encode.errorJwtParts")}
+    data-error-jwt-header={t("tools.encode.errorJwtHeader")}
+    data-error-jwt-payload={t("tools.encode.errorJwtPayload")}
+    data-jwt-empty={t("tools.encode.jwtEmpty")}
+    data-iat={t("tools.encode.iat")}
+    data-nbf={t("tools.encode.nbf")}
+    data-exp={t("tools.encode.exp")}
+    data-expired={t("tools.encode.expired")}
+    data-copy-text={t("tools.copy")}
+    data-copied={t("tools.copied")}
+  >
+    <div class="encode__inputs card">
+      <div class="encode__choice">
+        <p id="encode-format" class="encode__label">
+          {t("tools.encode.format")}
+        </p>
+        <div class="encode__segmented" role="radiogroup" aria-labelledby="encode-format">
+          {formats.map((format, i) => (
+            <label class="encode__segment">
+              <input type="radio" name="format" value={format.value} checked={i === 0} />
+              <span>{format.label}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+      <div class="encode__choice" data-directions>
+        <p id="encode-direction" class="encode__label">
+          {t("tools.encode.direction")}
+        </p>
+        <div class="encode__segmented" role="radiogroup" aria-labelledby="encode-direction">
+          {directions.map((direction, i) => (
+            <label class="encode__segment">
+              <input type="radio" name="direction" value={direction.value} checked={i === 0} />
+              <span>{direction.label}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+      <div class="encode__field">
+        <label class="encode__label" for="encode-input">
+          {t("tools.encode.input")}
+        </label>
+        <textarea
+          id="encode-input"
+          class="encode__area"
+          rows="8"
+          spellcheck="false"
+          autocomplete="off"
+          aria-describedby="encode-status"
+          data-input
+        >{t("tools.encode.sample")}</textarea>
+      </div>
+      <p class="encode__note" data-jwt-note hidden>
+        {t("tools.encode.unverified")}
+      </p>
+    </div>
+
+    <div class="encode__result card">
+      <p id="encode-status" class="encode__status" role="status" data-status></p>
+      <div class="encode__text" data-text-result>
+        <div class="encode__head">
+          <p class="label" id="encode-output-label">
+            {t("tools.encode.output")}
+          </p>
+          <button type="button" class="button button--small" data-copy>
+            {t("tools.copy")}
+          </button>
+        </div>
+        <output class="encode__output" for="encode-input" aria-labelledby="encode-output-label" data-output></output>
+      </div>
+      <div class="encode__jwt" data-jwt hidden>
+        <section class="encode__part" aria-labelledby="encode-header">
+          <h2 id="encode-header" class="label">
+            {t("tools.encode.header")}
+          </h2>
+          <pre class="encode__json" data-jwt-header></pre>
+        </section>
+        <section class="encode__part" aria-labelledby="encode-payload">
+          <h2 id="encode-payload" class="label">
+            {t("tools.encode.payload")}
+          </h2>
+          <pre class="encode__json" data-jwt-payload></pre>
+        </section>
+        <section class="encode__part" aria-labelledby="encode-times">
+          <h2 id="encode-times" class="label">
+            {t("tools.encode.times")}
+          </h2>
+          <dl class="encode__times" data-jwt-times></dl>
+        </section>
+      </div>
+    </div>
+  </div>
+</Base>
+
+<script>
+  import { initEncode } from "../../scripts/tool-encode";
+
+  initEncode();
+</script>
+
+<style>
+  .encode {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 1rem;
+    align-items: start;
+    padding-block-end: var(--spacing-section);
+  }
+
+  .encode > .card {
+    display: grid;
+    gap: 1.5rem;
+    min-width: 0;
+    padding: clamp(1.25rem, 1rem + 1vw, 2rem);
+  }
+
+  .encode__choice,
+  .encode__field,
+  .encode__text,
+  .encode__jwt,
+  .encode__part {
+    display: grid;
+    gap: 0.6rem;
+    min-width: 0;
+  }
+
+  .encode__jwt {
+    gap: 1.5rem;
+  }
+
+  .encode__label {
+    font-weight: 500;
+    font-size: var(--text-step--1);
+  }
+
+  .encode__segmented {
+    display: flex;
+    flex-wrap: wrap;
+    justify-self: start;
+    gap: 0.25rem;
+    max-width: 100%;
+    padding: 0.25rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-md);
+    background: var(--paper-sunken);
+  }
+
+  .encode__segment {
+    position: relative;
+    display: grid;
+  }
+
+  .encode__segment input {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .encode__segment span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.25rem;
+    padding-inline: 0.9rem;
+    border: 1px solid transparent;
+    border-radius: calc(var(--radius-md) - 0.25rem);
+    color: var(--ink-muted);
+    font-size: var(--text-step--1);
+    font-weight: 500;
+    pointer-events: none;
+  }
+
+  .encode__segment input:checked + span {
+    border-color: var(--rule-strong);
+    background: var(--paper-raised);
+    color: var(--ink);
+    box-shadow: 0 1px 2px oklch(0% 0 0 / 0.08);
+  }
+
+  .encode__segment input:focus-visible + span {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  @media (forced-colors: active) {
+    .encode__segment input:checked + span {
+      border-color: Highlight;
+      outline: 2px solid Highlight;
+    }
+  }
+
+  .encode__area {
+    width: 100%;
+    min-width: 0;
+    min-height: 10rem;
+    padding: 0.8rem 1rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+    color: var(--ink);
+    font: 400 var(--text-step--1) / 1.6 var(--mono);
+    resize: vertical;
+  }
+
+  .encode__area[aria-invalid="true"] {
+    border-color: var(--warning);
+  }
+
+  .encode__area:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .encode__note {
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-sm);
+    background: var(--warning-soft);
+    color: var(--ink);
+    font-size: var(--text-step--1);
+  }
+
+  .encode__status {
+    padding: 0.6rem 0.9rem;
+    border-radius: var(--radius-sm);
+    background: var(--warning-soft);
+    color: var(--ink);
+    font-size: var(--text-step--1);
+  }
+
+  .encode__status:empty {
+    display: none;
+  }
+
+  .encode__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .encode__output,
+  .encode__json {
+    display: block;
+    min-height: 3.5rem;
+    padding: 0.8rem 1rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+    font: 400 var(--text-step--1) / 1.6 var(--mono);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .encode__times {
+    display: grid;
+    gap: 0.25rem;
+    font-size: var(--text-step--1);
+  }
+
+  .encode__times :global(div) {
+    display: grid;
+    grid-template-columns: minmax(0, 10rem) minmax(0, 1fr);
+    gap: 0.75rem;
+    padding-block: 0.5rem;
+    border-block-start: 1px solid var(--rule);
+  }
+
+  .encode__times :global(dt) {
+    color: var(--ink-muted);
+  }
+
+  .encode__times :global(dd) {
+    font-family: var(--mono);
+    overflow-wrap: anywhere;
+  }
+
+  .encode__times:empty,
+  .encode__part:has(.encode__times:empty) {
+    display: none;
+  }
+
+  @media (width < 56rem) {
+    .encode {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>
