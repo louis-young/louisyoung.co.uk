@@ -12,7 +12,7 @@ pnpm dev
 
 ## Workflow
 
-1. Branch from `main`.
+1. Branch from `master`.
 2. Make your change. Add or update tests alongside it.
 3. Run `pnpm check && pnpm test`. For UI changes, also `pnpm build && pnpm test:e2e && pnpm test:a11y`.
 4. Commit using [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `docs:`, `test:` …). A commit hook checks this.
@@ -28,7 +28,7 @@ If your change alters how a page looks, the visual regression job will fail unti
 
 ## Repository settings (maintainers)
 
-- Ruleset on `main`: require pull requests and the `CI OK` status check (optionally CodeQL, Dependency review and Gitleaks too); block force pushes.
+- Ruleset on `master`: require pull requests and the `CI OK` status check (optionally CodeQL, Dependency review and Gitleaks too); block force pushes.
 - Enable auto-merge (used by the Dependabot workflow).
 - Code security: dependency graph, Dependabot alerts and security updates, secret scanning with push protection, private vulnerability reporting.
 - Code scanning: use the advanced setup (the `codeql.yml` workflow), not default setup.

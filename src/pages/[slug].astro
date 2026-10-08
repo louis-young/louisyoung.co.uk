@@ -40,7 +40,7 @@ const toc = buildToc(headings);
 const { previous, next } = getAdjacent(articles, article.id);
 const related = getRelated(articles, article, 2);
 const ogImage = `/og/${article.id}.png`;
-const editUrl = `${site.repository}/edit/main/content/articles/${article.id}/index.mdx`;
+const editUrl = `${site.repository}/edit/${site.defaultBranch}/content/articles/${article.id}/index.mdx`;
 ---
 
 <Base

@@ -5,7 +5,7 @@ on:
     paths:
       - ".github/**"
   push:
-    branches: [main]
+    branches: [master]
     paths:
       - ".github/**"
   workflow_dispatch:

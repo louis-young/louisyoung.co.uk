@@ -25,6 +25,13 @@ test.describe("article page", () => {
     await expect(block.locator("button.copy, button[data-code]").first()).toBeAttached();
   });
 
+  test("the edit link points at the article source on the default branch", async ({ page }) => {
+    await expect(page.getByRole("link", { name: "Suggest an edit" })).toHaveAttribute(
+      "href",
+      "https://github.com/louis-young/louisyoung.co.uk/edit/master/content/articles/how-to-fetch-data-from-backend-react/index.mdx",
+    );
+  });
+
   test("external links are marked and safe", async ({ page }) => {
     const external = page.locator(".prose a[data-external]").first();
     await expect(external).toHaveAttribute("rel", "noopener noreferrer");

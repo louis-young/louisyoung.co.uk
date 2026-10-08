@@ -12,7 +12,7 @@ export const GET: APIRoute = () => {
       `Expires: ${expires}`,
       `Preferred-Languages: en`,
       `Canonical: ${site.url}/.well-known/security.txt`,
-      `Policy: ${site.repository}/blob/main/SECURITY.md`,
+      `Policy: ${site.repository}/blob/${site.defaultBranch}/SECURITY.md`,
       "",
     ].join("\n"),
     { headers: { "Content-Type": "text/plain; charset=utf-8" } },
