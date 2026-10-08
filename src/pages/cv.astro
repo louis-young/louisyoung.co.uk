@@ -1,6 +1,7 @@
 ---
 import { cv } from "../../content/data/cv";
 import { profile } from "../../content/data/profile";
+import Availability from "../components/sections/Availability.astro";
 import CvRoles from "../components/sections/CvRoles.astro";
 import PageHero from "../components/sections/PageHero.astro";
 import SectionHeading from "../components/sections/SectionHeading.astro";
@@ -14,12 +15,22 @@ import { site } from "../site.config";
 const t = useTranslations(localeOf(Astro));
 const city = filled(profile.location.city);
 const { summary, roles, skills, education } = publishableCv(cv);
-const hasRoles = roles.length > 0;
+const bare = (href: string) => href.replace("https://", "").replace("www.", "");
 const contact = [
-  { label: profile.email, href: `mailto:${profile.email}` },
-  { label: site.url.replace("https://", ""), href: site.url },
-  ...site.social.map((item) => ({ label: item.href.replace("https://", "").replace("www.", ""), href: item.href })),
+  { label: t("cv.email"), value: profile.email, href: `mailto:${profile.email}` },
+  { label: t("cv.website"), value: bare(site.url), href: site.url },
+  ...site.social.map((item) => ({ label: item.label, value: bare(item.href), href: item.href })),
 ];
+const sections = [
+  { id: "profile", title: t("cv.profile"), show: true },
+  { id: "experience", title: t("cv.experience"), show: roles.length > 0 },
+  { id: "skills", title: t("cv.skills"), show: skills.length > 0 },
+  { id: "approach", title: t("cv.approach"), show: profile.principles.length > 0 },
+  { id: "education", title: t("cv.education"), show: education.length > 0 },
+]
+  .filter((section) => section.show)
+  .map((section, index) => ({ ...section, number: String(index + 1).padStart(2, "0") }));
+const numberOf = (id: string) => sections.find((section) => section.id === id)?.number;
 ---
 
 <Base title={t("cv.title")} description={t("cv.description")} image="/og/cv.png">
@@ -33,47 +44,100 @@ const contact = [
   </PageHero>
 
   <div class="container-page cv">
-    <aside class="cv__aside">
-      <p class="label">{city ? `${city}, ${profile.location.country}` : profile.location.country}</p>
-      <ul class="cv__contact" role="list">
-        {contact.map((item) => (
-          <li>
-            <a href={item.href}>{item.label}</a>
-          </li>
-        ))}
-      </ul>
-    </aside>
-    <div class="cv__main">
-      {summary && <p class="cv__summary">{summary}</p>}
-
-      {hasRoles && (
-        <section aria-labelledby="experience-title" class="cv__section">
-          <SectionHeading id="experience-title" title={t("cv.experience")} />
-          <CvRoles detailed />
-        </section>
-      )}
-
-      <section aria-labelledby="skills-title" class="cv__section">
-        <SectionHeading id="skills-title" title={t("cv.skills")} />
-        <dl class="cv__skills">
-          {skills.map((group) => (
-            <div class="cv__skill">
-              <dt class="label">{group.group}</dt>
+    <aside class="cv__aside" aria-labelledby="contact-title">
+      <div class="cv__card card">
+        <h2 id="contact-title" class="label">
+          {t("cv.contact")}
+        </h2>
+        <dl class="cv__contact">
+          <div class="cv__contact-row">
+            <dt>{t("cv.location")}</dt>
+            <dd>{city ? `${city}, ${profile.location.country}` : profile.location.country}</dd>
+          </div>
+          {contact.map((item) => (
+            <div class="cv__contact-row">
+              <dt>{item.label}</dt>
               <dd>
-                <ul class="cv__tags" role="list">
-                  {group.items.map((item) => (
-                    <li class="tag">{item}</li>
-                  ))}
-                </ul>
+                <a href={item.href}>{item.value}</a>
               </dd>
             </div>
           ))}
         </dl>
+        <div class="cv__availability">
+          <Availability />
+        </div>
+      </div>
+      <nav class="cv__nav" aria-labelledby="cv-contents-title">
+        <h2 id="cv-contents-title" class="label">
+          {t("cv.contents")}
+        </h2>
+        <ol class="cv__nav-list" role="list">
+          {sections.map((section) => (
+            <li>
+              <a href={`#${section.id}`} class="cv__nav-link">
+                <span class="cv__nav-number" aria-hidden="true">
+                  {section.number}
+                </span>
+                {section.title}
+              </a>
+            </li>
+          ))}
+        </ol>
+      </nav>
+    </aside>
+
+    <div class="cv__main">
+      <section id="profile" aria-labelledby="profile-title" class="cv__section">
+        <SectionHeading id="profile-title" number={numberOf("profile")} title={t("cv.profile")} />
+        <p class="cv__summary">{summary || profile.intro}</p>
+      </section>
+
+      {roles.length > 0 && (
+        <section id="experience" aria-labelledby="experience-title" class="cv__section">
+          <SectionHeading id="experience-title" number={numberOf("experience")} title={t("cv.experience")} />
+          <CvRoles detailed />
+        </section>
+      )}
+
+      {skills.length > 0 && (
+        <section id="skills" aria-labelledby="skills-title" class="cv__section">
+          <SectionHeading id="skills-title" number={numberOf("skills")} title={t("cv.skills")} />
+          <ul class="skills" role="list">
+            {skills.map((group, index) => (
+              <li class="skill card">
+                <div class="skill__head">
+                  <span class="skill__index" aria-hidden="true">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  <h3 class="skill__group">{group.group}</h3>
+                  <span class="skill__count">{t("cv.skillCount", { count: group.items.length })}</span>
+                </div>
+                <ul class="skill__items" role="list">
+                  {group.items.map((item) => (
+                    <li class="skill__item">{item}</li>
+                  ))}
+                </ul>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <section id="approach" aria-labelledby="approach-title" class="cv__section">
+        <SectionHeading id="approach-title" number={numberOf("approach")} title={t("cv.approach")} />
+        <ol class="approach" role="list">
+          {profile.principles.map((principle) => (
+            <li class="approach__item">
+              <h3 class="approach__title">{principle.title}</h3>
+              <p class="approach__body">{principle.body}</p>
+            </li>
+          ))}
+        </ol>
       </section>
 
       {education.length > 0 && (
-        <section aria-labelledby="education-title" class="cv__section">
-          <SectionHeading id="education-title" title={t("cv.education")} />
+        <section id="education" aria-labelledby="education-title" class="cv__section">
+          <SectionHeading id="education-title" number={numberOf("education")} title={t("cv.education")} />
           <ul class="cv__education" role="list">
             {education.map((item) => (
               <li class="cv__school">
@@ -87,7 +151,7 @@ const contact = [
         </section>
       )}
       <p class="cv__online label">
-        {t("cv.online")}: {site.url.replace("https://", "")}/cv/
+        {t("cv.online")}: {bare(site.url)}/cv/
       </p>
     </div>
   </div>
@@ -102,9 +166,9 @@ const contact = [
 <style>
   .cv {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 3fr);
-    gap: 2.5rem;
-    padding-block: 2rem var(--spacing-section);
+    grid-template-columns: minmax(15rem, 1fr) minmax(0, 2.6fr);
+    gap: clamp(2rem, 1rem + 3vw, 4rem);
+    padding-block: clamp(2rem, 1rem + 2vw, 3rem) var(--spacing-section);
     border-block-start: 1px solid var(--rule);
   }
 
@@ -113,54 +177,206 @@ const contact = [
     top: 6rem;
     align-self: start;
     display: grid;
-    gap: 1rem;
+    gap: 1.5rem;
+  }
+
+  .cv__card {
+    display: grid;
+    gap: 1.1rem;
+    padding: 1.35rem;
   }
 
   .cv__contact {
     display: grid;
-    gap: 0.35rem;
-    font-weight: 600;
+    gap: 0.85rem;
+  }
+
+  .cv__contact-row {
+    display: grid;
+    gap: 0.15rem;
+    min-width: 0;
+  }
+
+  .cv__contact-row dt {
+    font: 500 var(--text-step--2) / 1.3 var(--mono);
+    color: var(--ink-faint);
+  }
+
+  .cv__contact-row dd {
+    font-weight: 550;
+    font-size: var(--text-step--1);
     overflow-wrap: anywhere;
   }
 
   .cv__contact a {
-    text-decoration-color: var(--signal);
-    text-decoration-thickness: 2px;
+    text-decoration-color: color-mix(in oklch, var(--accent) 50%, transparent);
+    text-decoration-thickness: 1.5px;
+    transition: color var(--duration-fast) ease;
   }
 
-  .cv__summary {
-    max-width: 44ch;
-    font-weight: 500;
-    font-size: var(--text-step-2);
-    line-height: 1.22;
-    letter-spacing: -0.02em;
+  .cv__contact a:hover {
+    color: var(--accent);
+  }
+
+  .cv__availability {
+    padding-block-start: 1.1rem;
+    border-block-start: 1px solid var(--rule);
+  }
+
+  .cv__nav {
+    display: grid;
+    gap: 0.75rem;
+    padding-inline: 0.25rem;
+  }
+
+  .cv__nav-list {
+    display: grid;
+    gap: 0.15rem;
+    border-inline-start: 1px solid var(--rule);
+  }
+
+  .cv__nav-link {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    margin-inline-start: -1px;
+    padding: 0.35rem 0.85rem;
+    border-inline-start: 1px solid transparent;
+    color: var(--ink-muted);
+    font-size: var(--text-step--1);
+    text-decoration: none;
+    transition:
+      color var(--duration-fast) ease,
+      border-color var(--duration-fast) ease;
+  }
+
+  .cv__nav-link:hover {
+    border-color: var(--accent);
+    color: var(--ink);
+  }
+
+  .cv__nav-number {
+    font: 500 var(--text-step--2) / 1 var(--mono);
+    color: var(--ink-faint);
+  }
+
+  .cv__main {
+    display: grid;
+    gap: clamp(3rem, 2rem + 3vw, 5rem);
+    min-width: 0;
   }
 
   .cv__section {
-    margin-block-start: var(--spacing-section);
+    scroll-margin-top: 6rem;
   }
 
-  .cv__section :global(.section-title) {
-    font-size: var(--text-step-3);
+  .cv__summary {
+    max-width: 40ch;
+    font-weight: 500;
+    font-size: var(--text-step-2);
+    line-height: 1.3;
+    letter-spacing: -0.02em;
   }
 
-  .cv__skills {
-    border-block-end: 1px solid var(--rule-strong);
-  }
-
-  .cv__skill {
+  /* Skills: one card per group, with a count and a two-column list. */
+  .skills {
     display: grid;
-    grid-template-columns: 10rem minmax(0, 1fr);
-    gap: 1.5rem;
-    align-items: baseline;
-    padding-block: 1rem;
-    border-block-start: 1px solid var(--rule-strong);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+    gap: 1rem;
   }
 
-  .cv__tags {
+  .skill {
+    display: grid;
+    align-content: start;
+    gap: 1rem;
+    padding: 1.35rem;
+  }
+
+  .skill__head {
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
+    align-items: center;
+    gap: 0.75rem;
+    padding-block-end: 0.9rem;
+    border-block-end: 1px solid var(--rule);
+  }
+
+  .skill__index {
+    display: inline-grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border: 1px solid color-mix(in oklch, var(--accent) 35%, var(--rule));
+    border-radius: var(--radius-sm);
+    background: var(--accent-soft);
+    font: 600 var(--text-step--2) / 1 var(--mono);
+    color: var(--accent);
+  }
+
+  .skill__group {
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .skill__count {
+    margin-inline-start: auto;
+    font: 500 var(--text-step--2) / 1 var(--mono);
+    color: var(--ink-faint);
+  }
+
+  .skill__items {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 8.5rem), 1fr));
+    gap: 0.55rem 1rem;
+  }
+
+  .skill__item {
+    position: relative;
+    padding-inline-start: 1rem;
+    font-size: var(--text-step--1);
+    font-weight: 500;
+  }
+
+  .skill__item::before {
+    content: "";
+    position: absolute;
+    top: 0.6em;
+    left: 0;
+    width: 0.4rem;
+    height: 0.4rem;
+    border-radius: 2px;
+    background: linear-gradient(135deg, var(--accent), oklch(72% 0.13 235));
+    rotate: 45deg;
+  }
+
+  .approach {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+    gap: 0 2rem;
+    counter-reset: approach;
+  }
+
+  .approach__item {
+    display: grid;
+    gap: 0.35rem;
+    padding-block: 1.1rem;
+    border-block-start: 1px solid var(--rule);
+    counter-increment: approach;
+  }
+
+  .approach__title {
+    font-weight: 600;
+  }
+
+  .approach__title::before {
+    content: counter(approach, decimal-leading-zero);
+    margin-inline-end: 0.6rem;
+    font: 500 var(--text-step--2) / 1 var(--mono);
+    color: var(--accent);
+  }
+
+  .approach__body {
+    font-size: var(--text-step--1);
+    color: var(--ink-muted);
   }
 
   .cv__school {
@@ -168,16 +384,16 @@ const contact = [
     grid-template-columns: 10rem minmax(0, 1fr);
     gap: 1.5rem;
     padding-block: 1rem;
-    border-block: 1px solid var(--rule-strong);
+    border-block: 1px solid var(--rule);
   }
 
   .cv__years {
     font: 500 var(--text-step--1) / 1.4 var(--mono);
+    color: var(--ink-faint);
   }
 
   .cv__online {
     display: none;
-    margin-block-start: 2rem;
   }
 
   @media (width < 56rem) {
@@ -187,40 +403,132 @@ const contact = [
 
     .cv__aside {
       position: static;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+      align-items: start;
     }
 
-    .cv__skill,
     .cv__school {
       grid-template-columns: 1fr;
       gap: 0.5rem;
     }
   }
 
+  /* Print: an A4 CV in black on white, with the contact column kept and every control dropped. */
   @media print {
+    :global(html:root),
+    :global(html:root[data-theme]) {
+      --ink: oklch(15% 0 0);
+      --ink-muted: oklch(32% 0 0);
+      --ink-faint: oklch(42% 0 0);
+      --rule: oklch(85% 0 0);
+      --rule-strong: oklch(70% 0 0);
+      --paper: oklch(100% 0 0);
+      --paper-raised: oklch(100% 0 0);
+      --paper-sunken: oklch(100% 0 0);
+      --accent: oklch(35% 0.12 285);
+      --accent-soft: oklch(100% 0 0);
+      --shadow-raised: none;
+
+      font-size: 72%;
+    }
+
+    /* Paper has no time: show every surface in its final state, not mid-transition. */
+    :global(*),
+    :global(*::before),
+    :global(*::after) {
+      animation: none !important;
+      transition: none !important;
+    }
+
     :global(.site-header),
     :global(.site-footer),
     :global(.page-hero__actions),
+    :global(.page-hero__label),
     :global(.skip-link) {
       display: none !important;
     }
 
-    :global(html) {
-      font-size: 80%;
-      background: white;
-      color: black;
+    :global(.page-hero) {
+      padding-block: 0 1.25rem;
     }
 
-    :global(.page-hero) {
-      padding-block: 0 1rem;
+    :global(.page-hero .page-title) {
+      font-size: 2.6rem;
+    }
+
+    :global(.page-hero .page-hero__lede) {
+      margin-block-start: 0.4rem;
+    }
+
+    :global(.section-heading) {
+      margin-block-end: 0.75rem;
+    }
+
+    :global(.section-title) {
+      font-size: 1.25rem;
     }
 
     .cv {
-      grid-template-columns: 1fr 3fr;
-      padding-block: 1rem 0;
+      grid-template-columns: 13rem minmax(0, 1fr);
+      gap: 2rem;
+      padding-block: 1.25rem 0;
+    }
+
+    .cv__aside {
+      position: static;
+    }
+
+    .cv__card {
+      padding: 0;
+      border: 0;
+      background: none;
+    }
+
+    .cv__contact a {
+      text-decoration: none;
+    }
+
+    .cv__nav,
+    .cv__availability {
+      display: none;
+    }
+
+    .cv__main {
+      gap: 1.75rem;
+    }
+
+    .cv__summary {
+      max-width: none;
+      font-size: 1.15rem;
+    }
+
+    .skills {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1.25rem 2rem;
+    }
+
+    .skill {
+      padding: 0;
+      border: 0;
+      background: none;
+      gap: 0.6rem;
+      break-inside: avoid;
+    }
+
+    .skill__head {
+      padding-block-end: 0.4rem;
+    }
+
+    .skill__index {
+      display: none;
+    }
+
+    .approach__item {
+      padding-block: 0.6rem;
+      break-inside: avoid;
     }
 
     .cv__section {
-      margin-block-start: 2rem;
       break-inside: avoid-page;
     }
 
@@ -229,7 +537,15 @@ const contact = [
     }
 
     @page {
-      margin: 14mm;
+      size: A4;
+      margin: 14mm 16mm;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .skill__item::before {
+      forced-color-adjust: none;
+      background: CanvasText;
     }
   }
 </style>

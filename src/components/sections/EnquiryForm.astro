@@ -1,0 +1,347 @@
+---
+import { hire } from "../../../content/data/hire";
+import { profile } from "../../../content/data/profile";
+import { translatorFor } from "../../i18n/astro";
+
+const t = translatorFor(Astro);
+const labels = {
+  name: t("hire.field.name"),
+  email: t("hire.field.email"),
+  company: t("hire.field.company"),
+  service: t("hire.field.service"),
+  budget: t("hire.field.budget"),
+  start: t("hire.field.start"),
+  message: t("hire.field.message"),
+};
+
+type Name = keyof typeof labels;
+
+interface Field {
+  name: Name;
+  type?: "text" | "email";
+  autocomplete?: string;
+  required?: boolean;
+  missing?: string;
+  mismatch?: string;
+  hint?: string;
+  control?: "select" | "textarea";
+}
+
+const fields: Field[] = [
+  { name: "name", type: "text", autocomplete: "name", required: true, missing: t("hire.error.name") },
+  {
+    name: "email",
+    type: "email",
+    autocomplete: "email",
+    required: true,
+    missing: t("hire.error.email"),
+    mismatch: t("hire.error.emailFormat"),
+  },
+  { name: "company", type: "text", autocomplete: "organization" },
+  { name: "service", control: "select" },
+  { name: "budget", type: "text", hint: t("hire.hint.budget") },
+  { name: "start", type: "text", hint: t("hire.hint.start") },
+  { name: "message", control: "textarea", required: true, missing: t("hire.error.message") },
+];
+
+const id = (name: Name) => `enquiry-${name}`;
+/** Hint first, then the error, so screen readers hear what's expected before what went wrong. */
+const describedBy = (field: Field) =>
+  [field.hint && `${id(field.name)}-hint`, field.required && `${id(field.name)}-error`].filter(Boolean).join(" ") ||
+  undefined;
+---
+
+<form
+  class="enquiry-form"
+  action={`mailto:${profile.email}`}
+  method="post"
+  enctype="text/plain"
+  data-enquiry
+  data-to={profile.email}
+  data-subject={t("hire.enquirySubject")}
+  data-labels={JSON.stringify(labels)}
+>
+  <div class="enquiry-form__live" role="alert">
+    <div class="enquiry-form__notice enquiry-form__notice--error" data-enquiry-errors hidden>
+      <span class="enquiry-form__notice-icon" aria-hidden="true">
+        !
+      </span>
+      <p>{t("hire.errorSummary")}</p>
+    </div>
+  </div>
+
+  {fields.map((field) => (
+    <div class:list={["field", { "field--wide": field.control === "textarea" }]}>
+      <label for={id(field.name)} class="field__label">
+        {labels[field.name]}
+        {!field.required && field.control !== "select" && (
+          <span class="field__optional">{t("hire.field.optional")}</span>
+        )}
+      </label>
+      {field.control === "select" ? (
+        <select id={id(field.name)} name={field.name}>
+          {hire.services.map((service) => (
+            <option>{service.name}</option>
+          ))}
+          <option>{t("hire.serviceOther")}</option>
+        </select>
+      ) : field.control === "textarea" ? (
+        <textarea
+          id={id(field.name)}
+          name={field.name}
+          rows="6"
+          required={field.required}
+          aria-describedby={describedBy(field)}
+          data-error-missing={field.missing}
+        />
+      ) : (
+        <input
+          id={id(field.name)}
+          name={field.name}
+          type={field.type}
+          autocomplete={field.autocomplete}
+          required={field.required}
+          aria-describedby={describedBy(field)}
+          data-error-missing={field.missing}
+          data-error-type={field.mismatch}
+        />
+      )}
+      {field.hint && (
+        <p id={`${id(field.name)}-hint`} class="field__hint">
+          {field.hint}
+        </p>
+      )}
+      {field.required && <p id={`${id(field.name)}-error`} class="field__error" hidden />}
+    </div>
+  ))}
+
+  <div class="field--wide enquiry-form__actions">
+    <button type="submit" class="button button--signal">
+      {t("hire.send")} <span aria-hidden="true">→</span>
+    </button>
+    <a href={`mailto:${profile.email}`} class="link">
+      {profile.email}
+    </a>
+  </div>
+
+  <div class="field--wide enquiry-form__status" role="status">
+    <div class="enquiry-form__notice enquiry-form__notice--success" data-enquiry-success hidden>
+      <span class="enquiry-form__notice-icon" aria-hidden="true">
+        ✓
+      </span>
+      <div>
+        <p class="enquiry-form__notice-title">{t("hire.successTitle")}</p>
+        <p>
+          {t("hire.successBody")}{" "}
+          <a href={`mailto:${profile.email}`} class="link">
+            {profile.email}
+          </a>
+        </p>
+      </div>
+    </div>
+  </div>
+</form>
+
+<script>
+  import { initEnquiry } from "../../scripts/enquiry";
+
+  initEnquiry();
+</script>
+
+<style>
+  .enquiry-form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem 1rem;
+  }
+
+  /* Live regions stay in the accessibility tree while empty; they just give back their grid gap. */
+  .enquiry-form__live {
+    grid-column: 1 / -1;
+  }
+
+  .enquiry-form__live:has(> [hidden]) {
+    margin-block-end: -1.25rem;
+  }
+
+  .enquiry-form__status:has(> [hidden]) {
+    margin-block-start: -1.25rem;
+  }
+
+  .field {
+    display: grid;
+    align-content: start;
+    gap: 0.45rem;
+    min-width: 0;
+  }
+
+  .field--wide {
+    grid-column: 1 / -1;
+  }
+
+  .field__label {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    font-size: var(--text-step--1);
+    font-weight: 500;
+  }
+
+  .field__optional {
+    margin-inline-start: auto;
+    color: var(--ink-faint);
+    font: 400 var(--text-step--2) / 1 var(--mono);
+  }
+
+  .field input,
+  .field select,
+  .field textarea {
+    width: 100%;
+    min-width: 0;
+    min-height: 2.875rem;
+    padding: 0.6rem 0.85rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+    color: var(--ink);
+    font: inherit;
+    transition:
+      border-color var(--duration-fast) ease,
+      box-shadow var(--duration-fast) ease,
+      background-color var(--duration-fast) ease;
+  }
+
+  .field input:hover,
+  .field select:hover,
+  .field textarea:hover {
+    border-color: var(--ink-faint);
+  }
+
+  .field textarea {
+    resize: vertical;
+  }
+
+  .field :focus-visible {
+    outline: none;
+    border-color: var(--accent);
+    background: var(--paper);
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--accent) 30%, transparent);
+  }
+
+  .field [aria-invalid="true"] {
+    border-color: var(--danger);
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--danger) 18%, transparent);
+  }
+
+  .field__hint {
+    font-size: var(--text-step--2);
+    color: var(--ink-faint);
+  }
+
+  .field__error {
+    display: flex;
+    gap: 0.4rem;
+    font-size: var(--text-step--1);
+    font-weight: 500;
+    color: var(--danger);
+  }
+
+  .field__error::before {
+    content: "!";
+    display: inline-grid;
+    flex: none;
+    place-items: center;
+    width: 1.1rem;
+    height: 1.1rem;
+    margin-block-start: 0.15em;
+    border-radius: 50%;
+    background: var(--danger);
+    color: var(--paper);
+    font: 700 0.7rem / 1 var(--mono);
+  }
+
+  .enquiry-form__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem 1.5rem;
+    padding-block-start: 0.5rem;
+  }
+
+  .enquiry-form__notice {
+    display: flex;
+    gap: 0.85rem;
+    padding: 1rem 1.1rem;
+    border: 1px solid;
+    border-radius: var(--radius-md);
+    font-size: var(--text-step--1);
+    color: var(--ink);
+  }
+
+  .enquiry-form__notice[hidden] {
+    display: none;
+  }
+
+  .enquiry-form__notice--error {
+    border-color: color-mix(in oklch, var(--danger) 45%, transparent);
+    background: var(--danger-soft);
+  }
+
+  .enquiry-form__notice--success {
+    border-color: color-mix(in oklch, var(--success) 45%, transparent);
+    background: var(--success-soft);
+  }
+
+  .enquiry-form__notice-icon {
+    display: inline-grid;
+    flex: none;
+    place-items: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 50%;
+    background: var(--danger);
+    color: var(--paper);
+    font: 700 var(--text-step--1) / 1 var(--mono);
+  }
+
+  .enquiry-form__notice--success .enquiry-form__notice-icon {
+    background: var(--success);
+  }
+
+  .enquiry-form__notice-title {
+    margin-block-end: 0.2rem;
+    font-weight: 600;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .enquiry-form__notice:not([hidden]) {
+      animation: notice 400ms var(--ease-out-expo);
+    }
+  }
+
+  @keyframes notice {
+    from {
+      opacity: 0;
+      translate: 0 -0.35rem;
+    }
+  }
+
+  @media (width < 40rem) {
+    .enquiry-form {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .field [aria-invalid="true"] {
+      border: 2px solid Mark;
+    }
+
+    .enquiry-form__notice-icon,
+    .field__error::before {
+      forced-color-adjust: none;
+      background: CanvasText;
+      color: Canvas;
+    }
+  }
+</style>

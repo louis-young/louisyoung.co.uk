@@ -6,65 +6,444 @@ import Base from "../layouts/Base.astro";
 import { getArticles } from "../lib/articles";
 
 const t = useTranslations(localeOf(Astro));
-const suggestions = (await getArticles()).slice(0, 3);
+const articles = await getArticles();
+const suggestions = articles.slice(0, 3);
+const places = [
+  {
+    href: "/writing/",
+    title: t("nav.writing"),
+    body: t("home.writingIntro"),
+    meta: t("writing.count", { count: articles.length }),
+    icon: "¶",
+  },
+  { href: "/tools/", title: t("nav.tools"), body: t("tools.lede"), meta: t("tools.open"), icon: "⌘" },
+  { href: "/hire/", title: t("nav.hire"), body: t("footer.ctaBody"), meta: t("home.hireDetails"), icon: "◇" },
+];
 ---
 
 <Base title={t("notFound.title")} noindex>
-  <section class="container-page page">
-    <p class="page__code" aria-hidden="true">
-      404
-    </p>
-    <h1 class="page-title page__title">{t("notFound.title")}</h1>
-    <p class="page__body">{t("notFound.body")}</p>
-    <p class="page__actions">
-      <a href="/" class="button button--primary">
-        {t("notFound.home")}
-      </a>
-      <a href="/search/" class="button">
-        {t("nav.search")}
-      </a>
-    </p>
-    <div class="page__list">
+  <section class="container-page lost" aria-labelledby="lost-title">
+    <div class="lost__art" aria-hidden="true">
+      <span class="lost__digit">4</span>
+      <span class="lost__lens">
+        <span class="lost__glass"></span>
+        <span class="lost__handle"></span>
+      </span>
+      <span class="lost__digit">4</span>
+    </div>
+
+    <div class="lost__copy">
+      <p class="label lost__eyebrow">{t("notFound.eyebrow")}</p>
+      <h1 id="lost-title" class="page-title lost__title">
+        {t("notFound.title")}
+      </h1>
+      <p class="page-lede lost__body">{t("notFound.body")}</p>
+
+      <form class="lost__search" action="/search/" method="get" role="search" data-lost-search>
+        <label for="lost-query" class="visually-hidden">
+          {t("notFound.searchLabel")}
+        </label>
+        <svg class="lost__search-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+          <path
+            d="m21 21-4.3-4.3M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+          />
+        </svg>
+        <input
+          id="lost-query"
+          type="search"
+          name="q"
+          placeholder={t("notFound.searchPlaceholder")}
+          autocomplete="off"
+          enterkeyhint="search"
+        />
+        <button type="submit" class="button button--signal button--small">
+          {t("nav.search")}
+        </button>
+      </form>
+
+      <div class="lost__actions">
+        <a href="/" class="button button--small">
+          <span aria-hidden="true">←</span>
+          {t("notFound.home")}
+        </a>
+        <p class="lost__keys">
+          <button type="button" class="lost__key" data-palette-open>
+            <kbd>⌘K</kbd>
+            {t("palette.title")}
+          </button>
+          <button type="button" class="lost__key" data-terminal-open>
+            <kbd>`</kbd>
+            {t("terminal.title")}
+          </button>
+        </p>
+      </div>
+      <p class="lost__hint">{t("notFound.shortcuts")}</p>
+    </div>
+  </section>
+
+  <section class="container-page lost-section" aria-labelledby="places-title">
+    <h2 id="places-title" class="label lost-section__title">
+      {t("notFound.places")}
+    </h2>
+    <ul class="places" role="list">
+      {places.map((place) => (
+        <li class="place card card--interactive">
+          <span class="place__icon" aria-hidden="true">
+            {place.icon}
+          </span>
+          <h3 class="place__title">
+            <a href={place.href} class="stretched-link">
+              {place.title}
+            </a>
+          </h3>
+          <p class="place__body">{place.body}</p>
+          <p class="place__meta">
+            {place.meta} <span aria-hidden="true">→</span>
+          </p>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <section class="container-page lost-section lost-section--last" aria-labelledby="recent-title">
+    <h2 id="recent-title" class="label lost-section__title">
+      {t("notFound.recent")}
+    </h2>
+    <div class="lost__list">
       {suggestions.map((article) => (
-        <ArticleRow article={article} headingLevel="h2" />
+        <ArticleRow article={article} headingLevel="h3" />
       ))}
     </div>
   </section>
 </Base>
 
+<script>
+  import { queryFromPath } from "../lib/text";
+
+  // Offer the missing page's own words as a search, so a mistyped or moved URL is one Enter away.
+  const input = document.querySelector<HTMLInputElement>("[data-lost-search] input");
+  const query = queryFromPath(window.location.pathname);
+  if (input && query && !input.value) input.value = query;
+</script>
+
 <style>
-  .page {
-    padding-block: clamp(3rem, 2rem + 5vw, 6rem) var(--spacing-section);
+  .lost {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    gap: clamp(2rem, 1rem + 4vw, 5rem);
+    align-items: center;
+    padding-block: clamp(3rem, 2rem + 5vw, 6.5rem) clamp(2.5rem, 1.5rem + 3vw, 4rem);
   }
 
-  .page__code {
-    font-weight: 600;
-    font-size: var(--text-display);
-    line-height: 0.82;
-    letter-spacing: -0.04em;
+  /*
+   * The art: a giant 4·0·4 where the zero is a magnifying glass, still looking for the page.
+   * Pure CSS; it sweeps a couple of times on load and then rests (or never moves, with reduced motion).
+   */
+  .lost__art {
+    --size: clamp(7rem, 4rem + 13vw, 15rem);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: calc(var(--size) * 0.04);
+    font-weight: 700;
+    font-size: var(--size);
+    line-height: 0.8;
+    letter-spacing: -0.06em;
+    user-select: none;
+  }
+
+  .lost__digit {
+    background: linear-gradient(170deg, var(--ink) 15%, color-mix(in oklch, var(--ink) 15%, transparent) 95%);
+    background-clip: text;
+    color: transparent;
+  }
+
+  .lost__lens {
+    position: relative;
+    flex: none;
+    width: calc(var(--size) * 0.62);
+    height: calc(var(--size) * 0.62);
+    margin-inline: calc(var(--size) * 0.04);
+    transform-origin: 70% 70%;
+  }
+
+  .lost__glass {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: calc(var(--size) * 0.085) solid transparent;
+    background:
+      radial-gradient(circle at 35% 30%, color-mix(in oklch, var(--paper) 40%, transparent), transparent 55%)
+        padding-box,
+      linear-gradient(color-mix(in oklch, var(--accent-soft) 60%, transparent) 0 0) padding-box,
+      linear-gradient(135deg, var(--accent), oklch(72% 0.13 235)) border-box;
+    box-shadow:
+      0 0 calc(var(--size) * 0.3) calc(var(--size) * -0.05) var(--glow-1),
+      inset 0 0 calc(var(--size) * 0.12) color-mix(in oklch, var(--accent) 25%, transparent);
+  }
+
+  /* A glint across the glass. */
+  .lost__glass::after {
+    content: "";
+    position: absolute;
+    inset: 18% 52% 52% 18%;
+    border-radius: 50%;
+    border-top: calc(var(--size) * 0.025) solid color-mix(in oklch, var(--day) 70%, transparent);
+    rotate: -20deg;
+  }
+
+  .lost__handle {
+    position: absolute;
+    top: 86%;
+    left: 80%;
+    width: calc(var(--size) * 0.34);
+    height: calc(var(--size) * 0.095);
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--accent), oklch(72% 0.13 235));
+    rotate: 45deg;
+    transform-origin: 0 50%;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .lost__lens {
+      animation: search 2.4s var(--ease-in-out) 2 both;
+    }
+
+    .lost__digit {
+      animation: settle 900ms var(--ease-out-expo) backwards;
+    }
+
+    .lost__digit:last-child {
+      animation-delay: 120ms;
+    }
+
+    .lost__art:hover .lost__lens {
+      animation: search 2.4s var(--ease-in-out) 1;
+    }
+  }
+
+  @keyframes search {
+    0%,
+    100% {
+      translate: 0 0;
+      rotate: 0deg;
+    }
+
+    25% {
+      translate: -12% -10%;
+      rotate: -8deg;
+    }
+
+    50% {
+      translate: 10% -14%;
+      rotate: 6deg;
+    }
+
+    75% {
+      translate: 6% 8%;
+      rotate: -4deg;
+    }
+  }
+
+  @keyframes settle {
+    from {
+      opacity: 0;
+      translate: 0 0.15em;
+      filter: blur(8px);
+    }
+  }
+
+  .lost__eyebrow {
     color: var(--accent);
   }
 
-  .page__title {
-    margin-block-start: 1rem;
-    font-size: var(--text-step-4);
+  .lost__title {
+    margin-block-start: 0.85rem;
   }
 
-  .page__body {
-    max-width: 48ch;
+  .lost__body {
     margin-block-start: 1rem;
+  }
+
+  .lost__search {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    max-width: 32rem;
+    margin-block-start: 2rem;
+    padding: 0.35rem 0.35rem 0.35rem 2.75rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: 999px;
+    background: var(--paper-raised);
+    box-shadow: var(--shadow-raised);
+    transition:
+      border-color var(--duration-fast) ease,
+      box-shadow var(--duration-fast) ease;
+  }
+
+  .lost__search:focus-within {
+    border-color: var(--accent);
+    box-shadow:
+      var(--shadow-raised),
+      0 0 0 3px color-mix(in oklch, var(--accent) 30%, transparent);
+  }
+
+  .lost__search-icon {
+    position: absolute;
+    left: 1rem;
+    color: var(--ink-faint);
+  }
+
+  .lost__search input {
+    flex: 1;
+    min-width: 0;
+    min-height: 2.25rem;
+    border: 0;
+    background: none;
+    color: var(--ink);
+    font: inherit;
+  }
+
+  .lost__search input::placeholder {
+    color: var(--ink-faint);
+  }
+
+  .lost__search input:focus-visible {
+    outline: none;
+  }
+
+  .lost__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1.25rem;
+    margin-block-start: 1.25rem;
+  }
+
+  .lost__keys {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1rem;
+  }
+
+  .lost__key {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.25rem;
+    color: var(--ink-muted);
+    font-size: var(--text-step--1);
+    cursor: pointer;
+    transition: color var(--duration-fast) ease;
+  }
+
+  .lost__key:hover {
+    color: var(--ink);
+  }
+
+  .lost__hint {
+    margin-block-start: 0.5rem;
+    font-size: var(--text-step--2);
+    color: var(--ink-faint);
+  }
+
+  @media (width < 56rem) {
+    .lost {
+      grid-template-columns: 1fr;
+    }
+
+    .lost__art {
+      justify-content: flex-start;
+    }
+  }
+
+  .lost-section {
+    padding-block: clamp(1.5rem, 1rem + 2vw, 2.5rem);
+  }
+
+  .lost-section--last {
+    padding-block-end: var(--spacing-section);
+  }
+
+  .lost-section__title {
+    margin-block-end: 1.25rem;
+  }
+
+  .places {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+    gap: 1rem;
+  }
+
+  .place {
+    display: grid;
+    grid-template-rows: auto auto 1fr auto;
+    gap: 0.6rem;
+    padding: 1.5rem;
+  }
+
+  .place__icon {
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    margin-block-end: 0.4rem;
+    border: 1px solid var(--rule);
+    border-radius: 0.75rem;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font: 600 1.05rem / 1 var(--mono);
+  }
+
+  .place__title {
+    font-weight: 600;
+    font-size: var(--text-step-1);
+    letter-spacing: -0.02em;
+  }
+
+  .place__title a {
+    text-decoration: none;
+  }
+
+  .place__body {
+    font-size: var(--text-step--1);
     color: var(--ink-muted);
   }
 
-  .page__actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-block-start: 2rem;
+  .place__meta {
+    margin-block-start: 0.4rem;
+    font: 500 var(--text-step--2) / 1.3 var(--mono);
+    color: var(--accent);
   }
 
-  .page__list {
-    margin-block-start: 4rem;
+  .lost__list {
     border-block-end: 1px solid var(--rule-strong);
+  }
+
+  @media (forced-colors: active) {
+    .lost__digit {
+      color: CanvasText;
+      background: none;
+    }
+
+    .lost__glass {
+      border-color: CanvasText;
+      background: Canvas;
+    }
+
+    .lost__handle {
+      forced-color-adjust: none;
+      background: CanvasText;
+    }
+
+    .lost__search {
+      border: 1px solid CanvasText;
+    }
   }
 </style>

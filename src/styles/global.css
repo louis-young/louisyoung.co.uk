@@ -29,6 +29,9 @@
   --signal-text: oklch(50% 0.2 285);
   --on-accent: oklch(99% 0 0);
   --success: oklch(52% 0.15 155);
+  --success-soft: oklch(96% 0.03 155);
+  --danger: oklch(52% 0.19 25);
+  --danger-soft: oklch(96% 0.025 25);
   --glow-1: oklch(70% 0.17 290 / 0.35);
   --glow-2: oklch(72% 0.13 230 / 0.3);
   --night: oklch(15% 0.008 270);
@@ -60,6 +63,9 @@
   --signal-text: oklch(76% 0.13 285);
   --on-accent: oklch(14.5% 0.006 270);
   --success: oklch(78% 0.16 155);
+  --success-soft: oklch(24% 0.045 155);
+  --danger: oklch(74% 0.16 25);
+  --danger-soft: oklch(24% 0.05 25);
   --glow-1: oklch(55% 0.22 290 / 0.38);
   --glow-2: oklch(60% 0.17 235 / 0.3);
   --night: oklch(15% 0.008 270);

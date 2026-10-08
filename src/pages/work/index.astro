@@ -7,12 +7,24 @@ import WorkTable from "../../components/sections/WorkTable.astro";
 import { useTranslations } from "../../i18n";
 import { localeOf } from "../../i18n/astro";
 import Base from "../../layouts/Base.astro";
+import { getArticles } from "../../lib/articles";
 import { getRepositories } from "../../lib/github";
 import { getWork } from "../../lib/work";
 
 const t = useTranslations(localeOf(Astro));
 const work = await getWork();
 const repositories = await getRepositories(profile.github);
+const articleCount = (await getArticles()).length;
+const elsewhere = [
+  {
+    href: "/writing/",
+    title: t("nav.writing"),
+    body: t("home.writingIntro"),
+    meta: t("writing.count", { count: articleCount }),
+    icon: "¶",
+  },
+  { href: "/tools/", title: t("nav.tools"), body: t("tools.lede"), meta: t("tools.open"), icon: "⌘" },
+];
 ---
 
 <Base title={t("work.title")} description={t("work.description")} image="/og/work.png">
@@ -21,11 +33,44 @@ const repositories = await getRepositories(profile.github);
     {work.length > 0 ? (
       <WorkTable work={work} headingLevel="h2" />
     ) : (
-      <div class="card empty">
-        <p class="empty__text">{t("work.empty")}</p>
-        <a href="/writing/" class="button button--small">
-          {t("home.allWriting")} <span aria-hidden="true">→</span>
-        </a>
+      <div class="empty card">
+        <div class="empty__intro">
+          <p class="label empty__status">
+            <span class="empty__dot" aria-hidden="true" />
+            {t("work.emptyLabel")}
+          </p>
+          <h2 class="empty__title">{t("work.emptyTitle")}</h2>
+          <p class="empty__text">{t("work.empty")}</p>
+        </div>
+        <div class="empty__sketch" aria-hidden="true">
+          {[0, 1, 2].map((row) => (
+            <div class="empty__row" style={`--row: ${row}`}>
+              <span class="empty__number">{String(row + 1).padStart(3, "0")}</span>
+              <span class="empty__bar" />
+              <span class="empty__bar empty__bar--short" />
+            </div>
+          ))}
+        </div>
+        <ul class="empty__links" role="list">
+          {elsewhere.map((item) => (
+            <li class="empty__link card card--interactive">
+              <span class="empty__icon" aria-hidden="true">
+                {item.icon}
+              </span>
+              <div class="empty__link-body">
+                <h3 class="empty__link-title">
+                  <a href={item.href} class="stretched-link">
+                    {item.title}
+                  </a>
+                </h3>
+                <p class="empty__link-text">{item.body}</p>
+                <p class="empty__link-meta">
+                  {item.meta} <span aria-hidden="true">→</span>
+                </p>
+              </div>
+            </li>
+          ))}
+        </ul>
       </div>
     )}
   </section>
@@ -52,15 +97,168 @@ const repositories = await getRepositories(profile.github);
     color: var(--ink-muted);
   }
 
+  /* The empty state: a sketch of the table to come, and two good places to go meanwhile. */
   .empty {
     display: grid;
-    justify-items: start;
-    gap: 1.25rem;
-    padding: clamp(1.5rem, 1rem + 2vw, 2.5rem);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: clamp(1.75rem, 1rem + 2.5vw, 3rem);
+    padding: clamp(1.5rem, 1rem + 2.5vw, 3rem);
+    overflow: hidden;
+    background:
+      radial-gradient(28rem 16rem at 100% 0%, color-mix(in oklch, var(--glow-2) 50%, transparent), transparent 70%),
+      color-mix(in oklch, var(--paper-raised) 92%, transparent);
+  }
+
+  .empty__intro {
+    display: grid;
+    align-content: start;
+    gap: 1rem;
+  }
+
+  .empty__status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    color: var(--accent);
+  }
+
+  .empty__dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: var(--warning);
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--warning) 25%, transparent);
+  }
+
+  .empty__title {
+    font-weight: 600;
+    font-size: var(--text-step-3);
+    line-height: 1.1;
+    letter-spacing: -0.035em;
   }
 
   .empty__text {
-    max-width: 52ch;
+    max-width: 48ch;
     color: var(--ink-muted);
+  }
+
+  .empty__sketch {
+    display: grid;
+    align-content: center;
+    gap: 0.6rem;
+    mask-image: linear-gradient(to bottom, black 40%, transparent);
+  }
+
+  .empty__row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) minmax(0, 0.45fr);
+    align-items: center;
+    gap: 1rem;
+    padding: 0.9rem 1rem;
+    border: 1px dashed var(--rule-strong);
+    border-radius: var(--radius-md);
+    opacity: calc(1 - var(--row) * 0.2);
+  }
+
+  .empty__number {
+    font: 500 var(--text-step--2) / 1 var(--mono);
+    color: var(--ink-faint);
+  }
+
+  .empty__bar {
+    height: 0.6rem;
+    border-radius: 999px;
+    background: linear-gradient(
+      90deg,
+      color-mix(in oklch, var(--ink) 12%, transparent),
+      color-mix(in oklch, var(--ink) 5%, transparent)
+    );
+  }
+
+  .empty__bar--short {
+    background: color-mix(in oklch, var(--accent) 22%, transparent);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .empty__bar {
+      animation: shimmer 1.6s ease-in-out 3;
+    }
+  }
+
+  @keyframes shimmer {
+    50% {
+      opacity: 0.45;
+    }
+  }
+
+  .empty__links {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+    gap: 1rem;
+  }
+
+  .empty__link {
+    display: flex;
+    gap: 1rem;
+    padding: 1.35rem;
+    background: color-mix(in oklch, var(--paper) 70%, transparent);
+  }
+
+  .empty__icon {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 1px solid var(--rule);
+    border-radius: 0.75rem;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font: 600 1.05rem / 1 var(--mono);
+  }
+
+  .empty__link-body {
+    display: grid;
+    gap: 0.35rem;
+  }
+
+  .empty__link-title {
+    font-weight: 600;
+    font-size: var(--text-step-1);
+    letter-spacing: -0.02em;
+  }
+
+  .empty__link-title a {
+    text-decoration: none;
+  }
+
+  .empty__link-text {
+    font-size: var(--text-step--1);
+    color: var(--ink-muted);
+  }
+
+  .empty__link-meta {
+    margin-block-start: 0.35rem;
+    font: 500 var(--text-step--2) / 1.3 var(--mono);
+    color: var(--accent);
+  }
+
+  @media (width < 48rem) {
+    .empty {
+      grid-template-columns: 1fr;
+    }
+
+    .empty__link {
+      flex-direction: column;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .empty__bar,
+    .empty__dot {
+      forced-color-adjust: none;
+      background: CanvasText;
+    }
   }
 </style>
