@@ -318,6 +318,7 @@ jobs:
             --max-cache-age 1d
             --root-dir ${{ github.workspace }}/dist
             --accept 200,429
+            --exclude '^https://louisyoung\.co\.uk'
             --exclude codesandbox\.io
             --exclude linkedin\.com
             --exclude '://(www\.)?x\.com'

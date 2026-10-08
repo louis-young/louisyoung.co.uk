@@ -68,6 +68,9 @@ jobs:
 
       - name: Setup
         uses: ./.github/actions/setup
+        with:
+          # This job runs a pull request's code, so it must never write a shared cache.
+          cache: "false"
 
       - name: Build
         run: pnpm build

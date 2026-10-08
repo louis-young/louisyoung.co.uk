@@ -24,6 +24,9 @@ export const test = base.extend<{ consoleErrors: string[] }>({
     async ({ page }, use) => {
       const errors: string[] = [];
       page.on("console", (message) => {
+        // Chromium logs this when a test ends while a cross-document view transition is still
+        // running and the page is torn down. It is teardown noise, not a page error.
+        if (message.text().startsWith("Transition was aborted because of invalid state")) return;
         if (message.type() === "error") errors.push(message.text());
       });
       page.on("pageerror", (error) => errors.push(error.message));

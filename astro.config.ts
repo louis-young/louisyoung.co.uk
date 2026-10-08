@@ -34,7 +34,6 @@ export default defineConfig({
         "object-src 'none'",
         "base-uri 'self'",
         "form-action 'self'",
-        "upgrade-insecure-requests",
       ],
       scriptDirective: { resources: ["'self'", "'wasm-unsafe-eval'"] },
       // Expressive Code sets token colours and view transitions use names via style attributes.

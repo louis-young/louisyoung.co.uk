@@ -59,7 +59,10 @@ test.describe("article page", () => {
     const sandbox = page.locator("sandbox-embed").first();
     await expect(sandbox.locator("iframe")).toHaveCount(0);
     await sandbox.getByRole("button", { name: "Load interactive example" }).click();
-    await expect(sandbox.locator("iframe")).toHaveAttribute("src", /codesandbox\.io\/embed\/fetch-api-9d09j/u);
+    await expect(sandbox.locator("iframe")).toHaveAttribute(
+      "src",
+      /^https:\/\/codesandbox\.io\/embed\/fetch-api-9d09j\?/u,
+    );
   });
 });
 

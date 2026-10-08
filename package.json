@@ -20,7 +20,7 @@
     "build": "astro build && pagefind --site dist",
     "preview": "astro preview",
     "new": "node scripts/new-article.ts",
-    "check": "pnpm run --sequential \"/^check:.*/\"",
+    "check": "astro sync && pnpm run --sequential \"/^check:.*/\"",
     "check:format": "prettier --check .",
     "check:lint": "eslint --max-warnings 0 .",
     "check:types": "astro check --minimumSeverity warning",
@@ -35,7 +35,7 @@
     "test:a11y": "playwright test --project=a11y",
     "test:visual": "playwright test --project=visual",
     "test:synthetic": "playwright test --config=playwright.synthetic.config.ts",
-    "test:lighthouse": "lhci autorun",
+    "test:lighthouse": "pnpm dlx @lhci/cli@0.15.1 autorun",
     "test:html": "html-validate \"dist/**/*.html\"",
     "prepare": "lefthook install || true"
   },
@@ -70,7 +70,6 @@
     "@commitlint/cli": "^21.2.3",
     "@commitlint/config-conventional": "^21.2.3",
     "@eslint/js": "^10.0.1",
-    "@lhci/cli": "^0.15.1",
     "@ls-lint/ls-lint": "^2.3.1",
     "@playwright/test": "1.63.0",
     "@testing-library/react": "^16.3.3",
@@ -109,7 +108,9 @@
     ],
     "overrides": {
       "playwright": "1.63.0",
-      "playwright-core": "1.63.0"
+      "playwright-core": "1.63.0",
+      "fflate@<0.7.5": "0.7.5",
+      "postcss-selector-parser@<7.1.6": "^7.1.6"
     }
   }
 }
