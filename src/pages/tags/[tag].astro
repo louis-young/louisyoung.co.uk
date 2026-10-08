@@ -5,6 +5,7 @@ import { useTranslations } from "../../i18n";
 import { localeOf } from "../../i18n/astro";
 import Base from "../../layouts/Base.astro";
 import { getArticles, getTags, type Article } from "../../lib/articles";
+import { breadcrumbSchema, describeList } from "../../lib/seo";
 
 export const getStaticPaths = async () => {
   const articles = await getArticles();
@@ -25,7 +26,18 @@ const { articles, tags } = Astro.props;
 const t = useTranslations(localeOf(Astro));
 ---
 
-<Base title={t("tags.heading", { tag })}>
+<Base
+  title={t("tags.heading", { tag })}
+  description={describeList(
+    t("writing.filtered", { count: articles.length, tag }),
+    articles.map((article) => article.data.title),
+  )}
+  schema={breadcrumbSchema([
+    { name: t("nav.writing"), path: "/writing/" },
+    { name: t("tags.title"), path: "/tags/" },
+    { name: tag, path: `/tags/${tag}/` },
+  ])}
+>
   <header class="container-page topic-hero">
     <p class="label topic-hero__trail">
       <a href="/writing/">{t("nav.writing")}</a>

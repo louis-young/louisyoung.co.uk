@@ -3,6 +3,7 @@ import PageHero from "../../components/sections/PageHero.astro";
 import { useTranslations } from "../../i18n";
 import { localeOf } from "../../i18n/astro";
 import Base from "../../layouts/Base.astro";
+import { toolPageProps } from "../../lib/tool-catalogue";
 
 const t = useTranslations(localeOf(Astro));
 const flags = [
@@ -16,7 +17,7 @@ const flags = [
 const pattern = String.raw`(?<year>\d{4})-(?<month>\d{2})-(\d{2})`;
 ---
 
-<Base title={t("tools.regex.title")} description={t("tools.regex.summary")} image="/og/tools.png">
+<Base {...toolPageProps("regex", t)}>
   <PageHero label={t("nav.tools")} title={t("tools.regex.title")} lede={t("tools.regex.summary")} />
   <div
     class="container-page regex"

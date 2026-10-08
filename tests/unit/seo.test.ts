@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest";
 
-import { absoluteUrl, articleSchema, jsonLd, websiteSchema } from "../../src/lib/seo";
+import {
+  absoluteUrl,
+  articleSchema,
+  breadcrumbSchema,
+  describeList,
+  itemListSchema,
+  jsonLd,
+  toolSchema,
+  websiteSchema,
+} from "../../src/lib/seo";
 import { emphasise } from "../../src/lib/text";
 
 describe("seo", () => {
@@ -35,7 +44,82 @@ describe("seo", () => {
       dateModified: published.toISOString(),
       keywords: "react, hooks",
     });
-    expect(breadcrumb?.itemListElement).toHaveLength(2);
+    expect(breadcrumb.itemListElement).toHaveLength(2);
+  });
+
+  it("puts an article's section in its breadcrumb", () => {
+    const [, breadcrumb] = articleSchema({
+      title: "Title",
+      description: "Description",
+      url: "https://louisyoung.co.uk/a/",
+      image: "https://louisyoung.co.uk/og/a.png",
+      published: new Date("2021-02-15T00:00:00Z"),
+      tags: ["react"],
+      section: { name: "Writing", path: "/writing/" },
+    });
+    expect(breadcrumb.itemListElement.map((item) => item.item)).toEqual([
+      "https://louisyoung.co.uk/",
+      "https://louisyoung.co.uk/writing/",
+      "https://louisyoung.co.uk/a/",
+    ]);
+  });
+
+  it("builds breadcrumbs from the home page", () => {
+    expect(breadcrumbSchema([{ name: "Tools", path: "/tools/" }])).toEqual({
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Louis Young", item: "https://louisyoung.co.uk/" },
+        { "@type": "ListItem", position: 2, name: "Tools", item: "https://louisyoung.co.uk/tools/" },
+      ],
+    });
+  });
+
+  it("describes a tool as a free WebApplication", () => {
+    const [app, breadcrumb] = toolSchema({
+      name: "JSON formatter",
+      description: "Validate JSON.",
+      path: "/tools/json/",
+      image: "/og/tools-json.png",
+      section: { name: "Tools", path: "/tools/" },
+    });
+    expect(app).toMatchObject({
+      "@type": "WebApplication",
+      url: "https://louisyoung.co.uk/tools/json/",
+      image: "https://louisyoung.co.uk/og/tools-json.png",
+      applicationCategory: "DeveloperApplication",
+      isAccessibleForFree: true,
+      offers: { "@type": "Offer", price: "0" },
+    });
+    expect(app).toHaveProperty("browserRequirements");
+    expect(breadcrumb).toMatchObject({ "@type": "BreadcrumbList" });
+    expect(JSON.stringify(breadcrumb)).toContain("https://louisyoung.co.uk/tools/json/");
+  });
+
+  it("lists pages in order", () => {
+    const list = itemListSchema({
+      name: "Tools",
+      description: "Small tools",
+      path: "/tools/",
+      items: [
+        { name: "A", path: "/tools/a/" },
+        { name: "B", path: "/tools/b/" },
+      ],
+    });
+    expect(list).toMatchObject({ "@type": "ItemList", numberOfItems: 2, url: "https://louisyoung.co.uk/tools/" });
+    expect(list.itemListElement[1]).toEqual({
+      "@type": "ListItem",
+      position: 2,
+      name: "B",
+      url: "https://louisyoung.co.uk/tools/b/",
+    });
+  });
+
+  it("describes a list without running past the limit", () => {
+    expect(describeList("2 articles tagged “react”", ["One", "Two"])).toBe("2 articles tagged “react”: One, Two.");
+    expect(describeList("Lead", ["a".repeat(10), "b".repeat(10)], 25)).toBe(`Lead: ${"a".repeat(10)}…`);
+    expect(describeList("Lead", ["a".repeat(30)], 25)).toBe("Lead.");
+    expect(describeList("Lead", [])).toBe("Lead.");
   });
 });
 

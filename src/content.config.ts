@@ -19,6 +19,8 @@ export const reservedSlugs = [
   "cv.pdf",
   "now",
   "uses",
+  "changelog",
+  "changelog.xml",
 ];
 
 const articles = defineCollection({

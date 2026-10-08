@@ -40,12 +40,18 @@ export const useTranslations = (locale: AnyLocale = site.defaultLocale) => {
   return (key: MessageKey, values?: Values) => formatMessage(locale, messages[key], values);
 };
 
+const dateFormat = (locale: AnyLocale, options: Intl.DateTimeFormatOptions) =>
+  new Intl.DateTimeFormat(locale === "en-XA" ? "en-GB" : locale, { ...options, timeZone: "UTC" });
+
 export const formatDate = (date: Date, locale: AnyLocale = site.defaultLocale) =>
-  new Intl.DateTimeFormat(locale === "en-XA" ? "en-GB" : locale, {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-    timeZone: "UTC",
-  }).format(date);
+  dateFormat(locale, { day: "numeric", month: "long", year: "numeric" }).format(date);
+
+/** "October 2026", for headings that group by month. */
+export const formatMonth = (date: Date, locale: AnyLocale = site.defaultLocale) =>
+  dateFormat(locale, { month: "long", year: "numeric" }).format(date);
+
+/** "8 Oct", for dates already grouped under a month. */
+export const formatDay = (date: Date, locale: AnyLocale = site.defaultLocale) =>
+  dateFormat(locale, { day: "numeric", month: "short" }).format(date);
 
 export const isoDate = (date: Date) => date.toISOString().slice(0, 10);

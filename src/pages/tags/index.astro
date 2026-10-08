@@ -4,6 +4,7 @@ import { formatDate, isoDate, useTranslations } from "../../i18n";
 import { localeOf } from "../../i18n/astro";
 import Base from "../../layouts/Base.astro";
 import { getArticles, getTags } from "../../lib/articles";
+import { breadcrumbSchema } from "../../lib/seo";
 
 const locale = localeOf(Astro);
 const t = useTranslations(locale);
@@ -15,7 +16,14 @@ const topics = getTags(articles).flatMap(({ tag, count }) => {
 });
 ---
 
-<Base title={t("tags.title")} description={t("tags.description")}>
+<Base
+  title={t("tags.title")}
+  description={t("tags.description")}
+  schema={breadcrumbSchema([
+    { name: t("nav.writing"), path: "/writing/" },
+    { name: t("tags.title"), path: "/tags/" },
+  ])}
+>
   <PageHero label={t("nav.writing")} title={t("tags.title")} lede={t("tags.description")} />
   <div class="container-page topics-wrap">
     <ul class="topics" role="list">

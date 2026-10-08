@@ -3,6 +3,7 @@ import PageHero from "../../components/sections/PageHero.astro";
 import { useTranslations } from "../../i18n";
 import { localeOf } from "../../i18n/astro";
 import Base from "../../layouts/Base.astro";
+import { toolPageProps } from "../../lib/tool-catalogue";
 
 const t = useTranslations(localeOf(Astro));
 const checks = ["aaText", "aaLarge", "aaaText", "aaaLarge", "nonText"] as const;
@@ -15,7 +16,7 @@ const labels = {
 };
 ---
 
-<Base title={t("tools.contrast.title")} description={t("tools.contrast.summary")} image="/og/tools.png">
+<Base {...toolPageProps("contrast", t)}>
   <PageHero label={t("nav.tools")} title={t("tools.contrast.title")} lede={t("tools.contrast.summary")} />
   <div
     class="container-page contrast"

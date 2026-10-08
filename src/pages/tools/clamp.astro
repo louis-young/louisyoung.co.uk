@@ -3,6 +3,7 @@ import PageHero from "../../components/sections/PageHero.astro";
 import { useTranslations } from "../../i18n";
 import { localeOf } from "../../i18n/astro";
 import Base from "../../layouts/Base.astro";
+import { toolPageProps } from "../../lib/tool-catalogue";
 
 const t = useTranslations(localeOf(Astro));
 const fields = [
@@ -14,7 +15,7 @@ const fields = [
 ];
 ---
 
-<Base title={t("tools.clamp.title")} description={t("tools.clamp.summary")} image="/og/tools.png">
+<Base {...toolPageProps("clamp", t)}>
   <PageHero label={t("nav.tools")} title={t("tools.clamp.title")} lede={t("tools.clamp.summary")} />
   <div
     class="container-page clamp"

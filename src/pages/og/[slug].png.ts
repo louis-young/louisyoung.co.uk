@@ -4,6 +4,7 @@ import { getCollection } from "astro:content";
 import { useTranslations, formatDate } from "../../i18n";
 import { getArticles } from "../../lib/articles";
 import { cardSvg, pngResponse, svgToPng } from "../../lib/og";
+import { tools } from "../../lib/tool-catalogue";
 import { getWork, isPagePublished } from "../../lib/work";
 
 interface Card {
@@ -21,6 +22,8 @@ export const getStaticPaths = (async () => {
     ["cv", { title: t("cv.heading"), eyebrow: t("nav.cv") }],
     ["tools", { title: t("tools.heading"), eyebrow: t("nav.tools") }],
     ["stats", { title: t("stats.heading"), eyebrow: t("nav.stats") }],
+    ["changelog", { title: t("changelog.heading"), eyebrow: t("changelog.title") }],
+    ...tools.map((tool): [string, Card] => [`tools-${tool.slug}`, { title: t(tool.title), eyebrow: t("nav.tools") }]),
     ...(await getCollection("pages", isPagePublished)).map((page): [string, Card] => [
       page.id,
       { title: page.data.title, eyebrow: formatDate(page.data.updated) },

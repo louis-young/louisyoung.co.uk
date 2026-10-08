@@ -6,6 +6,7 @@ import { useTranslations } from "../i18n";
 import { localeOf } from "../i18n/astro";
 import Base from "../layouts/Base.astro";
 import { getArticles, getTags, groupByYear } from "../lib/articles";
+import { breadcrumbSchema } from "../lib/seo";
 
 const t = useTranslations(localeOf(Astro));
 const articles = await getArticles();
@@ -13,7 +14,12 @@ const tags = getTags(articles);
 const years = groupByYear(articles);
 ---
 
-<Base title={t("writing.title")} description={t("writing.description")} image="/og/writing.png">
+<Base
+  title={t("writing.title")}
+  description={t("writing.description")}
+  image="/og/writing.png"
+  schema={breadcrumbSchema([{ name: t("nav.writing"), path: "/writing/" }])}
+>
   <PageHero label={t("nav.writing")} title={t("writing.title")} lede={t("home.writingIntro")}>
     <a href="/search/" class="button button--small">
       <Icon name="search" size={14} />

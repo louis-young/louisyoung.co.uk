@@ -3,6 +3,7 @@ import PageHero from "../../components/sections/PageHero.astro";
 import { useTranslations } from "../../i18n";
 import { localeOf } from "../../i18n/astro";
 import Base from "../../layouts/Base.astro";
+import { toolPageProps } from "../../lib/tool-catalogue";
 import { convertAll, defaultContext, units } from "../../lib/units-tool";
 
 const t = useTranslations(localeOf(Astro));
@@ -26,7 +27,7 @@ const result = convertAll(start.value, start.unit, defaultContext);
 const rows = "rows" in result ? result.rows : [];
 ---
 
-<Base title={t("tools.units.title")} description={t("tools.units.summary")} image="/og/tools.png">
+<Base {...toolPageProps("units", t)}>
   <PageHero label={t("nav.tools")} title={t("tools.units.title")} lede={t("tools.units.summary")} />
   <div
     class="container-page units"

@@ -3,6 +3,7 @@ import PageHero from "../../components/sections/PageHero.astro";
 import { useTranslations } from "../../i18n";
 import { localeOf } from "../../i18n/astro";
 import Base from "../../layouts/Base.astro";
+import { toolPageProps } from "../../lib/tool-catalogue";
 
 const t = useTranslations(localeOf(Astro));
 const indents = [
@@ -15,7 +16,7 @@ const sample =
   '{"name":"Louis Young","site":"louisyoung.co.uk","tools":["json","regex","encode"],"open":true,"since":2012}';
 ---
 
-<Base title={t("tools.json.title")} description={t("tools.json.summary")} image="/og/tools.png">
+<Base {...toolPageProps("json", t)}>
   <PageHero label={t("nav.tools")} title={t("tools.json.title")} lede={t("tools.json.summary")} />
   <div
     class="container-page json"
