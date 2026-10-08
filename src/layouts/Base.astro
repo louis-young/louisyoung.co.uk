@@ -4,9 +4,11 @@ import "../styles/global.css";
 import Footer from "../components/Footer.astro";
 import Head from "../components/Head.astro";
 import Header from "../components/Header.astro";
-import ShortcutsDialog from "../components/ShortcutsDialog.astro";
+import Palette from "../components/Palette.astro";
 import { localeOf } from "../i18n/astro";
 import { useTranslations } from "../i18n";
+import { articlePath, getArticles } from "../lib/articles";
+import { getWork, workPath } from "../lib/work";
 
 type Props = Parameters<typeof Head>[0];
 
@@ -14,6 +16,16 @@ const locale = localeOf(Astro);
 const t = useTranslations(locale);
 /** Vercel Web Analytics is cookieless and served first-party, so it only exists on Vercel. */
 const analytics = Boolean(process.env["VERCEL"]);
+const paletteWork = (await getWork()).map((study) => ({
+  title: study.data.title,
+  href: workPath(study),
+  keywords: `${study.data.client} ${study.data.stack.join(" ")}`,
+}));
+const paletteArticles = (await getArticles()).map((article) => ({
+  title: article.data.title,
+  href: articlePath(article),
+  keywords: article.data.tags.join(" "),
+}));
 ---
 
 <!doctype html>
@@ -22,7 +34,7 @@ const analytics = Boolean(process.env["VERCEL"]);
     <Head {...Astro.props} />
     <slot name="head" />
   </head>
-  <body>
+  <body id="top">
     <a href="#main" class="skip-link">
       {t("nav.skip")}
     </a>
@@ -31,13 +43,21 @@ const analytics = Boolean(process.env["VERCEL"]);
       <slot />
     </main>
     <Footer />
-    <ShortcutsDialog />
+    <Palette work={paletteWork} articles={paletteArticles} />
+    <div class="grid-overlay container-page" aria-hidden="true">
+      {Array.from({ length: 12 }, () => (
+        <span />
+      ))}
+    </div>
     <script>
+      import { initClock } from "../scripts/clock";
+      import { initPalette } from "../scripts/palette";
       import { initShortcuts } from "../scripts/shortcuts";
       import { initTheme } from "../scripts/theme";
 
       initTheme();
-      initShortcuts();
+      initClock();
+      initShortcuts(initPalette());
     </script>
     {analytics && <script is:inline defer src="/_vercel/insights/script.js" />}
   </body>
@@ -50,10 +70,9 @@ const analytics = Boolean(process.env["VERCEL"]);
     left: 0.75rem;
     z-index: 50;
     padding: 0.75rem 1rem;
-    border-radius: var(--radius-md);
-    background: var(--ink);
-    color: var(--paper);
-    font-weight: 600;
+    background: var(--signal);
+    color: var(--on-accent);
+    font-weight: 700;
     translate: 0 -200%;
     transition: translate var(--duration-base) var(--ease-out-expo);
   }
@@ -65,5 +84,24 @@ const analytics = Boolean(process.env["VERCEL"]);
   main {
     flex: 1;
     outline: none;
+  }
+
+  .grid-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: none;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 1.5rem;
+    pointer-events: none;
+  }
+
+  .grid-overlay span {
+    background: color-mix(in oklch, var(--signal) 12%, transparent);
+    border-inline: 1px solid color-mix(in oklch, var(--signal) 40%, transparent);
+  }
+
+  :global(:root[data-grid]) .grid-overlay {
+    display: grid;
   }
 </style>

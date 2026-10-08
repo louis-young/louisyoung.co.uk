@@ -7,12 +7,13 @@ Louis Young's personal site: Astro 7 static site, TypeScript strict, Tailwind 4,
 - `pnpm dev` / `pnpm build` / `pnpm preview`
 - `pnpm check` runs all static checks (Prettier, ESLint, `astro check`, ls-lint, cspell, knip). It must pass.
 - `pnpm test` runs Vitest: unit, integration, types and content.
-- `pnpm test:e2e`, `pnpm test:a11y` and `pnpm test:visual` need `pnpm build` first. In sandboxes without downloaded browsers, set `CHROMIUM_PATH` to a local Chromium and run `--project=chromium`/`mobile`/`a11y`.
+- `pnpm test:e2e`, `pnpm test:a11y` and `pnpm test:visual` need `pnpm build` first. Astro backgrounds `astro preview` when it detects an AI agent, so run Playwright with `env -u AI_AGENT -u CLAUDECODE`. In sandboxes without downloaded browsers, set `CHROMIUM_PATH` to a local Chromium and run `--project=chromium`/`mobile`/`a11y`.
 - `pnpm new "Title"` scaffolds a draft article.
 
 ## Conventions
 
 - Article URLs are folder names under `content/articles/`. Never rename a published one.
+- Profile, CV and services are typed data in `content/data/*.ts`; case studies are `content/work/<slug>/index.mdx`; `/now` and `/uses` are `content/pages/*.mdx`. `[SQUARE BRACKETS]` mark placeholders (`pnpm content:todo`). See docs/content.md.
 - UI text goes in `src/i18n/en-GB.ts` and is read with `t()`. Never hard-code UI strings (the pseudo-locale test catches it). Delete keys you stop using (also tested).
 - Colours come from the tokens in `src/styles/global.css`. Add new text/background pairs to `tests/unit/tokens.test.ts`.
 - Keep `src/lib` pure and unit-tested; coverage thresholds are enforced.

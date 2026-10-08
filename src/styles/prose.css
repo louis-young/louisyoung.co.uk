@@ -1,15 +1,14 @@
 /*
- * Long-form article typography. Prose is set in Newsreader with optical sizing so body
- * copy and display headings each get the right cut of the same family.
+ * Long-form article typography: Schibsted Grotesk at a comfortable measure, heavy tight
+ * headings, signal-orange list markers and quote rules.
  */
 .prose {
   --measure: 68ch;
   --breakout: min(4rem, (100vw - 100%) / 2 - var(--spacing-gutter));
 
-  font-family: var(--serif);
+  font-family: var(--sans);
   font-size: var(--text-step-0);
-  font-optical-sizing: auto;
-  line-height: 1.7;
+  line-height: 1.68;
   font-variant-ligatures: common-ligatures;
   font-kerning: normal;
   color: var(--ink);
@@ -21,10 +20,10 @@
 
 .prose :where(h2, h3, h4) {
   position: relative;
-  font-family: var(--serif);
-  font-weight: 560;
-  letter-spacing: -0.015em;
-  line-height: 1.2;
+  font-family: var(--sans);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.08;
   scroll-margin-top: 5rem;
 }
 
@@ -104,10 +103,10 @@
   content: "";
   position: absolute;
   inset-inline-start: -1em;
-  top: 0.78em;
-  width: 0.35em;
-  height: 1.5px;
-  background: var(--ink-faint);
+  width: 0.4em;
+  height: 0.4em;
+  top: 0.62em;
+  background: var(--signal);
 }
 
 .prose ol {
@@ -127,7 +126,6 @@
 .prose :not(pre) > code {
   padding: 0.12em 0.36em;
   border: 1px solid var(--rule);
-  border-radius: var(--radius-sm);
   background: var(--paper-sunken);
   font-family: var(--mono);
   font-size: 0.8em;
@@ -137,10 +135,11 @@
 
 .prose blockquote {
   padding-inline-start: 1.25em;
-  border-inline-start: 2px solid var(--accent);
-  font-style: italic;
-  font-size: 1.05em;
-  color: var(--ink-muted);
+  border-inline-start: 4px solid var(--signal);
+  font-size: 1.15em;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  color: var(--ink);
 }
 
 .prose hr {

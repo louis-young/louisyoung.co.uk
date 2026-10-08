@@ -10,7 +10,7 @@ const tags = getTags(await getArticles());
 
 <Base title={t("tags.title")}>
   <section class="container-page page">
-    <h1 class="page__title">{t("tags.title")}</h1>
+    <h1 class="page-title">{t("tags.title")}</h1>
     <ul class="topics" role="list">
       {tags.map(({ tag, count }) => (
         <li>
@@ -29,26 +29,23 @@ const tags = getTags(await getArticles());
     padding-block: clamp(3rem, 2rem + 5vw, 6rem) var(--spacing-section);
   }
 
-  .page__title {
-    font: 500 var(--text-step-5) / 1.05 var(--serif);
-    letter-spacing: -0.035em;
-  }
-
   .topics {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
-    gap: 0.75rem;
     margin-block-start: 3rem;
+    border-block-start: 2px solid var(--rule-strong);
+    border-inline-start: 1px solid var(--rule-strong);
   }
 
   .topic {
     display: flex;
     align-items: baseline;
+    flex-wrap: wrap;
     justify-content: space-between;
-    gap: 1rem;
-    padding: 1.25rem 1.25rem 1.1rem;
-    border: 1px solid var(--rule);
-    border-radius: var(--radius-lg);
+    gap: 0.5rem 1rem;
+    padding: 1.4rem 1.25rem 1.25rem;
+    border-inline-end: 1px solid var(--rule-strong);
+    border-block-end: 1px solid var(--rule-strong);
     text-decoration: none;
     transition:
       border-color var(--duration-fast) ease,
@@ -56,12 +53,20 @@ const tags = getTags(await getArticles());
   }
 
   .topic:hover {
-    border-color: var(--accent);
-    background: var(--paper-sunken);
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  .topic:hover .meta {
+    color: inherit;
   }
 
   .topic__name {
-    font: 540 var(--text-step-2) / 1.1 var(--serif);
-    letter-spacing: -0.02em;
+    font-weight: 800;
+    font-size: var(--text-step-2);
+    line-height: 1;
+    letter-spacing: -0.035em;
+    text-transform: uppercase;
+    overflow-wrap: anywhere;
   }
 </style>

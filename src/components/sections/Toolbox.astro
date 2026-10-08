@@ -1,0 +1,19 @@
+---
+import { cv } from "../../../content/data/cv";
+
+const items = [...new Set(cv.skills.flatMap((group) => group.items))];
+---
+
+<ul class="toolbox" role="list">
+  {items.map((item) => (
+    <li class="tag">{item}</li>
+  ))}
+</ul>
+
+<style>
+  .toolbox {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+</style>

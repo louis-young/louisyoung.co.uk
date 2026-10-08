@@ -10,7 +10,8 @@ module.exports = {
     "text-content": "off",
     // `role="list"` restores list semantics Safari drops when `list-style: none` is set.
     "no-redundant-role": "off",
-    "prefer-native-element": ["error", { exclude: ["list"] }],
+    // The command palette is an ARIA combobox: a native <select> can't filter as you type.
+    "prefer-native-element": ["error", { exclude: ["list", "listbox", "option"] }],
     // Style attributes are permitted by the CSP (docs/adr/0002-csp-style-attributes.md).
     "no-inline-style": "off",
     "attribute-boolean-style": "off",

@@ -1,0 +1,79 @@
+---
+import { translatorFor } from "../../i18n/astro";
+import type { Repository } from "../../lib/github";
+
+interface Props {
+  repositories: readonly Repository[];
+}
+
+const t = translatorFor(Astro);
+const { repositories } = Astro.props;
+---
+
+<ul class="repos" role="list">
+  {repositories.map((repo) => (
+    <li class="repo">
+      <h3 class="repo__name">
+        <a href={repo.url} class="repo__link">
+          {repo.name}
+        </a>
+      </h3>
+      {repo.description && <p class="repo__description">{repo.description}</p>}
+      <p class="repo__meta label">
+        {repo.language && <span>{repo.language}</span>}
+        <span>{t("oss.stars", { count: repo.stars })}</span>
+      </p>
+    </li>
+  ))}
+</ul>
+
+<style>
+  .repos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+    gap: 0;
+    border-block-start: 1px solid var(--rule-strong);
+    border-inline-start: 1px solid var(--rule-strong);
+  }
+
+  .repo {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    padding: 1.4rem;
+    border-inline-end: 1px solid var(--rule-strong);
+    border-block-end: 1px solid var(--rule-strong);
+    transition: background-color var(--duration-fast) ease;
+  }
+
+  .repo:hover {
+    background: var(--paper-raised);
+  }
+
+  .repo__name {
+    font: 600 var(--text-step-0) / 1.2 var(--mono);
+    overflow-wrap: anywhere;
+  }
+
+  .repo__link {
+    text-decoration: none;
+  }
+
+  .repo__link::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+  }
+
+  .repo__description {
+    color: var(--ink-muted);
+    font-size: var(--text-step--1);
+  }
+
+  .repo__meta {
+    display: flex;
+    gap: 1rem;
+    margin-block-start: auto;
+  }
+</style>

@@ -19,7 +19,9 @@ const colours = [
   ["ink-muted", "Secondary text (≥ 4.5:1)"],
   ["ink-faint", "Decoration only (≥ 3:1)"],
   ["rule", "Hairlines"],
-  ["rule-strong", "Control borders"],
+  ["rule-strong", "Structural rules, control borders"],
+  ["signal", "Signal orange: bands, marks, focus"],
+  ["night", "Always-dark bands"],
   ["accent", "Links, emphasis"],
   ["accent-soft", "Accent wash"],
   ["note", "Note callouts"],
@@ -65,9 +67,10 @@ const handleClick = () => {
         Type
       </h2>
       <p class="guide__note">
-        Newsreader (serif, optical sizes) for reading, Instrument Sans for interface, Geist Mono for code and metadata.
-        A fluid scale from 360px to 1280px.
+        Schibsted Grotesk from 400 to 900 for everything you read, JetBrains Mono for labels, data and code. A fluid
+        scale from 360px to 1440px, topping out at an enormous display size.
       </p>
+      <p class="display guide__display">Index</p>
       <ol class="type-scale" role="list">
         {steps.map((step) => (
           <li class="type-scale__row">
@@ -89,6 +92,9 @@ const handleClick = () => {
         <button type="button" class="button">
           Secondary
         </button>
+        <button type="button" class="button button--signal">
+          Signal
+        </button>
         <button type="button" class="button" disabled>
           Disabled
         </button>
@@ -102,6 +108,9 @@ const handleClick = () => {
           Inline link
         </a>
         <kbd>?</kbd>
+        <span class="chip">
+          <span class="chip__dot" aria-hidden="true"></span>Available
+        </span>
       </div>
     </section>
 
@@ -149,8 +158,11 @@ const handleClick = () => {
 
   .guide__title {
     margin-block-start: 1rem;
-    font: 500 var(--text-step-5) / 1.05 var(--serif);
-    letter-spacing: -0.035em;
+    font-weight: 900;
+    font-size: var(--text-step-5);
+    line-height: 0.86;
+    letter-spacing: -0.06em;
+    text-transform: uppercase;
   }
 
   .guide__lede {
@@ -162,9 +174,10 @@ const handleClick = () => {
   .guide__heading {
     margin-block-end: 1.5rem;
     padding-block-end: 0.75rem;
-    border-block-end: 1px solid var(--rule);
-    font: 540 var(--text-step-3) / 1.1 var(--serif);
-    letter-spacing: -0.02em;
+    border-block-end: 2px solid var(--rule-strong);
+    font: 800 var(--text-step-3) / 1 var(--sans);
+    letter-spacing: -0.04em;
+    text-transform: uppercase;
   }
 
   .guide__note {
@@ -191,8 +204,7 @@ const handleClick = () => {
   .swatch__chip {
     height: 4.5rem;
     margin-block-end: 0.4rem;
-    border: 1px solid var(--rule);
-    border-radius: var(--radius-md);
+    border: 2px solid var(--rule-strong);
   }
 
   .swatch__token {
@@ -211,7 +223,8 @@ const handleClick = () => {
     gap: 1rem;
     padding-block: 0.6rem;
     border-block-end: 1px solid var(--rule);
-    font-family: var(--serif);
+    font-weight: 700;
+    letter-spacing: -0.03em;
     line-height: 1.15;
   }
 
@@ -219,6 +232,11 @@ const handleClick = () => {
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+  }
+
+  .guide__display {
+    margin-block-end: 1.5rem;
+    overflow: hidden;
   }
 
   .row {

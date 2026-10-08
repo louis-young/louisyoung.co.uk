@@ -16,7 +16,9 @@ const fontsource = (pkg: string, file: string) => `./node_modules/@fontsource-va
 export default defineConfig({
   site: site.url,
   trailingSlash: "always",
-  build: { format: "directory" },
+  // External stylesheets are covered by `style-src 'self'`; WebKit refused some hashed inline
+  // <style> blocks on some pages, and files cache across pages.
+  build: { format: "directory", inlineStylesheets: "never" },
   prefetch: { prefetchAll: true, defaultStrategy: "hover" },
   i18n: {
     locales: [...site.locales],
@@ -33,30 +35,31 @@ export default defineConfig({
         "frame-src https://codesandbox.io",
         "object-src 'none'",
         "base-uri 'self'",
-        "form-action 'self'",
+        "form-action 'self' mailto:",
       ],
       scriptDirective: { resources: ["'self'", "'wasm-unsafe-eval'"] },
       // Expressive Code sets token colours and view transitions use names via style attributes.
       // Attribute styles cannot execute script; <style> elements stay hash-locked.
-      styleDirective: { resources: [{ resource: "'unsafe-inline'", kind: "attribute" }] },
+      // 'report-sample' only adds the first characters of anything blocked to violation reports.
+      styleDirective: { resources: ["'self'", "'report-sample'", { resource: "'unsafe-inline'", kind: "attribute" }] },
     },
   },
   fonts: [
     {
       provider: fontProviders.local(),
-      name: "Newsreader",
-      cssVariable: "--font-newsreader",
-      fallbacks: ["Georgia", "serif"],
+      name: "Schibsted Grotesk",
+      cssVariable: "--font-schibsted-grotesk",
+      fallbacks: ["Helvetica Neue", "Arial", "sans-serif"],
       options: {
         variants: [
           {
-            src: [fontsource("newsreader", "newsreader-latin-wght-normal.woff2")],
-            weight: "200 800",
+            src: [fontsource("schibsted-grotesk", "schibsted-grotesk-latin-wght-normal.woff2")],
+            weight: "400 900",
             style: "normal",
           },
           {
-            src: [fontsource("newsreader", "newsreader-latin-wght-italic.woff2")],
-            weight: "200 800",
+            src: [fontsource("schibsted-grotesk", "schibsted-grotesk-latin-wght-italic.woff2")],
+            weight: "400 900",
             style: "italic",
           },
         ],
@@ -64,27 +67,16 @@ export default defineConfig({
     },
     {
       provider: fontProviders.local(),
-      name: "Instrument Sans",
-      cssVariable: "--font-instrument-sans",
-      fallbacks: ["system-ui", "sans-serif"],
-      options: {
-        variants: [
-          {
-            src: [fontsource("instrument-sans", "instrument-sans-latin-wght-normal.woff2")],
-            weight: "400 700",
-            style: "normal",
-          },
-        ],
-      },
-    },
-    {
-      provider: fontProviders.local(),
-      name: "Geist Mono",
-      cssVariable: "--font-geist-mono",
+      name: "JetBrains Mono",
+      cssVariable: "--font-jetbrains-mono",
       fallbacks: ["ui-monospace", "monospace"],
       options: {
         variants: [
-          { src: [fontsource("geist-mono", "geist-mono-latin-wght-normal.woff2")], weight: "100 900", style: "normal" },
+          {
+            src: [fontsource("jetbrains-mono", "jetbrains-mono-latin-wght-normal.woff2")],
+            weight: "100 800",
+            style: "normal",
+          },
         ],
       },
     },

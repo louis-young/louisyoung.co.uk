@@ -1,151 +1,457 @@
 ---
+import { getEntry } from "astro:content";
+
+import { cv } from "../../content/data/cv";
+import { hire } from "../../content/data/hire";
+import { profile } from "../../content/data/profile";
 import ArticleRow from "../components/ArticleRow.astro";
-import FeaturedArticle from "../components/FeaturedArticle.astro";
-import { useTranslations } from "../i18n";
+import Availability from "../components/sections/Availability.astro";
+import CvRoles from "../components/sections/CvRoles.astro";
+import Repositories from "../components/sections/Repositories.astro";
+import SectionHeading from "../components/sections/SectionHeading.astro";
+import Services from "../components/sections/Services.astro";
+import Toolbox from "../components/sections/Toolbox.astro";
+import WorkTable from "../components/sections/WorkTable.astro";
+import { formatDate, useTranslations } from "../i18n";
 import { localeOf } from "../i18n/astro";
 import Base from "../layouts/Base.astro";
-import { getArticles, getTags, groupByYear } from "../lib/articles";
-import { estimateReadingTime } from "../lib/reading-time";
+import { getArticles } from "../lib/articles";
+import { getRepositories } from "../lib/github";
+import { bookingHref } from "../lib/hire";
 import { websiteSchema } from "../lib/seo";
-import { emphasise } from "../lib/text";
+import { getWork } from "../lib/work";
 
-const t = useTranslations(localeOf(Astro));
-const articles = await getArticles();
-const [latest, ...rest] = articles;
-const tags = getTags(articles);
+const locale = localeOf(Astro);
+const t = useTranslations(locale);
+const work = await getWork();
+const articles = (await getArticles()).slice(0, 6);
+const repositories = await getRepositories(profile.github);
+const now = await getEntry("pages", "now");
+const [first, last] = profile.name.toUpperCase().split(" ");
+const ticker = [
+  t("availability.available", { date: profile.availability.from }),
+  ...hire.services.map((service) => service.name),
+  ...cv.skills.flatMap((group) => group.items).slice(0, 6),
+];
 ---
 
 <Base schema={websiteSchema()}>
   <section class="hero container-page" aria-labelledby="hero-title">
-    <p class="eyebrow hero__eyebrow">{t("home.eyebrow")}</p>
-    <h1 id="hero-title" class="hero__title" set:html={emphasise(t("home.title"))} />
-    <p class="hero__lede">{t("site.tagline")}</p>
+    <h1 id="hero-title" class="display hero__name">
+      <span class="hero__line">{first}</span>
+      <span class="hero__line">{last}</span>
+    </h1>
+    <div class="hero__grid">
+      <p class="label hero__index">00 — {t("home.index")}</p>
+      <p class="hero__intro">{profile.intro}</p>
+      <div class="hero__availability">
+        <Availability />
+        <p class="label">{profile.availability.note}</p>
+      </div>
+    </div>
   </section>
 
-  {latest && (
-    <section class="container-page section" aria-label={t("home.latest")}>
-      <FeaturedArticle article={latest} minutes={estimateReadingTime(latest.body ?? "")} />
+  <div class="ticker" aria-hidden="true">
+    <div class="ticker__track">
+      {[0, 1].map(() => (
+        <p class="ticker__group">
+          {ticker.map((item) => (
+            <span class="ticker__item">{item}</span>
+          ))}
+        </p>
+      ))}
+    </div>
+  </div>
+
+  <section class="container-page section" aria-labelledby="work-title">
+    <SectionHeading
+      id="work-title"
+      number="01"
+      title={t("home.selectedWork")}
+      link={{ href: "/work/", label: t("home.allWork") }}
+    />
+    <WorkTable work={work} />
+  </section>
+
+  <section class="container-page section writing" aria-labelledby="writing-title">
+    <div class="writing__intro">
+      <SectionHeading id="writing-title" number="02" title={t("nav.writing")} />
+      <p class="writing__lede">{t("home.writingIntro")}</p>
+      <a href="/writing/" class="button button--small">
+        {t("home.allWriting")} <span aria-hidden="true">→</span>
+      </a>
+    </div>
+    <div class="writing__list">
+      {articles.map((article) => (
+        <ArticleRow article={article} compact />
+      ))}
+    </div>
+  </section>
+
+  <section class="hire-band" aria-labelledby="hire-title">
+    <div class="container-page">
+      <h2 id="hire-title" class="hire-band__title">
+        <span class="hire-band__number">03</span>
+        {t("home.hireTitle")}
+      </h2>
+      <Services />
+      <div class="hire-band__actions">
+        <a href={`mailto:${profile.email}`} class="button button--primary hire-band__cta">
+          {t("hire.email")}
+        </a>
+        <a
+          href={bookingHref(profile.bookingUrl, profile.email, t("hire.bookingSubject"))}
+          class="button hire-band__cta"
+        >
+          {t("hire.book")}
+        </a>
+        <a href="/hire/" class="hire-band__more label">
+          {t("home.hireDetails")} →
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="container-page section" aria-labelledby="cv-title">
+    <SectionHeading
+      id="cv-title"
+      number="04"
+      title={t("cv.heading")}
+      link={{ href: "/cv.pdf", label: t("cv.download"), download: true }}
+    />
+    <div class="cv-snapshot">
+      <CvRoles limit={3} />
+      <div>
+        <p class="label cv-snapshot__label">{t("cv.toolbox")}</p>
+        <Toolbox />
+      </div>
+    </div>
+  </section>
+
+  {now && (
+    <section class="container-page section now" aria-labelledby="now-title">
+      <SectionHeading id="now-title" number="05" title={t("nav.now")} />
+      <div class="now__body">
+        <p class="now__summary">{now.data.summary}</p>
+        <p class="label now__meta">
+          {t("page.updated", { date: formatDate(now.data.updated, locale) })} · <a href="/now/">{t("home.nowMore")}</a>{" "}
+          · <a href="/uses/">/uses</a>
+        </p>
+      </div>
     </section>
   )}
 
-  <section class="container-page section archive" aria-labelledby="archive-title">
-    <div class="archive__header">
-      <h2 id="archive-title" class="eyebrow">
-        {t("home.archive")}
-      </h2>
-      <ul class="archive__tags" role="list" aria-label={t("tags.title")}>
-        {tags.map(({ tag }) => (
-          <li>
-            <a class="tag" href={`/tags/${tag}/`}>
-              {tag}
-            </a>
-          </li>
-        ))}
-      </ul>
-    </div>
-    {groupByYear(rest).map(([year, group]) => (
-      <section class="archive__year" aria-labelledby={`year-${year}`}>
-        <h3 id={`year-${year}`} class="archive__year-label">
-          {year}
-        </h3>
-        <div>
-          {group.map((article) => (
-            <ArticleRow article={article} />
-          ))}
-        </div>
-      </section>
-    ))}
-  </section>
+  {repositories.length > 0 && (
+    <section class="container-page section" aria-labelledby="oss-title">
+      <SectionHeading
+        id="oss-title"
+        number="06"
+        title={t("oss.title")}
+        link={{ href: `https://github.com/${profile.github}`, label: t("oss.all") }}
+      />
+      <Repositories repositories={repositories} />
+    </section>
+  )}
 </Base>
 
 <style>
   .hero {
-    padding-block: clamp(3rem, 2rem + 6vw, 7.5rem) clamp(2.5rem, 2rem + 3vw, 4.5rem);
+    padding-block: clamp(2.5rem, 1rem + 6vw, 6rem) clamp(2rem, 1rem + 4vw, 4rem);
   }
 
-  .hero__title {
-    max-width: 17ch;
-    margin-block-start: 1.25rem;
-    font: 480 var(--text-step-5) / 1.02 var(--serif);
-    letter-spacing: -0.035em;
-    font-optical-sizing: auto;
-  }
-
-  .hero__title em {
-    font-style: italic;
-    color: var(--accent);
-  }
-
-  .hero__lede {
-    max-width: 46ch;
-    margin-block-start: 1.5rem;
-    font-size: var(--text-step-1);
-    line-height: 1.45;
-    color: var(--ink-muted);
-  }
-
-  .hero > * {
-    animation: rise var(--duration-slow) var(--ease-out-expo) backwards;
-  }
-
-  .hero > :nth-child(2) {
-    animation-delay: 60ms;
-  }
-
-  .hero > :nth-child(3) {
-    animation-delay: 120ms;
-  }
-
-  .section {
-    padding-block-end: var(--spacing-section);
-  }
-
-  .archive__header {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    padding-block-end: 1.25rem;
-  }
-
-  .archive__tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-  }
-
-  .archive__year {
+  .hero__name {
     display: grid;
-    grid-template-columns: 6rem 1fr;
-    gap: 0 1.5rem;
+    margin-inline-start: -0.06em;
   }
 
-  .archive__year-label {
-    position: sticky;
-    top: 5rem;
-    align-self: start;
-    padding-block-start: 1.85rem;
-    font: 500 var(--text-step--1) / 1 var(--mono);
-    color: var(--ink-muted);
-    border-block-start: 1px solid var(--ink);
+  .hero__line {
+    display: block;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .hero__line {
+      animation: hero-rise 900ms var(--ease-out-expo) backwards;
+      clip-path: inset(0 0 -0.1em 0);
+    }
+
+    .hero__line:nth-child(2) {
+      animation-delay: 90ms;
+    }
+
+    .hero__grid > * {
+      animation: fade-up 700ms var(--ease-out-expo) backwards;
+      animation-delay: 300ms;
+    }
+
+    .hero__grid > :nth-child(2) {
+      animation-delay: 380ms;
+    }
+
+    .hero__grid > :nth-child(3) {
+      animation-delay: 460ms;
+    }
+  }
+
+  .hero__grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 1.5rem;
+    align-items: end;
+    margin-block-start: clamp(2rem, 1rem + 4vw, 4rem);
+  }
+
+  .hero__index {
+    grid-column: span 3;
+  }
+
+  .hero__intro {
+    grid-column: span 6;
+    max-width: 34ch;
+    font-weight: 500;
+    font-size: var(--text-step-2);
+    line-height: 1.18;
+    letter-spacing: -0.02em;
+  }
+
+  .hero__availability {
+    grid-column: span 3;
+    display: grid;
+    justify-items: start;
+    gap: 0.6rem;
+  }
+
+  @media (width < 64rem) {
+    .hero__index {
+      grid-column: 1 / -1;
+    }
+
+    .hero__intro {
+      grid-column: span 7;
+    }
+
+    .hero__availability {
+      grid-column: span 5;
+    }
   }
 
   @media (width < 44rem) {
-    .archive__year {
-      grid-template-columns: 1fr;
-    }
-
-    .archive__year-label {
-      position: static;
-      padding-block: 1rem 0;
+    .hero__intro,
+    .hero__availability {
+      grid-column: 1 / -1;
     }
   }
 
-  @keyframes rise {
+  .ticker {
+    overflow: hidden;
+    border-block: 2px solid var(--rule-strong);
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  .ticker__track {
+    display: flex;
+    width: max-content;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .ticker__track {
+      animation: ticker 40s linear infinite;
+    }
+
+    .ticker:hover .ticker__track {
+      animation-play-state: paused;
+    }
+  }
+
+  .ticker__group {
+    display: flex;
+    flex-shrink: 0;
+  }
+
+  .ticker__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 0.9rem 0 0.9rem 1.5rem;
+    font: 500 var(--text-step--1) / 1 var(--mono);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .ticker__item::after {
+    content: "";
+    width: 0.55rem;
+    height: 0.55rem;
+    background: var(--signal);
+  }
+
+  .section {
+    padding-block: var(--spacing-section);
+  }
+
+  .section + .section {
+    border-block-start: 2px solid var(--rule-strong);
+  }
+
+  .writing {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+    gap: 2.5rem;
+  }
+
+  .writing__intro {
+    display: grid;
+    align-content: start;
+    justify-items: start;
+    gap: 1.25rem;
+  }
+
+  .writing__intro :global(.section-heading) {
+    margin: 0;
+  }
+
+  .writing__lede {
+    max-width: 32ch;
+    color: var(--ink-muted);
+  }
+
+  .writing__list {
+    border-block-end: 1px solid var(--rule-strong);
+  }
+
+  @media (width < 60rem) {
+    .writing {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .hire-band {
+    padding-block: var(--spacing-section);
+    background: var(--signal);
+    color: var(--on-accent);
+  }
+
+  .hire-band__title {
+    max-width: 10ch;
+    margin-block-end: clamp(2rem, 4vw, 3.5rem);
+    font-weight: 900;
+    font-size: var(--text-step-5);
+    line-height: 0.86;
+    letter-spacing: -0.06em;
+    text-transform: uppercase;
+  }
+
+  .hire-band__number {
+    display: block;
+    margin-block-end: 0.75rem;
+    font: 500 var(--text-step--1) / 1 var(--mono);
+    letter-spacing: 0.04em;
+  }
+
+  .hire-band__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem 1.5rem;
+    margin-block-start: 2.5rem;
+  }
+
+  .hire-band .button {
+    color: var(--on-accent);
+    border-color: var(--on-accent);
+  }
+
+  .hire-band .button--primary {
+    background: var(--on-accent);
+    color: var(--signal);
+  }
+
+  .hire-band .button:hover {
+    box-shadow: 3px 3px 0 var(--on-accent);
+  }
+
+  .hire-band__cta {
+    min-height: 3.5rem;
+    padding-inline: 1.6rem;
+    font-size: var(--text-step-1);
+  }
+
+  .hire-band__more {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 0.3em;
+  }
+
+  .cv-snapshot {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    gap: 2.5rem;
+  }
+
+  .cv-snapshot__label {
+    margin-block-end: 1rem;
+  }
+
+  @media (width < 60rem) {
+    .cv-snapshot {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .now {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 1.5rem;
+  }
+
+  .now > :global(.section-heading) {
+    grid-column: span 4;
+  }
+
+  .now__body {
+    grid-column: span 8;
+  }
+
+  .now__summary {
+    max-width: 36ch;
+    font-weight: 500;
+    font-size: var(--text-step-2);
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+  }
+
+  .now__meta {
+    margin-block-start: 1.25rem;
+  }
+
+  .now__meta a {
+    color: var(--ink);
+  }
+
+  @media (width < 52rem) {
+    .now > :global(.section-heading),
+    .now__body {
+      grid-column: 1 / -1;
+    }
+  }
+
+  @keyframes hero-rise {
+    from {
+      translate: 0 0.9em;
+    }
+  }
+
+  @keyframes fade-up {
     from {
       opacity: 0;
-      translate: 0 0.75rem;
+      translate: 0 1rem;
+    }
+  }
+
+  @keyframes ticker {
+    to {
+      translate: -50% 0;
     }
   }
 </style>

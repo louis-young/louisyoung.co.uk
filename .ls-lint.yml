@@ -16,6 +16,13 @@ ls:
     .ts: kebab-case
   src/i18n:
     .ts: kebab-case | regex:en-GB
+  content/data:
+    .ts: kebab-case
+  content/work:
+    .dir: kebab-case
+    .mdx: regex:index
+  content/pages:
+    .mdx: kebab-case
   content/articles:
     .dir: kebab-case
     .mdx: regex:index

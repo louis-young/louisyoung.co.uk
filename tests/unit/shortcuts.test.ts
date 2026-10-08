@@ -14,7 +14,8 @@ describe("shortcutFor", () => {
   it.each([
     ["/", "search"],
     ["t", "theme"],
-    ["?", "help"],
+    ["g", "grid"],
+    ["?", "palette"],
     ["x", undefined],
   ])("maps %s to %s", (value, expected) => {
     expect(shortcutFor(key(value))).toBe(expected);
@@ -24,5 +25,12 @@ describe("shortcutFor", () => {
     expect(shortcutFor(key("t", { metaKey: true }))).toBeUndefined();
     expect(shortcutFor(key("/", { ctrlKey: true }))).toBeUndefined();
     expect(shortcutFor(key("?", { altKey: true }))).toBeUndefined();
+    expect(shortcutFor(key("k", { altKey: true, metaKey: true }))).toBeUndefined();
+  });
+
+  it("opens the palette with ⌘K or Ctrl+K", () => {
+    expect(shortcutFor(key("k", { metaKey: true }))).toBe("palette");
+    expect(shortcutFor(key("K", { ctrlKey: true }))).toBe("palette");
+    expect(shortcutFor(key("k"))).toBeUndefined();
   });
 });

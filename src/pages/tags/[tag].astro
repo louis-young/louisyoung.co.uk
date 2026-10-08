@@ -24,12 +24,15 @@ const t = useTranslations(localeOf(Astro));
 
 <Base title={t("tags.heading", { tag })}>
   <section class="container-page page">
-    <p class="eyebrow">
-      <a href="/tags/" class="link">
-        {t("tags.title")}
-      </a>
+    <p class="label">
+      <a href="/writing/">{t("nav.writing")}</a>
+      <span aria-hidden="true">/</span>
+      <a href="/tags/">{t("tags.title")}</a>
     </p>
-    <h1 class="page__title">{t("tags.heading", { tag })}</h1>
+    <h1 class="page__title">
+      <span class="label page__prefix">{t("tags.prefix")}</span>
+      <span class="page-title page__tag">{tag}</span>
+    </h1>
     <p class="meta page__count">{t("tags.count", { count: articles.length })}</p>
     <div class="page__list">
       {articles.map((article) => (
@@ -45,9 +48,21 @@ const t = useTranslations(localeOf(Astro));
   }
 
   .page__title {
-    margin-block-start: 1rem;
-    font: 500 var(--text-step-4) / 1.05 var(--serif);
-    letter-spacing: -0.03em;
+    display: grid;
+    gap: 0.75rem;
+    margin-block-start: 1.5rem;
+  }
+
+  .page__prefix {
+    color: var(--ink);
+  }
+
+  .page__tag {
+    display: block;
+  }
+
+  .label a {
+    color: var(--ink);
   }
 
   .page__count {
@@ -56,5 +71,6 @@ const t = useTranslations(localeOf(Astro));
 
   .page__list {
     margin-block-start: 2.5rem;
+    border-block-end: 1px solid var(--rule-strong);
   }
 </style>

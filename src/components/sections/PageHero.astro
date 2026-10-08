@@ -1,0 +1,53 @@
+---
+interface Props {
+  /** Small mono label above the title, e.g. "01 — Work". */
+  label: string;
+  title: string;
+  lede?: string | undefined;
+  /** Narrow pages (articles, /now) align with the text column. */
+  narrow?: boolean;
+}
+
+const { label, title, lede, narrow = false } = Astro.props;
+---
+
+<header class:list={["page-hero", narrow ? "container-text" : "container-page"]}>
+  <p class="label page-hero__label">{label}</p>
+  <h1 class="page-title">{title}</h1>
+  {lede && <p class="page-lede page-hero__lede">{lede}</p>}
+  {Astro.slots.has("default") && (
+    <div class="page-hero__actions">
+      <slot />
+    </div>
+  )}
+</header>
+
+<style>
+  .page-hero {
+    padding-block: clamp(2.5rem, 1rem + 5vw, 5.5rem) clamp(2rem, 1rem + 3vw, 3.5rem);
+  }
+
+  .page-hero__label {
+    margin-block-end: 1.25rem;
+  }
+
+  .page-hero__label::before {
+    content: "";
+    display: inline-block;
+    width: 0.6rem;
+    height: 0.6rem;
+    margin-inline-end: 0.6rem;
+    background: var(--signal);
+  }
+
+  .page-hero__lede {
+    margin-block-start: 1.5rem;
+  }
+
+  .page-hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-block-start: 2rem;
+  }
+</style>

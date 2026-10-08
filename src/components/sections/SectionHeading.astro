@@ -1,0 +1,56 @@
+---
+interface Props {
+  number?: string | undefined;
+  title: string;
+  id: string;
+  level?: "h1" | "h2";
+  link?: { href: string; label: string; download?: boolean } | undefined;
+}
+
+const { number, title, id, level: Heading = "h2", link } = Astro.props;
+---
+
+<div class="section-heading">
+  <Heading id={id} class="section-title">
+    {number && <span class="section-heading__number">{number}</span>}
+    {title}
+  </Heading>
+  {link && (
+    <a href={link.href} class="button button--small" download={link.download ? "" : undefined}>
+      {link.label} <span aria-hidden="true">→</span>
+    </a>
+  )}
+</div>
+
+<style>
+  .section-heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem 1.5rem;
+    margin-block-end: clamp(1.75rem, 3vw, 2.75rem);
+  }
+
+  .section-heading__number {
+    margin-inline-end: 0.25em;
+    color: var(--signal-text);
+  }
+
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .section-title {
+        animation: slide-in linear both;
+        animation-timeline: view();
+        animation-range: entry 0% entry 60%;
+      }
+    }
+  }
+
+  @keyframes slide-in {
+    from {
+      opacity: 0;
+      translate: -2rem 0;
+    }
+  }
+</style>

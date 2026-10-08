@@ -1,0 +1,349 @@
+---
+import { hire } from "../../content/data/hire";
+import { profile } from "../../content/data/profile";
+import Availability from "../components/sections/Availability.astro";
+import PageHero from "../components/sections/PageHero.astro";
+import SectionHeading from "../components/sections/SectionHeading.astro";
+import Services from "../components/sections/Services.astro";
+import { useTranslations } from "../i18n";
+import { localeOf } from "../i18n/astro";
+import Base from "../layouts/Base.astro";
+import { bookingHref } from "../lib/hire";
+
+const t = useTranslations(localeOf(Astro));
+const booking = bookingHref(profile.bookingUrl, profile.email, t("hire.bookingSubject"));
+const fields = {
+  name: t("hire.field.name"),
+  email: t("hire.field.email"),
+  company: t("hire.field.company"),
+  service: t("hire.field.service"),
+  budget: t("hire.field.budget"),
+  start: t("hire.field.start"),
+  message: t("hire.field.message"),
+};
+---
+
+<Base title={t("hire.title")} description={t("hire.description")} image="/og/hire.png">
+  <PageHero label={`03 — ${t("nav.hire")}`} title={t("hire.heading")} lede={profile.intro}>
+    <Availability />
+    <a href={booking} class="button button--primary" id="book">
+      {t("hire.book")}
+    </a>
+  </PageHero>
+
+  <section class="band" aria-labelledby="services-title">
+    <div class="container-page">
+      <SectionHeading id="services-title" number="A" title={t("hire.services")} />
+      <Services detailed />
+    </div>
+  </section>
+
+  <section class="container-page section" aria-labelledby="process-title">
+    <SectionHeading id="process-title" number="B" title={t("hire.process")} />
+    <ol class="process" role="list">
+      {hire.process.map((step, index) => (
+        <li class="process__step">
+          <span class="process__number">{String(index + 1).padStart(2, "0")}</span>
+          <h3 class="process__title">{step.title}</h3>
+          <p>{step.body}</p>
+        </li>
+      ))}
+    </ol>
+  </section>
+
+  <section class="container-page section split" aria-labelledby="terms-title">
+    <div>
+      <SectionHeading id="terms-title" number="C" title={t("hire.terms")} />
+      <dl class="terms">
+        {hire.terms.map((term) => (
+          <div class="terms__row">
+            <dt class="label">{term.label}</dt>
+            <dd>{term.value}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+    <div>
+      <SectionHeading id="faq-title" number="D" title={t("hire.faq")} />
+      <div class="faq">
+        {hire.faq.map((item) => (
+          <details class="faq__item">
+            <summary class="faq__question">{item.question}</summary>
+            <p class="faq__answer">{item.answer}</p>
+          </details>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="container-page section" aria-labelledby="enquiry-title">
+    <SectionHeading id="enquiry-title" number="E" title={t("hire.enquiry")} />
+    <div class="enquiry">
+      <p class="enquiry__intro">{t("hire.enquiryIntro")}</p>
+      <form
+        class="enquiry__form"
+        action={`mailto:${profile.email}`}
+        method="post"
+        enctype="text/plain"
+        data-enquiry
+        data-to={profile.email}
+        data-subject={t("hire.enquirySubject")}
+        data-labels={JSON.stringify(fields)}
+      >
+        <label class="field">
+          <span class="field__label">{fields.name}</span>
+          <input type="text" name="name" autocomplete="name" required />
+        </label>
+        <label class="field">
+          <span class="field__label">{fields.email}</span>
+          <input name="email" type="email" autocomplete="email" required />
+        </label>
+        <label class="field">
+          <span class="field__label">
+            {fields.company} <span class="field__optional">{t("hire.field.optional")}</span>
+          </span>
+          <input type="text" name="company" autocomplete="organization" />
+        </label>
+        <label class="field">
+          <span class="field__label">{fields.service}</span>
+          <select name="service">
+            {hire.services.map((service) => (
+              <option>{service.name}</option>
+            ))}
+            <option>{t("hire.serviceOther")}</option>
+          </select>
+        </label>
+        <label class="field">
+          <span class="field__label">
+            {fields.budget} <span class="field__optional">{t("hire.field.optional")}</span>
+          </span>
+          <input type="text" name="budget" />
+        </label>
+        <label class="field">
+          <span class="field__label">
+            {fields.start} <span class="field__optional">{t("hire.field.optional")}</span>
+          </span>
+          <input type="text" name="start" />
+        </label>
+        <label class="field field--wide">
+          <span class="field__label">{fields.message}</span>
+          <textarea name="message" rows="6" required></textarea>
+        </label>
+        <div class="field--wide enquiry__actions">
+          <button type="submit" class="button button--signal">
+            {t("hire.send")} →
+          </button>
+          <a href={`mailto:${profile.email}`} class="link">
+            {profile.email}
+          </a>
+        </div>
+      </form>
+    </div>
+  </section>
+</Base>
+
+<script>
+  import { enquiryMailto, type Enquiry } from "../lib/hire";
+
+  const form = document.querySelector<HTMLFormElement>("[data-enquiry]");
+  form?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const data = Object.fromEntries(new FormData(form)) as unknown as Enquiry;
+    const labels = JSON.parse(form.dataset["labels"] ?? "{}") as Record<keyof Enquiry, string>;
+    const href = enquiryMailto(form.dataset["to"] ?? "", data, labels, form.dataset["subject"] ?? "");
+    // Kept on the form too, so the composed email can be inspected (and tested) without a mail client.
+    form.dataset["mailto"] = href;
+    window.location.href = href;
+  });
+</script>
+
+<style>
+  .band {
+    padding-block: var(--spacing-section);
+    background: var(--signal);
+    color: var(--on-accent);
+  }
+
+  .band :global(.section-heading__number) {
+    color: inherit;
+  }
+
+  .section {
+    padding-block: var(--spacing-section);
+  }
+
+  .section + .section {
+    border-block-start: 2px solid var(--rule-strong);
+  }
+
+  .process {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    gap: 2rem;
+  }
+
+  .process__step {
+    display: grid;
+    align-content: start;
+    gap: 0.75rem;
+    padding-block-start: 1rem;
+    border-block-start: 2px solid var(--rule-strong);
+  }
+
+  .process__number {
+    font-weight: 900;
+    font-size: var(--text-step-4);
+    line-height: 1;
+    letter-spacing: -0.05em;
+    color: var(--signal-text);
+  }
+
+  .process__title {
+    font-weight: 800;
+    font-size: var(--text-step-1);
+    letter-spacing: -0.025em;
+  }
+
+  .process__step p {
+    color: var(--ink-muted);
+  }
+
+  .split {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 3rem;
+  }
+
+  @media (width < 56rem) {
+    .split {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .terms {
+    border-block-end: 1px solid var(--rule-strong);
+  }
+
+  .terms__row {
+    display: grid;
+    grid-template-columns: 9rem minmax(0, 1fr);
+    gap: 1rem;
+    align-items: baseline;
+    padding-block: 0.9rem;
+    border-block-start: 1px solid var(--rule-strong);
+  }
+
+  .terms__row dd {
+    font-weight: 600;
+  }
+
+  .faq {
+    border-block-end: 1px solid var(--rule-strong);
+  }
+
+  .faq__item {
+    border-block-start: 1px solid var(--rule-strong);
+  }
+
+  .faq__question {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-block: 1rem;
+    font-weight: 700;
+    font-size: var(--text-step-0);
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .faq__question::-webkit-details-marker {
+    display: none;
+  }
+
+  .faq__question::after {
+    content: "+";
+    font-family: var(--mono);
+    color: var(--signal-text);
+    transition: rotate var(--duration-base) var(--ease-out-expo);
+  }
+
+  .faq__item[open] .faq__question::after {
+    rotate: 45deg;
+  }
+
+  .faq__answer {
+    padding-block-end: 1.25rem;
+    max-width: 60ch;
+    color: var(--ink-muted);
+  }
+
+  .enquiry {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+    gap: 2.5rem;
+  }
+
+  .enquiry__intro {
+    max-width: 32ch;
+    color: var(--ink-muted);
+  }
+
+  .enquiry__form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem;
+  }
+
+  .field {
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  .field--wide {
+    grid-column: 1 / -1;
+  }
+
+  .field__label {
+    font: 500 var(--text-step--2) / 1.2 var(--mono);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .field__optional {
+    color: var(--ink-faint);
+  }
+
+  .field input,
+  .field select,
+  .field textarea {
+    width: 100%;
+    min-height: 3rem;
+    padding: 0.6rem 0.8rem;
+    border: 2px solid var(--rule-strong);
+    background: var(--paper-raised);
+    color: var(--ink);
+    font: 500 var(--text-step-0) / 1.4 var(--sans);
+  }
+
+  .field textarea {
+    resize: vertical;
+  }
+
+  .field :focus-visible {
+    outline-offset: 0;
+  }
+
+  .enquiry__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem 1.5rem;
+  }
+
+  @media (width < 56rem) {
+    .enquiry,
+    .enquiry__form {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
