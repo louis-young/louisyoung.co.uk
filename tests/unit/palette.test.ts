@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { moveIndex, rankCommands, scoreCommand } from "../../src/lib/palette";
+import { moveIndex, rankCommands, sameOriginPath, scoreCommand } from "../../src/lib/palette";
 
 const commands = [
   { title: "Home" },
@@ -49,5 +49,21 @@ describe("moveIndex", () => {
     expect(moveIndex(2, 1, 3)).toBe(0);
     expect(moveIndex(1, 1, 3)).toBe(2);
     expect(moveIndex(0, 1, 0)).toBe(-1);
+  });
+});
+
+describe("sameOriginPath", () => {
+  const origin = "https://louisyoung.co.uk";
+
+  it.each([
+    ["/hire/", "/hire/"],
+    ["/search/?q=a#b", "/search/?q=a#b"],
+    ["https://louisyoung.co.uk/cv.pdf", "/cv.pdf"],
+    ["//evil.example/", undefined],
+    ["https://evil.example/", undefined],
+    ["javascript:alert(1)", undefined],
+    ["http://[", undefined],
+  ])("resolves %j to %j", (href, expected) => {
+    expect(sameOriginPath(href, origin)).toBe(expected);
   });
 });

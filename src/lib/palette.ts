@@ -41,3 +41,16 @@ export const rankCommands = <T extends Pick<Command, "title" | "keywords">>(comm
 /** Moves an active index up or down a list, wrapping at both ends. */
 export const moveIndex = (current: number, delta: number, length: number) =>
   length === 0 ? -1 : (((current + delta) % length) + length) % length;
+
+/**
+ * Resolves a palette link to a same-origin path, or `undefined` for anything else
+ * (another origin, `javascript:` and so on), so option data can never navigate off-site.
+ */
+export const sameOriginPath = (href: string, origin: string) => {
+  try {
+    const url = new URL(href, origin);
+    return url.origin === origin ? `${url.pathname}${url.search}${url.hash}` : undefined;
+  } catch {
+    return undefined;
+  }
+};

@@ -1,4 +1,4 @@
-import { moveIndex, rankCommands } from "../lib/palette";
+import { moveIndex, rankCommands, sameOriginPath } from "../lib/palette";
 import { toggleGrid } from "./shortcuts";
 import { cycleTheme } from "./theme";
 
@@ -82,7 +82,9 @@ export const initPalette = (signal?: AbortSignal) => {
       if (query) window.location.assign(`/search/?q=${encodeURIComponent(query)}`);
       return;
     }
-    const { href, action } = option.element.dataset;
+    const { action } = option.element.dataset;
+    const raw = option.element.dataset["href"];
+    const href = raw ? sameOriginPath(raw, window.location.origin) : undefined;
     if (href) {
       dialog.close();
       if (action === "download") {
@@ -101,7 +103,7 @@ export const initPalette = (signal?: AbortSignal) => {
         await navigator.clipboard.writeText(value);
         announce(option.element.dataset["done"] ?? "");
       } catch {
-        window.location.assign(`mailto:${value}`);
+        window.location.assign(`mailto:${encodeURIComponent(value)}`);
       }
       return;
     }

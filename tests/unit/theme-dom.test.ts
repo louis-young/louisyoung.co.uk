@@ -191,7 +191,7 @@ describe("command palette (DOM)", () => {
     });
     Element.prototype.scrollIntoView = vi.fn();
     assign = vi.fn();
-    vi.stubGlobal("location", { href: window.location.href, assign });
+    vi.stubGlobal("location", { href: window.location.href, origin: window.location.origin, assign });
   });
 
   afterEach(() => {
@@ -297,7 +297,7 @@ describe("command palette (DOM)", () => {
     open();
     document.querySelector<HTMLElement>("#o3")!.click();
     await vi.waitFor(() => {
-      expect(assign).toHaveBeenCalledWith("mailto:me@example.com");
+      expect(assign).toHaveBeenCalledWith("mailto:me%40example.com");
     });
     document.querySelector<HTMLElement>("#o6")!.click();
     expect(anchorClick).toHaveBeenCalled();
