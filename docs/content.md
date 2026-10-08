@@ -7,7 +7,7 @@ Everything about you lives in a handful of files. Anything in `[SQUARE BRACKETS]
 | Name, headline, intro, location, booking | `content/data/profile.ts`           | Header, home hero, hire, CV, footer      |
 | Availability (`available`, `limited`, …) | `content/data/profile.ts`           | The signal chip on home and `/hire/`     |
 | Roles, skills, education, summary        | `content/data/cv.ts`                | `/cv/`, `/cv.pdf`, the home CV snapshot  |
-| Services, process, terms, FAQ            | `content/data/hire.ts`              | `/hire/` and the orange band on home     |
+| Services, process, quotes, FAQ           | `content/data/hire.ts`              | `/hire/` and the orange band on home     |
 | Case studies                             | `content/work/<slug>/index.mdx`     | `/work/`, `/work/<slug>/`, home, ⌘K      |
 | `/now` and `/uses`                       | `content/pages/now.mdx`, `uses.mdx` | Their pages, and the Now excerpt on home |
 | Articles                                 | `content/articles/<slug>/index.mdx` | See [authoring.md](authoring.md)         |

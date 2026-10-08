@@ -59,6 +59,18 @@ export const hire = {
     { label: "Location", value: "Remote · [CITY] on site" },
     { label: "Availability", value: "From [MONTH YEAR]" },
   ],
+  testimonials: [
+    {
+      quote: "[A sentence or two from a client or colleague about the impact of your work.]",
+      name: "[Name]",
+      role: "[Role, Company]",
+    },
+    {
+      quote: "[Another short quote: what it was like to work with you, and what changed.]",
+      name: "[Name]",
+      role: "[Role, Company]",
+    },
+  ],
   faq: [
     {
       question: "Do you work outside IR35?",

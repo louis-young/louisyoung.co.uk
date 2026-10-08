@@ -51,9 +51,30 @@ const fields = {
     </ol>
   </section>
 
+  {hire.testimonials.length > 0 && (
+    <section class="container-page section" aria-labelledby="testimonials-title">
+      <SectionHeading id="testimonials-title" number="C" title={t("hire.testimonials")} />
+      <ul class="quotes" role="list">
+        {hire.testimonials.map((item) => (
+          <li class="quote">
+            <figure>
+              <blockquote class="quote__text">
+                <p>{item.quote}</p>
+              </blockquote>
+              <figcaption class="quote__by">
+                <span class="quote__name">{item.name}</span>
+                <span class="label">{item.role}</span>
+              </figcaption>
+            </figure>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
+
   <section class="container-page section split" aria-labelledby="terms-title">
     <div>
-      <SectionHeading id="terms-title" number="C" title={t("hire.terms")} />
+      <SectionHeading id="terms-title" number="D" title={t("hire.terms")} />
       <dl class="terms">
         {hire.terms.map((term) => (
           <div class="terms__row">
@@ -64,7 +85,7 @@ const fields = {
       </dl>
     </div>
     <div>
-      <SectionHeading id="faq-title" number="D" title={t("hire.faq")} />
+      <SectionHeading id="faq-title" number="E" title={t("hire.faq")} />
       <div class="faq">
         {hire.faq.map((item) => (
           <details class="faq__item">
@@ -77,7 +98,7 @@ const fields = {
   </section>
 
   <section class="container-page section" aria-labelledby="enquiry-title">
-    <SectionHeading id="enquiry-title" number="E" title={t("hire.enquiry")} />
+    <SectionHeading id="enquiry-title" number="F" title={t("hire.enquiry")} />
     <div class="enquiry">
       <p class="enquiry__intro">{t("hire.enquiryIntro")}</p>
       <form
@@ -208,6 +229,47 @@ const fields = {
     color: var(--ink-muted);
   }
 
+  .quotes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+    gap: 2.5rem;
+  }
+
+  .quote figure {
+    display: grid;
+    gap: 1.5rem;
+    height: 100%;
+    align-content: space-between;
+    padding-block-start: 1.25rem;
+    border-block-start: 2px solid var(--rule-strong);
+  }
+
+  .quote__text {
+    font-weight: 600;
+    font-size: var(--text-step-2);
+    line-height: 1.2;
+    letter-spacing: -0.025em;
+    text-indent: -0.45em;
+  }
+
+  .quote__text p::before {
+    content: "“";
+    color: var(--signal-text);
+  }
+
+  .quote__text p::after {
+    content: "”";
+  }
+
+  .quote__by {
+    display: grid;
+    gap: 0.25rem;
+  }
+
+  .quote__name {
+    font-weight: 700;
+  }
+
   .split {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -215,6 +277,47 @@ const fields = {
   }
 
   @media (width < 56rem) {
+    .quotes {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+      gap: 2.5rem;
+    }
+
+    .quote figure {
+      display: grid;
+      gap: 1.5rem;
+      height: 100%;
+      align-content: space-between;
+      padding-block-start: 1.25rem;
+      border-block-start: 2px solid var(--rule-strong);
+    }
+
+    .quote__text {
+      font-weight: 600;
+      font-size: var(--text-step-2);
+      line-height: 1.2;
+      letter-spacing: -0.025em;
+      text-indent: -0.45em;
+    }
+
+    .quote__text p::before {
+      content: "“";
+      color: var(--signal-text);
+    }
+
+    .quote__text p::after {
+      content: "”";
+    }
+
+    .quote__by {
+      display: grid;
+      gap: 0.25rem;
+    }
+
+    .quote__name {
+      font-weight: 700;
+    }
+
     .split {
       grid-template-columns: 1fr;
     }

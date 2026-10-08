@@ -57,6 +57,7 @@ export const enGB = {
   "hire.process": "How it works",
   "hire.terms": "Terms",
   "hire.faq": "Questions",
+  "hire.testimonials": "What people say",
   "hire.book": "Book a 20-minute call",
   "hire.email": "Email me",
   "hire.bookingSubject": "Intro call",
