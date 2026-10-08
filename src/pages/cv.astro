@@ -7,9 +7,14 @@ import SectionHeading from "../components/sections/SectionHeading.astro";
 import { useTranslations } from "../i18n";
 import { localeOf } from "../i18n/astro";
 import Base from "../layouts/Base.astro";
+import { publishableCv } from "../lib/cv";
+import { filled } from "../lib/placeholders";
 import { site } from "../site.config";
 
 const t = useTranslations(localeOf(Astro));
+const city = filled(profile.location.city);
+const { summary, roles, skills, education } = publishableCv(cv);
+const hasRoles = roles.length > 0;
 const contact = [
   { label: profile.email, href: `mailto:${profile.email}` },
   { label: site.url.replace("https://", ""), href: site.url },
@@ -18,9 +23,9 @@ const contact = [
 ---
 
 <Base title={t("cv.title")} description={t("cv.description")} image="/og/cv.png">
-  <PageHero label={`04 — ${t("nav.cv")}`} title={profile.name} lede={profile.headline}>
+  <PageHero label={t("nav.cv")} title={profile.name} lede={profile.headline}>
     <a href="/cv.pdf" class="button button--primary" download>
-      {t("cv.download")} ↓
+      {t("cv.download")} <span aria-hidden="true">↓</span>
     </a>
     <button type="button" class="button" data-print>
       {t("cv.print")}
@@ -29,9 +34,7 @@ const contact = [
 
   <div class="container-page cv">
     <aside class="cv__aside">
-      <p class="label">
-        {profile.location.city}, {profile.location.country}
-      </p>
+      <p class="label">{city ? `${city}, ${profile.location.country}` : profile.location.country}</p>
       <ul class="cv__contact" role="list">
         {contact.map((item) => (
           <li>
@@ -41,17 +44,19 @@ const contact = [
       </ul>
     </aside>
     <div class="cv__main">
-      <p class="cv__summary">{cv.summary}</p>
+      {summary && <p class="cv__summary">{summary}</p>}
 
-      <section aria-labelledby="experience-title" class="cv__section">
-        <SectionHeading id="experience-title" title={t("cv.experience")} />
-        <CvRoles detailed />
-      </section>
+      {hasRoles && (
+        <section aria-labelledby="experience-title" class="cv__section">
+          <SectionHeading id="experience-title" title={t("cv.experience")} />
+          <CvRoles detailed />
+        </section>
+      )}
 
       <section aria-labelledby="skills-title" class="cv__section">
         <SectionHeading id="skills-title" title={t("cv.skills")} />
         <dl class="cv__skills">
-          {cv.skills.map((group) => (
+          {skills.map((group) => (
             <div class="cv__skill">
               <dt class="label">{group.group}</dt>
               <dd>
@@ -66,19 +71,21 @@ const contact = [
         </dl>
       </section>
 
-      <section aria-labelledby="education-title" class="cv__section">
-        <SectionHeading id="education-title" title={t("cv.education")} />
-        <ul class="cv__education" role="list">
-          {cv.education.map((item) => (
-            <li class="cv__school">
-              <span class="cv__years">{item.years}</span>
-              <span>
-                <strong>{item.qualification}</strong>, {item.institution}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </section>
+      {education.length > 0 && (
+        <section aria-labelledby="education-title" class="cv__section">
+          <SectionHeading id="education-title" title={t("cv.education")} />
+          <ul class="cv__education" role="list">
+            {education.map((item) => (
+              <li class="cv__school">
+                <span class="cv__years">{item.years}</span>
+                <span>
+                  <strong>{item.qualification}</strong>, {item.institution}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       <p class="cv__online label">
         {t("cv.online")}: {site.url.replace("https://", "")}/cv/
       </p>
@@ -98,7 +105,7 @@ const contact = [
     grid-template-columns: minmax(0, 1fr) minmax(0, 3fr);
     gap: 2.5rem;
     padding-block: 2rem var(--spacing-section);
-    border-block-start: 2px solid var(--rule-strong);
+    border-block-start: 1px solid var(--rule);
   }
 
   .cv__aside {
@@ -193,8 +200,7 @@ const contact = [
     :global(.site-header),
     :global(.site-footer),
     :global(.page-hero__actions),
-    :global(.skip-link),
-    :global(.grid-overlay) {
+    :global(.skip-link) {
       display: none !important;
     }
 

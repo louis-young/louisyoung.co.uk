@@ -27,14 +27,18 @@ const pairs: [string, string, number][] = [
   ["accent", "paper-sunken", 4.5],
   ["accent", "accent-soft", 4.5],
   ["on-accent", "signal", 4.5],
-  ["signal", "night", 4.5],
   ["signal-text", "paper", 4.5],
   ["signal-text", "paper-sunken", 4.5],
   ["day", "night", 7],
   ["warning", "warning-soft", 4.5],
   ["ink", "warning-soft", 7],
   ["ink", "selection", 4.5],
-  ["ink-faint", "paper", 3],
+  // Faint ink sets labels, dates and footer headings, so it is held to the text minimum.
+  ["ink-faint", "paper", 4.5],
+  ["ink-faint", "paper-sunken", 4.5],
+  ["ink-faint", "paper-raised", 4.5],
+  ["ink-muted", "paper-raised", 4.5],
+  ["accent", "paper-raised", 4.5],
   ["rule-strong", "paper", 1.4],
 ];
 

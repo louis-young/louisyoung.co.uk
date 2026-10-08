@@ -49,6 +49,10 @@ export const cycleTheme = () => {
   const next = nextPreference(parsePreference(document.documentElement.dataset.themePreference));
   writeStored(next);
   applyPreference(next);
+  // Keyboard users change the theme with T, away from the button, so say what happened.
+  const status = document.querySelector("[data-theme-status]");
+  const label = document.querySelector("[data-theme-toggle]")?.getAttribute("aria-label");
+  if (status && label) status.textContent = label;
 };
 
 /** Wires up theme toggles. Pass a signal to remove the listeners again. */

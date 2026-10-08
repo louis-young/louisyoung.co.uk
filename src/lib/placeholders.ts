@@ -34,3 +34,9 @@ export const findPlaceholdersInText = (text: string): PlaceholderHit[] =>
   });
 
 const join = (path: string, key: string) => (path ? `${path}.${key}` : key);
+
+/** The value, or `undefined` while it is still a placeholder, so templates can skip it. */
+export const filled = (value: string | undefined) => (value && !isPlaceholder(value) ? value : undefined);
+
+/** Only the entries that have been filled in. */
+export const withoutPlaceholders = (values: readonly string[]) => values.filter((value) => !isPlaceholder(value));

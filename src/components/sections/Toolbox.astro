@@ -1,7 +1,8 @@
 ---
 import { cv } from "../../../content/data/cv";
+import { withoutPlaceholders } from "../../lib/placeholders";
 
-const items = [...new Set(cv.skills.flatMap((group) => group.items))];
+const items = withoutPlaceholders([...new Set(cv.skills.flatMap((group) => group.items))]);
 ---
 
 <ul class="toolbox" role="list">
@@ -14,6 +15,6 @@ const items = [...new Set(cv.skills.flatMap((group) => group.items))];
   .toolbox {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem;
+    gap: 0.4rem;
   }
 </style>

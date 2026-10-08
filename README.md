@@ -7,14 +7,15 @@
 The personal website of Louis Young, software engineer: selected work, contract and advisory services, a digital CV, and practical, example-led writing about React, TypeScript and the web.
 
 <p>
-  <img src="docs/images/home-light.webp" alt="The home page in the light theme: LOUIS YOUNG set enormous in black grotesk capitals on a Swiss grid, with a signal-orange availability chip." width="49%">
-  <img src="docs/images/hire-dark.webp" alt="The hire page in the dark theme: WORK WITH ME in huge capitals above a signal-orange band of services." width="49%">
+  <img src="docs/images/home-dark.webp" alt="The home page in the dark theme: Louis Young in large gradient type over a faint grid and violet glow, with an availability chip, email and booking buttons, and a bento grid of writing, services and skills." width="49%">
+  <img src="docs/images/hire-light.webp" alt="The hire page in the light theme: Work with me above rounded service cards, a four-step process and an enquiry form." width="49%">
 </p>
 
 ## Highlights
 
 - **Static and fast.** Astro renders every page to HTML at build time. Article pages ship about 4 kB of JavaScript (gzipped), and a test enforces a budget; React only loads for an article's live demo, and only when it scrolls into view.
-- **Index design system.** A Swiss grid, huge Schibsted Grotesk capitals, JetBrains Mono labels, hard black rules and one signal orange. OKLCH tokens, a fluid type scale up to an enormous display size, light, dark and system themes with no flash on load, and a 12-column grid overlay on <kbd>G</kbd>.
+- **Product-grade design system.** Near-black surfaces with soft violet glows and a faint grid, glassy rounded cards, Geist and Geist Mono, and one violet accent. OKLCH tokens, a fluid type scale, light, dark and system themes with no flash on load, and staggered reveals that respect reduced motion.
+- **Never shows a placeholder.** Unfinished case studies, `/now/` and `/uses/` are drafts, and any `[PLACEHOLDER]` in profile, CV or hire data is left out of the page (and the CV PDF) until it's filled in. `SHOW_DRAFTS=true pnpm build` includes drafts, as CI does for the browser tests.
 - **More than a blog.** Case studies (`/work/`), services, rates, process and an enquiry form (`/hire/`), a digital CV with print styles and a generated PDF (`/cv/`, `/cv.pdf`), `/now/`, `/uses/`, a live local clock and public GitHub repositories fetched at build time.
 - **⌘K everywhere.** A command palette (<kbd>⌘K</kbd>, <kbd>Ctrl K</kbd>, <kbd>?</kbd>) jumps to any page, case study or article, copies the email address, downloads the CV, switches theme and falls back to full-text search. <kbd>J</kbd> and <kbd>K</kbd> step through article and case-study lists.
 - **Content in typed files.** Profile, CV and services live in `content/data/*.ts` and are checked by TypeScript. `pnpm content:todo` lists every `[PLACEHOLDER]` still to fill in.

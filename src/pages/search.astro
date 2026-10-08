@@ -58,17 +58,22 @@ const t = useTranslations(localeOf(Astro));
     --pagefind-ui-primary: var(--accent);
     --pagefind-ui-text: var(--ink);
     --pagefind-ui-background: var(--paper-raised);
-    --pagefind-ui-border: var(--rule-strong);
+    --pagefind-ui-border: var(--rule);
     --pagefind-ui-tag: var(--paper-sunken);
-    --pagefind-ui-border-width: 2px;
-    --pagefind-ui-border-radius: 0;
+    --pagefind-ui-border-width: 1px;
+    --pagefind-ui-border-radius: 14px;
     --pagefind-ui-font: var(--sans);
   }
 
   .search :global(.pagefind-ui__result-title) {
-    font-weight: 700;
-    letter-spacing: -0.02em;
+    font-weight: 600;
+    letter-spacing: -0.015em;
     font-size: var(--text-step-1);
+  }
+
+  .search :global(.pagefind-ui__search-input:focus-visible) {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
   }
 
   .search :global(mark) {

@@ -41,6 +41,14 @@ describe("theme (DOM)", () => {
   const root = document.documentElement;
   const button = () => document.querySelector<HTMLButtonElement>("[data-theme-toggle]")!;
 
+  it("announces the new theme when it changes", async () => {
+    document.body.insertAdjacentHTML("beforeend", '<p role="status" data-theme-status></p>');
+    const { cycleTheme, initTheme } = await import("../../src/scripts/theme");
+    initTheme(controller.signal);
+    cycleTheme();
+    expect(document.querySelector("[data-theme-status]")!.textContent).toBe("Theme: Light");
+  });
+
   it("applies the stored preference and labels the toggle", async () => {
     localStorage.setItem("theme", "dark");
     (await load()).initTheme(controller.signal);
@@ -116,14 +124,10 @@ describe("shortcuts (DOM)", () => {
     expect(open).toHaveBeenCalledTimes(3);
   });
 
-  it("cycles the theme with t and toggles the grid with g", async () => {
+  it("cycles the theme with t", async () => {
     (await import("../../src/scripts/shortcuts")).initShortcuts(vi.fn(), controller.signal);
     press("t");
     expect(document.documentElement.dataset["themePreference"]).toBe("light");
-    press("g");
-    expect(document.documentElement.hasAttribute("data-grid")).toBe(true);
-    press("g");
-    expect(document.documentElement.hasAttribute("data-grid")).toBe(false);
   });
 
   it("focuses an on-page search input with /, otherwise opens the palette", async () => {
@@ -173,7 +177,7 @@ describe("shortcuts (DOM)", () => {
 
 const paletteMarkup = `
   <button data-palette-open>Open</button>
-  <dialog id="palette">
+  <dialog id="palette" data-count-one="# result" data-count-other="# results">
     <input role="combobox" />
     <button data-palette-close>Esc</button>
     <div role="listbox">
@@ -274,6 +278,16 @@ describe("command palette (DOM)", () => {
     expect(document.querySelector("#o4")!.parentElement?.className).toBe("palette__options");
   });
 
+  it("announces how many options match", async () => {
+    const open = await init();
+    open();
+    const status = () => document.querySelector("[data-palette-status]")!.textContent;
+    type("hire");
+    expect(status()).toBe("1 result");
+    type("e");
+    expect(status()).toMatch(/^\d+ results$/u);
+  });
+
   it("falls back to full-text search when nothing matches", async () => {
     const open = await init();
     open();
@@ -284,7 +298,7 @@ describe("command palette (DOM)", () => {
     expect(assign).toHaveBeenCalledWith("/search/?q=zzzz");
   });
 
-  it("runs actions: theme, grid, search and copy", async () => {
+  it("runs actions: theme, search and copy", async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     vi.stubGlobal("navigator", { clipboard: { writeText } });
     const open = await init();
@@ -294,9 +308,6 @@ describe("command palette (DOM)", () => {
     open();
     click("o4");
     expect(document.documentElement.dataset["themePreference"]).toBe("light");
-    open();
-    click("o7");
-    expect(document.documentElement.hasAttribute("data-grid")).toBe(true);
     open();
     type("search");
     key("Enter");

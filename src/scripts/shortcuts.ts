@@ -1,6 +1,6 @@
 import { cycleTheme } from "./theme";
 
-export type Shortcut = "palette" | "search" | "theme" | "grid" | "next" | "previous";
+export type Shortcut = "palette" | "search" | "theme" | "next" | "previous";
 
 const isTyping = (target: EventTarget | null) =>
   target instanceof HTMLElement && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/u.test(target.tagName));
@@ -13,7 +13,6 @@ export const shortcutFor = (
   if (event.key === "/") return "search";
   if (event.key === "?") return "palette";
   if (event.key === "t") return "theme";
-  if (event.key === "g") return "grid";
   if (event.key === "j") return "next";
   if (event.key === "k") return "previous";
   return undefined;
@@ -37,13 +36,6 @@ export const clampStep = (current: number, delta: 1 | -1, length: number) => {
   return Math.min(length - 1, Math.max(0, current + delta));
 };
 
-/** Shows or hides the 12-column layout grid overlay. */
-export const toggleGrid = () => {
-  const root = document.documentElement;
-  if (root.hasAttribute("data-grid")) root.removeAttribute("data-grid");
-  else root.setAttribute("data-grid", "");
-};
-
 /** Wires up keyboard shortcuts. Pass a signal to remove the listeners again. */
 export const initShortcuts = (openPalette: () => void, signal?: AbortSignal) => {
   document.addEventListener(
@@ -62,7 +54,6 @@ export const initShortcuts = (openPalette: () => void, signal?: AbortSignal) => 
       }
       if (shortcut === "palette") openPalette();
       if (shortcut === "theme") cycleTheme();
-      if (shortcut === "grid") toggleGrid();
       if (shortcut === "next") stepList(1);
       if (shortcut === "previous") stepList(-1);
     },

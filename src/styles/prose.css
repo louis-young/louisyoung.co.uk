@@ -1,6 +1,6 @@
 /*
- * Long-form article typography: Schibsted Grotesk at a comfortable measure, heavy tight
- * headings, signal-orange list markers and quote rules.
+ * Long-form article typography: Geist at a comfortable measure, semibold headings,
+ * violet list markers and soft quote rules.
  */
 .prose {
   --measure: 68ch;
@@ -21,7 +21,7 @@
 .prose :where(h2, h3, h4) {
   position: relative;
   font-family: var(--sans);
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: -0.035em;
   line-height: 1.08;
   scroll-margin-top: 5rem;
@@ -106,7 +106,8 @@
   width: 0.4em;
   height: 0.4em;
   top: 0.62em;
-  background: var(--signal);
+  border-radius: 50%;
+  background: var(--accent);
 }
 
 .prose ol {
@@ -126,6 +127,7 @@
 .prose :not(pre) > code {
   padding: 0.12em 0.36em;
   border: 1px solid var(--rule);
+  border-radius: 0.35rem;
   background: var(--paper-sunken);
   font-family: var(--mono);
   font-size: 0.8em;
@@ -135,9 +137,9 @@
 
 .prose blockquote {
   padding-inline-start: 1.25em;
-  border-inline-start: 4px solid var(--signal);
-  font-size: 1.15em;
-  font-weight: 500;
+  border-inline-start: 2px solid var(--accent);
+  font-size: 1.1em;
+  font-weight: 450;
   letter-spacing: -0.015em;
   color: var(--ink);
 }

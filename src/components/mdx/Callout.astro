@@ -24,12 +24,13 @@ const icons = { note: "info", tip: "tip", warning: "warning" } as const;
 
 <style>
   .callout {
-    --callout: var(--ink);
-    --callout-soft: var(--paper-sunken);
+    --callout: var(--ink-muted);
+    --callout-soft: var(--paper-raised);
 
     margin-block: 1.75em;
     padding: 1rem 1.25rem 1.1rem;
-    border-inline-start: 4px solid var(--callout);
+    border: 1px solid color-mix(in oklch, var(--callout) 30%, var(--rule));
+    border-radius: var(--radius-md);
     background: var(--callout-soft);
     font-size: 0.92em;
   }
@@ -40,8 +41,8 @@ const icons = { note: "info", tip: "tip", warning: "warning" } as const;
   }
 
   .callout--tip {
-    --callout: var(--signal-text);
-    --callout-soft: var(--paper-sunken);
+    --callout: var(--accent);
+    --callout-soft: color-mix(in oklch, var(--accent) 8%, var(--paper-raised));
   }
 
   .callout__title {

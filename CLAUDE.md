@@ -9,6 +9,7 @@ Louis Young's personal site: Astro 7 static site, TypeScript strict, Tailwind 4,
 - `pnpm test` runs Vitest: unit, integration, types and content.
 - `pnpm test:e2e`, `pnpm test:a11y` and `pnpm test:visual` need `pnpm build` first. Astro backgrounds `astro preview` when it detects an AI agent, so run Playwright with `env -u AI_AGENT -u CLAUDECODE`. In sandboxes without downloaded browsers, set `CHROMIUM_PATH` to a local Chromium and run `--project=chromium`/`mobile`/`a11y`.
 - `pnpm new "Title"` scaffolds a draft article.
+- Case studies and `/now`, `/uses` can be `draft: true`; drafts render in dev and with `SHOW_DRAFTS=true` (CI builds use it), never in production. Hide unfilled `[PLACEHOLDER]` data with `filled()`/`withoutPlaceholders()` from `src/lib/placeholders.ts`.
 
 ## Conventions
 

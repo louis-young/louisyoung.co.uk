@@ -25,7 +25,8 @@ const t = translatorFor(Astro);
 <style>
   .demo {
     overflow: hidden;
-    border: 2px solid var(--rule-strong);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-lg);
     background: var(--paper-raised);
     box-shadow: var(--shadow-raised);
   }
@@ -37,7 +38,7 @@ const t = translatorFor(Astro);
     gap: 0.5rem 0.75rem;
     margin: 0;
     padding: 0.7rem 1rem;
-    border-block-end: 2px solid var(--rule-strong);
+    border-block-end: 1px solid var(--rule);
     font: 500 var(--text-step--1) / 1.3 var(--sans);
     color: var(--ink-muted);
     text-align: start;
@@ -47,12 +48,11 @@ const t = translatorFor(Astro);
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
-    padding: 0.2rem 0.55rem;
-    background: var(--signal);
-    color: var(--on-accent);
-    font: 600 var(--text-step--2) / 1 var(--mono);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    background: color-mix(in oklch, var(--accent) 16%, transparent);
+    color: var(--accent);
+    font: 500 var(--text-step--2) / 1 var(--mono);
   }
 
   .demo__stage {

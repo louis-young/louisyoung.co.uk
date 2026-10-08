@@ -121,7 +121,7 @@ const facts = [
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     margin-block-start: clamp(2rem, 4vw, 3.5rem);
-    border-block-start: 2px solid var(--rule-strong);
+    border-block-start: 1px solid var(--rule);
   }
 
   .case__fact {
@@ -163,10 +163,10 @@ const facts = [
 
   .outcome__value {
     color: var(--signal);
-    font-weight: 900;
+    font-weight: 600;
     font-size: var(--text-step-5);
     line-height: 0.9;
-    letter-spacing: -0.06em;
+    letter-spacing: -0.04em;
   }
 
   .outcome__label {
@@ -191,7 +191,7 @@ const facts = [
     gap: 2rem;
     margin-block-start: var(--spacing-section);
     padding-block: 2rem var(--spacing-section);
-    border-block-start: 2px solid var(--rule-strong);
+    border-block-start: 1px solid var(--rule);
   }
 
   .case__next {
@@ -201,16 +201,15 @@ const facts = [
   }
 
   .case__next-title {
-    font-weight: 900;
+    font-weight: 600;
     font-size: var(--text-step-4);
-    line-height: 0.95;
-    letter-spacing: -0.05em;
-    text-transform: uppercase;
+    line-height: 1.05;
+    letter-spacing: -0.04em;
     transition: color var(--duration-fast) ease;
   }
 
   .case__next:hover .case__next-title {
-    color: var(--signal-text);
+    color: var(--accent);
   }
 
   .case__nav-actions {

@@ -28,7 +28,7 @@ tests/                       unit, integration, types, e2e, a11y, visual, synthe
 
 Tailwind CSS 4 provides the reset and utilities. Most styling is component-scoped CSS that reads design tokens:
 
-- The "Index" system: Schibsted Grotesk (400–900) and JetBrains Mono, square corners, 2px black structural rules and one signal orange (`--signal`). Orange text uses `--signal-text`, darkened in the light theme to keep 4.5:1; `--night` and `--day` stay fixed for bands that don't invert.
+- The product-grade dark system: Geist (variable, 100–900) and Geist Mono, hairline `--rule` borders, rounded `.card` surfaces (`--radius-sm/md/lg`), pill buttons and tags, and one violet `--accent`. `.backdrop` paints the glows (`--glow-1`, `--glow-2`) and a masked grid behind the header; `.reveal` staggers entrances by `--reveal-index`. `--ink-faint` is held to 4.5:1 because it sets labels and dates.
 - Raw tokens (`--paper`, `--ink`, `--accent` …) are defined on `:root` and overridden for `[data-theme="dark"]` and `prefers-contrast: more`.
 - `@theme inline` maps them into Tailwind's colour namespace. `@theme static` defines the type, spacing, radius and motion scales.
 - `tests/unit/tokens.test.ts` converts every OKLCH token to sRGB and asserts WCAG contrast for each text/background pairing, in both themes.

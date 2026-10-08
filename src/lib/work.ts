@@ -4,8 +4,13 @@ export type CaseStudy = CollectionEntry<"work">;
 
 const byOrder = (a: Pick<CaseStudy, "data">, b: Pick<CaseStudy, "data">) => a.data.order - b.data.order;
 
+/** Drafts render in development, and in CI builds (SHOW_DRAFTS) so their layouts stay tested. */
+const showDrafts = () => import.meta.env.DEV || Boolean(process.env["SHOW_DRAFTS"]);
+
 export const getWork = async () =>
-  (await getCollection("work", (entry) => import.meta.env.DEV || !entry.data.draft)).sort(byOrder);
+  (await getCollection("work", (entry) => showDrafts() || !entry.data.draft)).sort(byOrder);
+
+export const isPagePublished = (page: { data: { draft: boolean } }) => showDrafts() || !page.data.draft;
 
 export const workPath = (study: Pick<CaseStudy, "id">) => `/work/${study.id}/`;
 
