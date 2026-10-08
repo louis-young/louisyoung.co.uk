@@ -137,6 +137,27 @@ describe("shortcuts (DOM)", () => {
     expect(open).toHaveBeenCalledOnce();
   });
 
+  it("steps through list rows with j and k", async () => {
+    Element.prototype.scrollIntoView = vi.fn();
+    document.body.insertAdjacentHTML(
+      "beforeend",
+      '<a class="article-row__link" href="/a/">A</a><a class="work-row__link" href="/b/">B</a>',
+    );
+    (await import("../../src/scripts/shortcuts")).initShortcuts(vi.fn(), controller.signal);
+    press("j");
+    expect(document.activeElement?.textContent).toBe("A");
+    press("j");
+    press("j");
+    expect(document.activeElement?.textContent).toBe("B");
+    press("k");
+    expect(document.activeElement?.textContent).toBe("A");
+  });
+
+  it("does nothing with j when there are no rows", async () => {
+    (await import("../../src/scripts/shortcuts")).initShortcuts(vi.fn(), controller.signal);
+    expect(() => press("j")).not.toThrow();
+  });
+
   it("ignores single keys typed into fields and while a dialog is open", async () => {
     const open = vi.fn();
     (await import("../../src/scripts/shortcuts")).initShortcuts(open, controller.signal);

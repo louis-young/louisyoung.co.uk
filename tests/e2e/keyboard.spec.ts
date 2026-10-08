@@ -56,6 +56,19 @@ test.describe("keyboard", () => {
     await expect(page.locator(".grid-overlay")).toBeHidden();
   });
 
+  test("j and k step through the writing list", async ({ page }) => {
+    await page.goto("/writing/");
+    const links = page.locator(".article-row__link");
+    await page.keyboard.press("j");
+    await expect(links.first()).toBeFocused();
+    await page.keyboard.press("j");
+    await expect(links.nth(1)).toBeFocused();
+    await page.keyboard.press("k");
+    await expect(links.first()).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect(page).toHaveURL(/\/[a-z-]+\/$/u);
+  });
+
   test("shortcuts don't fire while typing", async ({ page }) => {
     await page.goto("/search/");
     const input = page.getByRole("searchbox").or(page.locator(".pagefind-ui__search-input"));
