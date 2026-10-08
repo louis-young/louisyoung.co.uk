@@ -14,6 +14,7 @@ describe("shortcutFor", () => {
   it.each([
     ["/", "search"],
     ["t", "theme"],
+    ["`", "terminal"],
     ["g", undefined],
     ["j", "next"],
     ["k", "previous"],

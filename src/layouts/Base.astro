@@ -5,6 +5,7 @@ import Footer from "../components/Footer.astro";
 import Head from "../components/Head.astro";
 import Header from "../components/Header.astro";
 import Palette from "../components/Palette.astro";
+import Terminal from "../components/Terminal.astro";
 import { localeOf } from "../i18n/astro";
 import { useTranslations } from "../i18n";
 import { articlePath, getArticles } from "../lib/articles";
@@ -66,10 +67,22 @@ const paletteArticles = (await getArticles()).map((article) => ({
         ...(showUses ? [] : ["/uses/"]),
       ]}
     />
+    <Terminal
+      pages={[
+        ...(sections.work ? ["work"] : []),
+        "writing",
+        "hire",
+        ...(sections.cv ? ["cv"] : []),
+        ...(sections.now ? ["now"] : []),
+        ...(showUses ? ["uses"] : []),
+        "tags",
+        "search",
+      ]}
+    />
     <p class="visually-hidden" role="status" data-theme-status></p>
     <script>
       import { initClock } from "../scripts/clock";
-      import { initPalette } from "../scripts/palette";
+      import { bindOpeners, lazyOpener } from "../scripts/lazy";
       import { initShortcuts } from "../scripts/shortcuts";
       import { initSpotlight } from "../scripts/spotlight";
       import { initTheme } from "../scripts/theme";
@@ -77,7 +90,14 @@ const paletteArticles = (await getArticles()).map((article) => ({
       initTheme();
       initClock();
       initSpotlight();
-      initShortcuts(initPalette());
+
+      // The palette and terminal only load the first time someone opens them.
+      const openPalette = lazyOpener(() => import("../scripts/palette").then((module) => module.initPalette()));
+      const openTerminal = lazyOpener(() => import("../scripts/terminal").then((module) => module.initTerminal()));
+      bindOpeners("[data-palette-open]", openPalette);
+      bindOpeners("[data-terminal-open]", openTerminal);
+      document.addEventListener("terminal:open", openTerminal);
+      initShortcuts(openPalette, undefined, openTerminal);
     </script>
     {analytics && <script is:inline defer src="/_vercel/insights/script.js" />}
   </body>

@@ -58,6 +58,7 @@ const groups: { id: string; label: string; options: Option[] }[] = [
       },
       { title: t("palette.downloadCv"), href: "/cv.pdf", action: "download" },
       { title: t("palette.theme"), action: "theme", hint: "T" },
+      { title: t("palette.terminal"), action: "terminal", hint: "`", keywords: "terminal shell cli console" },
     ],
   },
   { id: "work", label: t("palette.work"), options: work.map((item) => ({ ...item })) },

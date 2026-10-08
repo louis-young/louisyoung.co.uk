@@ -1,0 +1,144 @@
+---
+import { Picture } from "astro:assets";
+
+import { translatorFor } from "../../i18n/astro";
+import { articlePath, type Article } from "../../lib/articles";
+import { estimateReadingTime } from "../../lib/reading-time";
+import ArticleMeta from "../ArticleMeta.astro";
+
+interface Props {
+  article: Article;
+}
+
+const { article } = Astro.props;
+const { data } = article;
+const t = translatorFor(Astro);
+---
+
+<article class="featured card card--interactive" aria-labelledby={`featured-${article.id}`}>
+  <div class="featured__media">
+    <Picture
+      src={data.cover.src}
+      alt=""
+      formats={["avif", "webp"]}
+      widths={[480, 720, 960]}
+      sizes="(min-width: 56rem) 34rem, 100vw"
+      class="featured__image"
+    />
+  </div>
+  <div class="featured__body">
+    <p class="label featured__eyebrow">{t("home.featured")}</p>
+    <h2 id={`featured-${article.id}`} class="featured__title">
+      <a href={articlePath(article)} class="stretched-link">
+        {data.title}
+      </a>
+    </h2>
+    <p class="featured__description">{data.description}</p>
+    <ArticleMeta date={data.date} minutes={estimateReadingTime(article.body ?? "")} />
+    <ul class="featured__tags" role="list">
+      {data.tags.map((tag) => (
+        <li class="tag">{tag}</li>
+      ))}
+    </ul>
+    <span class="featured__cta" aria-hidden="true">
+      {t("home.readArticle")} →
+    </span>
+  </div>
+</article>
+
+<style>
+  .featured {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    overflow: hidden;
+  }
+
+  .featured__media {
+    position: relative;
+    min-height: 16rem;
+    background: var(--paper-sunken);
+  }
+
+  .featured__media::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent 60%, color-mix(in oklch, var(--paper-raised) 70%, transparent));
+  }
+
+  .featured__media :global(.featured__image) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: scale 900ms var(--ease-out-expo);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .featured:hover :global(.featured__image) {
+      scale: 1.04;
+    }
+  }
+
+  .featured__body {
+    display: grid;
+    align-content: center;
+    justify-items: start;
+    gap: 0.9rem;
+    padding: clamp(1.5rem, 1rem + 2vw, 2.5rem);
+  }
+
+  .featured__eyebrow {
+    color: var(--accent);
+  }
+
+  .featured__title {
+    font-weight: 600;
+    font-size: var(--text-step-3);
+    line-height: 1.1;
+    letter-spacing: -0.035em;
+  }
+
+  .featured__title a {
+    text-decoration: none;
+  }
+
+  .featured__description {
+    max-width: 46ch;
+    color: var(--ink-muted);
+  }
+
+  .featured__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .featured__cta {
+    margin-block-start: 0.5rem;
+    font-weight: 500;
+    font-size: var(--text-step--1);
+    color: var(--accent);
+    transition: translate var(--duration-base) var(--ease-out-expo);
+  }
+
+  .featured:hover .featured__cta {
+    translate: 4px 0;
+  }
+
+  @media (width < 56rem) {
+    .featured {
+      grid-template-columns: 1fr;
+    }
+
+    .featured__media {
+      min-height: 0;
+      aspect-ratio: 16 / 9;
+    }
+
+    .featured__media::after {
+      background: linear-gradient(180deg, transparent 60%, color-mix(in oklch, var(--paper-raised) 70%, transparent));
+    }
+  }
+</style>

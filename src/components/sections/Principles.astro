@@ -1,0 +1,68 @@
+---
+import { profile } from "../../../content/data/profile";
+
+const icons = [
+  // Ship small: stacked layers
+  "M12 3 3 8l9 5 9-5-9-5Zm-9 9 9 5 9-5M3 16l9 5 9-5",
+  // Accessible: a person in a circle
+  "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 4.5a1.25 1.25 0 1 1 0 2.5 1.25 1.25 0 0 1 0-2.5ZM7.5 11l4.5 1 4.5-1M12 12v3l-2 3m2-3 2 3",
+  // Performance: a lightning bolt
+  "M13 3 5 13h6l-1 8 8-10h-6l1-8Z",
+  // Leave it better: a sparkle
+  "M12 3v4m0 10v4M3 12h4m10 0h4M6 6l2.5 2.5m7 7L18 18M6 18l2.5-2.5m7-7L18 6",
+];
+---
+
+<ol class="principles" role="list">
+  {profile.principles.map((principle, index) => (
+    <li class="principle card">
+      <svg class="principle__icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+        <path
+          d={icons[index % icons.length]}
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.6"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+      <h3 class="principle__title">{principle.title}</h3>
+      <p class="principle__body">{principle.body}</p>
+    </li>
+  ))}
+</ol>
+
+<style>
+  .principles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+    gap: 1rem;
+  }
+
+  .principle {
+    display: grid;
+    align-content: start;
+    gap: 0.6rem;
+    padding: 1.5rem;
+  }
+
+  .principle__icon {
+    box-sizing: content-box;
+    margin-block-end: 0.5rem;
+    padding: 0.55rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-sm);
+    background: color-mix(in oklch, var(--accent) 10%, transparent);
+    color: var(--accent);
+  }
+
+  .principle__title {
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .principle__body {
+    color: var(--ink-muted);
+    font-size: var(--text-step--1);
+  }
+</style>

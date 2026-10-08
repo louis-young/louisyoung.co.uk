@@ -1,0 +1,236 @@
+---
+import { profile } from "../../content/data/profile";
+import { translatorFor } from "../i18n/astro";
+import { getArticles } from "../lib/articles";
+import { filled } from "../lib/placeholders";
+import type { COMMANDS, TerminalContext } from "../lib/terminal";
+
+interface Props {
+  /** Top-level pages that exist (drafts excluded), as `ls` shows them. */
+  pages: readonly string[];
+}
+
+const t = translatorFor(Astro);
+const articles = (await getArticles()).map((article) => ({
+  slug: article.id,
+  title: article.data.title,
+  tags: article.data.tags,
+}));
+
+const country = filled(profile.location.city)
+  ? `${profile.location.city}, ${profile.location.country}`
+  : profile.location.country;
+const context: Omit<TerminalContext, "now"> = {
+  articles,
+  pages: Astro.props.pages.map((name) => ({ name, href: `/${name}/` })),
+  email: profile.email,
+  messages: {
+    help: t("terminal.help"),
+    whoami: t("terminal.whoami", { name: profile.name, headline: profile.headline, country, intro: profile.intro }),
+    notFound: t("terminal.notFound"),
+    openUsage: t("terminal.openUsage"),
+    noMatch: t("terminal.noMatch"),
+    opening: t("terminal.opening"),
+    theme: t("terminal.theme"),
+    copied: t("terminal.copied"),
+    sudo: t("terminal.sudo"),
+    searching: t("terminal.searching"),
+    lsUsage: t("terminal.lsUsage"),
+    noTag: t("terminal.noTag"),
+    date: t("terminal.date"),
+    echoUsage: t("terminal.echoUsage"),
+  },
+  descriptions: {
+    help: t("terminal.cmd.help"),
+    whoami: t("terminal.cmd.whoami"),
+    ls: t("terminal.cmd.ls"),
+    open: t("terminal.cmd.open"),
+    search: t("terminal.cmd.search"),
+    theme: t("terminal.cmd.theme"),
+    email: t("terminal.cmd.email"),
+    date: t("terminal.cmd.date"),
+    echo: t("terminal.cmd.echo"),
+    clear: t("terminal.cmd.clear"),
+    exit: t("terminal.cmd.exit"),
+  } satisfies Record<(typeof COMMANDS)[number], string>,
+  locale: Astro.currentLocale ?? "en-GB",
+};
+---
+
+<dialog id="terminal" class="terminal" aria-labelledby="terminal-title" data-context={JSON.stringify(context)}>
+  <div class="terminal__bar">
+    <span class="terminal__dots" aria-hidden="true">
+      <span></span>
+      <span></span>
+      <span></span>
+    </span>
+    <h2 id="terminal-title" class="terminal__title">
+      {t("terminal.title")}
+    </h2>
+    <button type="button" class="icon-button terminal__close" data-terminal-close aria-label={t("terminal.close")}>
+      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+        <path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="terminal__screen" data-terminal-screen>
+    <div class="terminal__log" role="log" aria-live="polite" data-terminal-log>
+      <p class="terminal__line terminal__line--muted">{t("terminal.welcome")}</p>
+    </div>
+    <form class="terminal__form" data-terminal-form>
+      <label for="terminal-input" class="terminal__prompt">
+        <span aria-hidden="true">~ $</span>
+        <span class="visually-hidden">{t("terminal.input")}</span>
+      </label>
+      <input
+        id="terminal-input"
+        class="terminal__input"
+        type="text"
+        autocomplete="off"
+        autocapitalize="off"
+        spellcheck="false"
+        enterkeyhint="send"
+      />
+    </form>
+  </div>
+</dialog>
+
+<style>
+  .terminal {
+    width: min(100% - 2rem, 44rem);
+    height: min(80dvh, 30rem);
+    margin: 12vh auto auto;
+    padding: 0;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-lg);
+    background: oklch(13% 0.01 270);
+    color: oklch(92% 0.01 270);
+    box-shadow:
+      0 30px 80px -20px oklch(0% 0 0 / 0.6),
+      0 0 60px -10px var(--glow-1);
+    overflow: hidden;
+    --term-accent: oklch(80% 0.13 285);
+    --term-muted: oklch(70% 0.01 270);
+    --term-ok: oklch(80% 0.15 150);
+  }
+
+  .terminal[open] {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .terminal::backdrop {
+    background: oklch(10% 0.01 270 / 0.55);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .terminal[open] {
+      animation: terminal-in var(--duration-base) var(--ease-out-expo);
+    }
+  }
+
+  .terminal__bar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.35rem 0.5rem 0.35rem 1rem;
+    border-block-end: 1px solid oklch(26% 0.01 270);
+    background: oklch(17% 0.01 270);
+  }
+
+  .terminal__dots {
+    display: flex;
+    gap: 0.4rem;
+  }
+
+  .terminal__dots span {
+    width: 0.7rem;
+    height: 0.7rem;
+    border-radius: 50%;
+    background: oklch(40% 0.01 270);
+  }
+
+  .terminal__title {
+    flex: 1;
+    font: 500 var(--text-step--1) / 1 var(--mono);
+    text-align: center;
+    color: var(--term-muted);
+  }
+
+  .terminal__close {
+    color: var(--term-muted);
+  }
+
+  .terminal__close:hover {
+    color: oklch(96% 0 0);
+    background: oklch(24% 0.01 270);
+  }
+
+  .terminal__screen {
+    flex: 1;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 1rem 1.1rem 1.25rem;
+    font: 400 var(--text-step--1) / 1.6 var(--mono);
+    cursor: text;
+  }
+
+  .terminal__log {
+    display: grid;
+  }
+
+  .terminal__log :global(.terminal__line) {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .terminal__log :global(.terminal__line--muted) {
+    color: var(--term-muted);
+  }
+
+  .terminal__log :global(.terminal__line--command) {
+    margin-block-start: 0.6rem;
+    color: oklch(96% 0 0);
+  }
+
+  .terminal__log :global(.terminal__line--command)::before {
+    content: "~ $ ";
+    color: var(--term-ok);
+  }
+
+  .terminal__form {
+    display: flex;
+    gap: 0.6ch;
+    margin-block-start: 0.6rem;
+  }
+
+  .terminal__prompt {
+    color: var(--term-ok);
+  }
+
+  .terminal__input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    color: oklch(96% 0 0);
+    font: inherit;
+    caret-color: var(--term-accent);
+  }
+
+  .terminal__input:focus-visible {
+    outline: none;
+  }
+
+  .terminal:has(.terminal__input:focus-visible) .terminal__form {
+    outline: 1px dashed oklch(40% 0.05 285);
+    outline-offset: 4px;
+  }
+
+  @keyframes terminal-in {
+    from {
+      opacity: 0;
+      scale: 0.97;
+    }
+  }
+</style>

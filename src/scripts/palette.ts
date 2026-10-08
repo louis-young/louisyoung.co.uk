@@ -119,6 +119,7 @@ export const initPalette = (signal?: AbortSignal) => {
     }
     dialog.close();
     if (action === "theme") cycleTheme();
+    if (action === "terminal") document.dispatchEvent(new Event("terminal:open"));
   };
 
   const open = () => {
@@ -173,9 +174,5 @@ export const initPalette = (signal?: AbortSignal) => {
     },
     options,
   );
-  for (const opener of document.querySelectorAll("[data-palette-open]")) {
-    opener.addEventListener("click", open, options);
-  }
-
   return open;
 };
