@@ -1,0 +1,276 @@
+---
+import PageHero from "../../components/sections/PageHero.astro";
+import { useTranslations } from "../../i18n";
+import { localeOf } from "../../i18n/astro";
+import Base from "../../layouts/Base.astro";
+
+const t = useTranslations(localeOf(Astro));
+const checks = ["aaText", "aaLarge", "aaaText", "aaaLarge", "nonText"] as const;
+const labels = {
+  aaText: t("tools.contrast.aaText"),
+  aaLarge: t("tools.contrast.aaLarge"),
+  aaaText: t("tools.contrast.aaaText"),
+  aaaLarge: t("tools.contrast.aaaLarge"),
+  nonText: t("tools.contrast.nonText"),
+};
+---
+
+<Base title={t("tools.contrast.title")} description={t("tools.contrast.summary")} image="/og/tools.png">
+  <PageHero label={t("nav.tools")} title={t("tools.contrast.title")} lede={t("tools.contrast.summary")} />
+  <div
+    class="container-page contrast"
+    data-contrast
+    data-pass={t("tools.contrast.pass")}
+    data-fail={t("tools.contrast.fail")}
+    data-status={t("tools.contrast.status")}
+  >
+    <div class="contrast__inputs card">
+      {(["foreground", "background"] as const).map((role) => (
+        <div class="contrast__field">
+          <label for={`contrast-${role}`} class="contrast__label">
+            {t(role === "foreground" ? "tools.contrast.foreground" : "tools.contrast.background")}
+          </label>
+          <div class="contrast__control">
+            <input
+              type="color"
+              class="contrast__swatch"
+              data-picker={role}
+              value={role === "foreground" ? "#7c6cf0" : "#0b0c10"}
+              aria-label={t(role === "foreground" ? "tools.contrast.foreground" : "tools.contrast.background")}
+            />
+            <input
+              id={`contrast-${role}`}
+              type="text"
+              class="contrast__text"
+              data-text={role}
+              value={role === "foreground" ? "#7c6cf0" : "#0b0c10"}
+              autocomplete="off"
+              spellcheck="false"
+              aria-describedby={`contrast-${role}-hint`}
+            />
+          </div>
+          <p id={`contrast-${role}-hint`} class="contrast__hint" data-hint={role}>
+            {t("tools.contrast.hint")}
+          </p>
+        </div>
+      ))}
+      <button type="button" class="button button--small contrast__swap" data-swap>
+        ⇅ {t("tools.contrast.swap")}
+      </button>
+    </div>
+
+    <section class="contrast__result card" aria-label={t("tools.contrast.ratio")}>
+      <div class="contrast__preview" data-preview>
+        <p class="contrast__preview-large">{t("tools.contrast.previewLarge")}</p>
+        <p>{t("tools.contrast.preview")}</p>
+      </div>
+      <p class="contrast__ratio">
+        <span class="label">{t("tools.contrast.ratio")}</span>
+        <output data-ratio for="contrast-foreground contrast-background">
+          –
+        </output>
+      </p>
+      <ul class="contrast__checks" role="list">
+        {checks.map((check) => (
+          <li class="contrast__check" data-check={check}>
+            <span>{labels[check]}</span>
+            <span class="contrast__badge" data-badge />
+          </li>
+        ))}
+      </ul>
+      <div class="contrast__suggestion" data-suggestion hidden>
+        <p class="label">{t("tools.contrast.suggestion")}</p>
+        <div class="contrast__suggestion-row">
+          <span class="contrast__chip" data-suggestion-chip aria-hidden="true"></span>
+          <code data-suggestion-value></code>
+          <button type="button" class="button button--small" data-apply>
+            {t("tools.contrast.apply")}
+          </button>
+        </div>
+      </div>
+      <p class="contrast__none" data-none hidden>
+        {t("tools.contrast.noSuggestion")}
+      </p>
+      <p class="visually-hidden" role="status" data-announce></p>
+    </section>
+  </div>
+</Base>
+
+<script>
+  import { initContrast } from "../../scripts/tools";
+
+  initContrast();
+</script>
+
+<style>
+  .contrast {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+    gap: 1rem;
+    align-items: start;
+    padding-block-end: var(--spacing-section);
+  }
+
+  .contrast > .card {
+    padding: clamp(1.25rem, 1rem + 1vw, 2rem);
+  }
+
+  .contrast__inputs {
+    display: grid;
+    gap: 1.5rem;
+  }
+
+  .contrast__field {
+    display: grid;
+    gap: 0.45rem;
+  }
+
+  .contrast__label {
+    font-weight: 500;
+    font-size: var(--text-step--1);
+  }
+
+  .contrast__control {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .contrast__swatch {
+    flex-shrink: 0;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0.2rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+    cursor: pointer;
+  }
+
+  .contrast__text {
+    flex: 1;
+    min-width: 0;
+    min-height: 2.75rem;
+    padding: 0.5rem 0.8rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+    color: var(--ink);
+    font: 500 var(--text-step--1) / 1 var(--mono);
+  }
+
+  .contrast__text:focus-visible,
+  .contrast__swatch:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .contrast__text[aria-invalid="true"] {
+    border-color: var(--warning);
+  }
+
+  .contrast__hint {
+    font-size: var(--text-step--2);
+    color: var(--ink-faint);
+  }
+
+  .contrast__hint[data-invalid] {
+    color: var(--warning);
+  }
+
+  .contrast__swap {
+    justify-self: start;
+  }
+
+  .contrast__result {
+    display: grid;
+    gap: 1.5rem;
+  }
+
+  .contrast__preview {
+    display: grid;
+    gap: 0.5rem;
+    padding: 1.5rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-md);
+  }
+
+  .contrast__preview-large {
+    font-weight: 600;
+    font-size: 1.5rem;
+    line-height: 1.2;
+  }
+
+  .contrast__ratio {
+    display: grid;
+    gap: 0.35rem;
+  }
+
+  .contrast__ratio output {
+    font-weight: 600;
+    font-size: var(--text-step-4);
+    line-height: 1;
+    letter-spacing: -0.04em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .contrast__checks {
+    display: grid;
+  }
+
+  .contrast__check {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding-block: 0.7rem;
+    border-block-start: 1px solid var(--rule);
+    font-size: var(--text-step--1);
+  }
+
+  .contrast__badge {
+    min-width: 3.5rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    font: 500 var(--text-step--2) / 1 var(--mono);
+    text-align: center;
+  }
+
+  .contrast__badge[data-result="pass"] {
+    background: color-mix(in oklch, var(--success) 18%, transparent);
+    color: var(--ink);
+  }
+
+  .contrast__badge[data-result="fail"] {
+    background: var(--warning-soft);
+    color: var(--ink);
+  }
+
+  .contrast__suggestion {
+    display: grid;
+    gap: 0.6rem;
+  }
+
+  .contrast__suggestion-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .contrast__chip {
+    width: 1.75rem;
+    height: 1.75rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: 50%;
+  }
+
+  .contrast__none {
+    color: var(--ink-muted);
+  }
+
+  @media (width < 56rem) {
+    .contrast {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

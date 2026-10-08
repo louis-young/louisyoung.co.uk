@@ -23,6 +23,12 @@ export const pages = [
   "/tags/react/",
   "/search/",
   "/design/",
+  "/tools/",
+  "/tools/contrast/",
+  "/tools/clamp/",
+  "/tools/reading-time/",
+  "/stats/",
+  "/colophon/",
   ...articleSlugs.map((slug) => `/${slug}/`),
 ];
 

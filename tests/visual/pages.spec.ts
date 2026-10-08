@@ -15,6 +15,9 @@ const routes = {
   search: "/search/",
   "not-found": "/404/",
   design: "/design/",
+  tools: "/tools/",
+  contrast: "/tools/contrast/",
+  stats: "/stats/",
 };
 const viewports = {
   mobile: { width: 390, height: 844 },
