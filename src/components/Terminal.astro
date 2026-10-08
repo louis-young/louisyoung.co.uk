@@ -91,7 +91,8 @@ const context: Omit<TerminalContext, "now"> = {
         spellcheck="false"
         enterkeyhint="send"
       />
-      <button type="submit" class="visually-hidden">
+      {/* Enter submits; the button is for assistive tech, so it stays out of the Tab order. */}
+      <button type="submit" class="visually-hidden" tabindex="-1">
         {t("terminal.run")}
       </button>
     </form>
@@ -226,7 +227,8 @@ const context: Omit<TerminalContext, "now"> = {
   }
 
   .terminal:has(.terminal__input:focus-visible) .terminal__form {
-    outline: 1px dashed oklch(40% 0.05 285);
+    /* The terminal's accent, not a dim violet: the focus ring needs 3:1 against the screen. */
+    outline: 1px dashed var(--term-accent);
     outline-offset: 4px;
   }
 

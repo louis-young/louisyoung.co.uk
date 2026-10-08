@@ -287,11 +287,11 @@ const places = [
       box-shadow var(--duration-fast) ease;
   }
 
-  .lost__search:focus-within {
+  /* The pill shows the input's focus: a solid outline meets 3:1 and survives forced colours. */
+  .lost__search:has(input:focus-visible) {
     border-color: var(--accent);
-    box-shadow:
-      var(--shadow-raised),
-      0 0 0 3px color-mix(in oklch, var(--accent) 30%, transparent);
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
   }
 
   .lost__search-icon {
@@ -355,7 +355,8 @@ const places = [
 
   @media (width < 56rem) {
     .lost {
-      grid-template-columns: 1fr;
+      /* minmax(0, …) so the giant 404 can't push the column wider than a 320px screen. */
+      grid-template-columns: minmax(0, 1fr);
     }
 
     .lost__art {

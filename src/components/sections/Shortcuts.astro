@@ -27,6 +27,7 @@ const shortcuts = [
   },
   { keys: [["t", "T"]], label: t("terminal.cmd.theme") },
   { keys: [["`", "`"]], label: t("terminal.title") },
+  { keys: [["?", "?"]], label: t("shortcuts.title") },
 ] as const;
 ---
 
@@ -43,6 +44,9 @@ const shortcuts = [
       </button>
       <button type="button" class="button button--small" data-terminal-open>
         {t("palette.terminal")}
+      </button>
+      <button type="button" class="button button--small" data-shortcuts-open>
+        {t("shortcuts.title")}
       </button>
     </div>
   </div>

@@ -334,6 +334,16 @@ const css = formatBezier(start);
     background: var(--accent-soft);
   }
 
+  /* Forced colours drop the fill that marks the pressed preset. */
+  @media (forced-colors: active) {
+    .easing__preset[aria-pressed="true"] {
+      forced-color-adjust: none;
+      border-color: Highlight;
+      background: Highlight;
+      color: HighlightText;
+    }
+  }
+
   .easing__code {
     display: flex;
     flex-wrap: wrap;

@@ -57,6 +57,20 @@ describe("article shortcuts", () => {
   });
 });
 
+describe("shortcuts help", () => {
+  it("? opens the shortcuts dialog, except while typing", () => {
+    document.body.innerHTML = `<input id="field" />`;
+    const openPalette = vi.fn();
+    const openHelp = vi.fn();
+    initShortcuts(openPalette, controller.signal, undefined, openHelp);
+    press("?", document.querySelector("#field")!);
+    expect(openHelp).not.toHaveBeenCalled();
+    press("?");
+    expect(openHelp).toHaveBeenCalledOnce();
+    expect(openPalette).not.toHaveBeenCalled();
+  });
+});
+
 describe("stepList", () => {
   it("skips rows hidden by a filter", () => {
     Element.prototype.scrollIntoView = vi.fn();

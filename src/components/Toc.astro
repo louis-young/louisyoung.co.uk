@@ -126,4 +126,11 @@ const t = translatorFor(Astro);
   .toc__list--nested .toc__link[aria-current="location"]::before {
     inset-inline-start: calc(-0.85rem - 1px);
   }
+
+  @media (forced-colors: active) {
+    .toc__link[aria-current="location"]::before {
+      forced-color-adjust: none;
+      background: Highlight;
+    }
+  }
 </style>

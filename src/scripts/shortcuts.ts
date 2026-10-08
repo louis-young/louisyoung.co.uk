@@ -1,7 +1,7 @@
 import { cycleTheme } from "./theme";
 
 export type Shortcut =
-  "palette" | "search" | "theme" | "next" | "previous" | "terminal" | "nextArticle" | "previousArticle";
+  "palette" | "search" | "help" | "theme" | "next" | "previous" | "terminal" | "nextArticle" | "previousArticle";
 
 const isTyping = (target: EventTarget | null) =>
   target instanceof HTMLElement && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/u.test(target.tagName));
@@ -12,7 +12,7 @@ export const shortcutFor = (
   if ((event.metaKey || event.ctrlKey) && !event.altKey && event.key.toLowerCase() === "k") return "palette";
   if (event.metaKey || event.ctrlKey || event.altKey) return undefined;
   if (event.key === "/") return "search";
-  if (event.key === "?") return "palette";
+  if (event.key === "?") return "help";
   if (event.key === "t") return "theme";
   if (event.key === "`") return "terminal";
   if (event.key === "j") return "next";
@@ -47,7 +47,12 @@ export const clampStep = (current: number, delta: 1 | -1, length: number) => {
 };
 
 /** Wires up keyboard shortcuts. Pass a signal to remove the listeners again. */
-export const initShortcuts = (openPalette: () => void, signal?: AbortSignal, openTerminal?: () => void) => {
+export const initShortcuts = (
+  openPalette: () => void,
+  signal?: AbortSignal,
+  openTerminal?: () => void,
+  openHelp?: () => void,
+) => {
   document.addEventListener(
     "keydown",
     (event) => {
@@ -63,6 +68,7 @@ export const initShortcuts = (openPalette: () => void, signal?: AbortSignal, ope
         else openPalette();
       }
       if (shortcut === "palette") openPalette();
+      if (shortcut === "help") openHelp?.();
       if (shortcut === "theme") cycleTheme();
       if (shortcut === "terminal") openTerminal?.();
       if (shortcut === "next") stepList(1);

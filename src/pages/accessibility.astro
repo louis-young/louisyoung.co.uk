@@ -1,0 +1,13 @@
+---
+import { getEntry } from "astro:content";
+
+import MdxPage from "../components/sections/MdxPage.astro";
+import { useTranslations } from "../i18n";
+import { localeOf } from "../i18n/astro";
+
+const t = useTranslations(localeOf(Astro));
+const page = await getEntry("pages", "accessibility");
+if (!page) throw new Error("content/pages/accessibility.mdx is missing");
+---
+
+<MdxPage page={page} label={t("nav.accessibility")} />

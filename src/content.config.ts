@@ -21,6 +21,8 @@ export const reservedSlugs = [
   "uses",
   "changelog",
   "changelog.xml",
+  "colophon",
+  "accessibility",
 ];
 
 const articles = defineCollection({

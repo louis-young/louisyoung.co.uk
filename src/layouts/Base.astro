@@ -5,6 +5,7 @@ import Footer from "../components/Footer.astro";
 import Head from "../components/Head.astro";
 import Header from "../components/Header.astro";
 import Palette from "../components/Palette.astro";
+import ShortcutsHelp from "../components/ShortcutsHelp.astro";
 import Terminal from "../components/Terminal.astro";
 import { localeOf } from "../i18n/astro";
 import { useTranslations } from "../i18n";
@@ -79,10 +80,12 @@ const paletteArticles = (await getArticles()).map((article) => ({
         "stats",
         "changelog",
         "colophon",
+        "accessibility",
         "tags",
         "search",
       ]}
     />
+    <ShortcutsHelp />
     <p class="visually-hidden" role="status" data-theme-status></p>
     <script>
       import { initClock } from "../scripts/clock";
@@ -95,13 +98,18 @@ const paletteArticles = (await getArticles()).map((article) => ({
       initClock();
       initSpotlight();
 
-      // The palette and terminal only load the first time someone opens them.
+      // The palette, terminal and shortcuts help only load the first time someone opens them.
       const openPalette = lazyOpener(() => import("../scripts/palette").then((module) => module.initPalette()));
       const openTerminal = lazyOpener(() => import("../scripts/terminal").then((module) => module.initTerminal()));
+      const openHelp = lazyOpener(() =>
+        import("../scripts/shortcuts-help").then((module) => module.initShortcutsHelp()),
+      );
       bindOpeners("[data-palette-open]", openPalette);
       bindOpeners("[data-terminal-open]", openTerminal);
+      bindOpeners("[data-shortcuts-open]", openHelp);
       document.addEventListener("terminal:open", openTerminal);
-      initShortcuts(openPalette, undefined, openTerminal);
+      document.addEventListener("shortcuts:open", openHelp);
+      initShortcuts(openPalette, undefined, openTerminal, openHelp);
     </script>
     {analytics && <script is:inline defer src="/_vercel/insights/script.js" />}
   </body>

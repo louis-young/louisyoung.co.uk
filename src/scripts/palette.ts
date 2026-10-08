@@ -120,6 +120,7 @@ export const initPalette = (signal?: AbortSignal) => {
     dialog.close();
     if (action === "theme") cycleTheme();
     if (action === "terminal") document.dispatchEvent(new Event("terminal:open"));
+    if (action === "shortcuts") document.dispatchEvent(new Event("shortcuts:open"));
   };
 
   const open = () => {

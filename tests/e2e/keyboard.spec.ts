@@ -48,7 +48,7 @@ test.describe("keyboard", () => {
 
   test("the palette falls back to full-text search", async ({ page }) => {
     await page.goto("/");
-    await page.keyboard.press("?");
+    await page.keyboard.press("ControlOrMeta+k");
     await page.getByRole("combobox").fill("createContext");
     await expect(page.getByText("Nothing matches")).toBeVisible();
     await page.keyboard.press("Enter");
@@ -97,5 +97,44 @@ test.describe("keyboard", () => {
     await prompt.fill("open 1");
     await prompt.press("Enter");
     await expect.poll(() => new URL(page.url()).pathname).toMatch(/^\/[a-z0-9-]+\/$/u);
+  });
+
+  test("? opens the keyboard shortcuts, which close with Escape and hand focus back", async ({ page }) => {
+    await page.goto("/writing/");
+    const opener = page.locator(".site-nav__link").first();
+    await opener.focus();
+    await page.keyboard.press("?");
+    const dialog = page.getByRole("dialog", { name: "Keyboard shortcuts" });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByRole("button", { name: "Close keyboard shortcuts" })).toBeFocused();
+    await expect(dialog.getByRole("term")).toContainText(["⌘K", "/", "?", "J", "K", "[", "]", "T", "`"]);
+    await page.keyboard.press("Escape");
+    await expect(dialog).toBeHidden();
+    await expect(opener).toBeFocused();
+  });
+
+  test("? types a question mark in a field instead of opening the shortcuts", async ({ page }) => {
+    await page.goto("/hire/");
+    const field = page.getByLabel("About the project");
+    await field.fill("");
+    await field.press("?");
+    await expect(field).toHaveValue("?");
+    await expect(page.getByRole("dialog", { name: "Keyboard shortcuts" })).toBeHidden();
+  });
+
+  test("the shortcuts open from the palette and from the footer", async ({ page }) => {
+    await page.goto("/");
+    await page.keyboard.press("ControlOrMeta+k");
+    await page.getByRole("combobox").fill("keyboard");
+    await page.keyboard.press("Enter");
+    const dialog = page.getByRole("dialog", { name: "Keyboard shortcuts" });
+    await expect(dialog).toBeVisible();
+    await dialog.getByRole("button", { name: "Close keyboard shortcuts" }).click();
+    await expect(dialog).toBeHidden();
+    const footerButton = page.getByRole("contentinfo").getByRole("button", { name: "Keyboard shortcuts" });
+    await footerButton.click();
+    await expect(dialog).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(footerButton).toBeFocused();
   });
 });

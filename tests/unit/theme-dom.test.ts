@@ -115,13 +115,15 @@ describe("shortcuts (DOM)", () => {
   const press = (key: string, target: EventTarget = document.body, init: KeyboardEventInit = {}) =>
     target.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true, ...init }));
 
-  it("opens the palette with ?, ⌘K and Ctrl+K", async () => {
+  it("opens the palette with ⌘K and Ctrl+K, and the shortcuts help with ?", async () => {
     const open = vi.fn();
-    (await import("../../src/scripts/shortcuts")).initShortcuts(open, controller.signal);
+    const openHelp = vi.fn();
+    (await import("../../src/scripts/shortcuts")).initShortcuts(open, controller.signal, undefined, openHelp);
     press("?");
     press("k", document.body, { metaKey: true });
     press("K", document.querySelector("#field")!, { ctrlKey: true });
-    expect(open).toHaveBeenCalledTimes(3);
+    expect(open).toHaveBeenCalledTimes(2);
+    expect(openHelp).toHaveBeenCalledOnce();
   });
 
   it("cycles the theme with t", async () => {
@@ -319,6 +321,26 @@ describe("command palette (DOM)", () => {
       expect(document.querySelector("[data-palette-status]")!.textContent).toBe("Copied");
     });
     expect(writeText).toHaveBeenCalledWith("me@example.com");
+  });
+
+  it("hands the terminal and shortcuts actions to their dialogs", async () => {
+    document.querySelector('[data-group="actions"] .palette__options')!.insertAdjacentHTML(
+      "beforeend",
+      `<div role="option" id="o8" data-group="actions" data-title="Open the terminal" data-action="terminal">Terminal</div>
+       <div role="option" id="o9" data-group="actions" data-title="Keyboard shortcuts" data-action="shortcuts">Keys</div>`,
+    );
+    const events: string[] = [];
+    for (const name of ["terminal:open", "shortcuts:open"]) {
+      document.addEventListener(name, () => events.push(name), { signal: controller.signal });
+    }
+    const open = await init();
+    open();
+    document.querySelector<HTMLElement>("#o8")!.click();
+    expect(dialog().open).toBe(false);
+    open();
+    document.querySelector<HTMLElement>("#o9")!.click();
+    expect(dialog().open).toBe(false);
+    expect(events).toEqual(["terminal:open", "shortcuts:open"]);
   });
 
   it("opens mail when the clipboard is unavailable, and downloads files", async () => {
