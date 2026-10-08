@@ -104,6 +104,7 @@ export const enGB = {
   "article.codeLabel": "Code sample {index}",
   "tags.title": "Topics",
   "tags.heading": "Writing tagged “{tag}”",
+  "tags.prefix": "Writing tagged",
   "tags.count": "{count, plural, one {# article} other {# articles}}",
   "search.title": "Search",
   "search.description": "Search every article by title, topic or anything mentioned in the text.",

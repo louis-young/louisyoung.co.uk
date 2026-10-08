@@ -52,7 +52,7 @@ test.describe("navigation", () => {
     await page.goto("/tags/");
     await page.getByRole("link", { name: /react/u }).first().click();
     await expect(page).toHaveURL("/tags/react/");
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Writing tagged “react”");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(/Writing tagged\s*react/u);
     expect(await page.locator(".article-row").count()).toBeGreaterThan(1);
   });
 
