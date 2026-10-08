@@ -40,6 +40,11 @@ const pairs: [string, string, number][] = [
   ["ink-muted", "paper-raised", 4.5],
   ["accent", "paper-raised", 4.5],
   ["rule-strong", "paper", 1.4],
+  // The home page's decorative editor sets code on sunken and raised surfaces.
+  ["syntax-string", "paper-sunken", 4.5],
+  ["syntax-string", "paper-raised", 4.5],
+  ["syntax-type", "paper-sunken", 4.5],
+  ["syntax-type", "paper-raised", 4.5],
 ];
 
 describe.each(Object.entries(themes))("%s theme tokens", (_theme, tokens) => {

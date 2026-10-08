@@ -8,9 +8,11 @@ import ArticleRow from "../components/ArticleRow.astro";
 import Availability from "../components/sections/Availability.astro";
 import CvRoles from "../components/sections/CvRoles.astro";
 import FeaturedArticle from "../components/sections/FeaturedArticle.astro";
+import HeroEditor from "../components/sections/HeroEditor.astro";
 import Principles from "../components/sections/Principles.astro";
 import Repositories from "../components/sections/Repositories.astro";
 import SectionHeading from "../components/sections/SectionHeading.astro";
+import Shortcuts from "../components/sections/Shortcuts.astro";
 import Toolbox from "../components/sections/Toolbox.astro";
 import WorkTable from "../components/sections/WorkTable.astro";
 import { formatDate, useTranslations } from "../i18n";
@@ -35,7 +37,7 @@ const nowEntry = await getEntry("pages", "now");
 const now = nowEntry && isPagePublished(nowEntry) ? nowEntry : undefined;
 const hasRoles = cv.roles.some((role) => filled(role.company) && filled(role.role));
 const stars = repositories.reduce((total, repository) => total + repository.stars, 0);
-const stats = [
+const counts = [
   { value: allArticles.length, label: t("home.statArticles", { count: allArticles.length }) },
   { value: topics.length, label: t("home.statTopics", { count: topics.length }) },
   ...(allArticles.length > 0
@@ -48,50 +50,70 @@ const stats = [
       ]
     : []),
 ];
+/** Small counts tick up from zero in CSS; years and thousands are shown as they are. */
+const stats = counts.map((stat) => ({
+  ...stat,
+  text: "raw" in stat ? String(stat.value) : stat.value.toLocaleString(locale),
+  count: !("raw" in stat) && stat.value < 1000,
+}));
 ---
 
 <Base schema={websiteSchema()}>
   <section class="hero container-page" aria-labelledby="hero-title">
-    <div class="reveal">
-      <Availability />
+    <div class="hero__copy">
+      <div class="reveal">
+        <Availability />
+      </div>
+      <h1 id="hero-title" class="display hero__title reveal" style="--reveal-index: 1">
+        <span class="gradient-text">{profile.name}</span>
+        <span class="hero__headline">{profile.headline}</span>
+      </h1>
+      <p class="hero__intro reveal" style="--reveal-index: 2">
+        {profile.intro}
+      </p>
+      <div class="hero__actions reveal" style="--reveal-index: 3">
+        <a href={`mailto:${profile.email}`} class="button button--signal">
+          {t("hire.email")} <span aria-hidden="true">→</span>
+        </a>
+        <a href={bookingHref(profile.bookingUrl, profile.email, t("hire.bookingSubject"))} class="button">
+          {t("hire.book")}
+        </a>
+      </div>
+      <p class="label hero__note reveal" style="--reveal-index: 4">
+        {profile.availability.note}
+      </p>
     </div>
-    <h1 id="hero-title" class="display hero__title reveal" style="--reveal-index: 1">
-      <span class="gradient-text">{profile.name}</span>
-      <span class="hero__headline">{profile.headline}</span>
-    </h1>
-    <p class="hero__intro reveal" style="--reveal-index: 2">
-      {profile.intro}
-    </p>
-    <div class="hero__actions reveal" style="--reveal-index: 3">
-      <a href={`mailto:${profile.email}`} class="button button--signal">
-        {t("hire.email")} <span aria-hidden="true">→</span>
-      </a>
-      <a href={bookingHref(profile.bookingUrl, profile.email, t("hire.bookingSubject"))} class="button">
-        {t("hire.book")}
-      </a>
+    <div class="hero__visual">
+      <HeroEditor />
     </div>
-    <p class="label hero__note reveal" style="--reveal-index: 4">
-      {profile.availability.note}
-    </p>
 
     <dl class="stats card reveal" style="--reveal-index: 5">
       {stats.map((stat) => (
         <div class="stats__item">
           <dt class="stats__label">{stat.label}</dt>
-          <dd class="stats__value">{"raw" in stat ? String(stat.value) : stat.value.toLocaleString(locale)}</dd>
+          <dd class="stats__value">
+            {stat.count ? (
+              <>
+                <span class="visually-hidden">{stat.text}</span>
+                <span class="stats__count" aria-hidden="true" style={`--to: ${stat.value}`} />
+              </>
+            ) : (
+              stat.text
+            )}
+          </dd>
         </div>
       ))}
     </dl>
   </section>
 
   {featured && (
-    <section class="container-page section section--tight" aria-label={t("home.featured")}>
+    <section class="container-page section section--tight rise" aria-label={t("home.featured")}>
       <FeaturedArticle article={featured} />
     </section>
   )}
 
   <section class="container-page section bento" aria-label={t("home.overview")}>
-    <article class="card bento__writing" aria-labelledby="writing-title">
+    <article class="card bento__writing rise" aria-labelledby="writing-title">
       <SectionHeading
         id="writing-title"
         number={t("nav.writing")}
@@ -117,7 +139,7 @@ const stats = [
       </nav>
     </article>
 
-    <article class="card bento__hire" aria-labelledby="hire-title">
+    <article class="card bento__hire rise" aria-labelledby="hire-title">
       <div class="bento__glow" aria-hidden="true"></div>
       <p class="label bento__eyebrow">{t("nav.hire")}</p>
       <h2 id="hire-title" class="section-title">
@@ -138,7 +160,7 @@ const stats = [
       </a>
     </article>
 
-    <article class="card bento__toolbox" aria-labelledby="toolbox-title">
+    <article class="card bento__toolbox rise" aria-labelledby="toolbox-title">
       <p class="label bento__eyebrow">{t("cv.skills")}</p>
       <h2 id="toolbox-title" class="bento__title">
         {t("cv.toolbox")}
@@ -146,8 +168,10 @@ const stats = [
       <Toolbox />
     </article>
 
+    <Shortcuts class="bento__keys rise" />
+
     {now && (
-      <article class="card bento__now" aria-labelledby="now-title">
+      <article class="card bento__now rise" aria-labelledby="now-title">
         <p class="label bento__eyebrow">{t("nav.now")}</p>
         <h2 id="now-title" class="bento__title">
           {now.data.summary}
@@ -207,8 +231,47 @@ const stats = [
 <style>
   .hero {
     display: grid;
-    justify-items: start;
+    grid-template-columns: minmax(0, 1fr);
     padding-block: clamp(3.5rem, 2rem + 7vw, 8rem) clamp(2rem, 1rem + 3vw, 3.5rem);
+  }
+
+  .hero__copy {
+    display: grid;
+    justify-items: start;
+  }
+
+  /* The editor is decoration: it needs room for a 48-character line, so phones go without. */
+  .hero__visual {
+    display: none;
+  }
+
+  @media (width >= 48rem) {
+    .hero__visual {
+      display: block;
+      width: min(100%, 31rem);
+      margin-block-start: 3.5rem;
+    }
+  }
+
+  @media (width >= 68rem) {
+    .hero {
+      grid-template-columns: minmax(0, 1fr) 29rem;
+      column-gap: 3rem;
+      align-items: center;
+    }
+
+    .hero__visual {
+      width: auto;
+      margin-block-start: 0;
+    }
+
+    .hero__title {
+      font-size: clamp(3.5rem, 0.5rem + 4.6vw, 5rem);
+    }
+
+    .stats {
+      grid-column: 1 / -1;
+    }
   }
 
   .hero__title {
@@ -263,6 +326,34 @@ const stats = [
     font-variant-numeric: tabular-nums;
   }
 
+  /* Counts tick up from zero: a registered integer animates, and a counter prints it. */
+  @property --stat-n {
+    syntax: "<integer>";
+    inherits: false;
+    initial-value: 0;
+  }
+
+  .stats__count {
+    --stat-n: var(--to);
+    counter-reset: stat var(--stat-n);
+  }
+
+  .stats__count::after {
+    content: counter(stat);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .stats__count {
+      animation: count 1.8s var(--ease-out-expo) 500ms backwards;
+    }
+  }
+
+  @keyframes count {
+    from {
+      --stat-n: 0;
+    }
+  }
+
   .stats__label {
     font-size: var(--text-step--1);
     color: var(--ink-muted);
@@ -282,7 +373,7 @@ const stats = [
     gap: 1rem;
   }
 
-  .bento > .card {
+  .bento > :global(.card) {
     padding: clamp(1.25rem, 1rem + 1vw, 2rem);
   }
 
@@ -323,7 +414,8 @@ const stats = [
     grid-column: span 5;
   }
 
-  .bento__now {
+  .bento__now,
+  .bento > :global(.bento__keys) {
     grid-column: 1 / -1;
   }
 

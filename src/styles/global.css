@@ -36,6 +36,8 @@
   --selection: oklch(88% 0.08 285);
   --warning: oklch(48% 0.12 65);
   --warning-soft: oklch(95% 0.04 85);
+  --syntax-string: oklch(50% 0.13 155);
+  --syntax-type: oklch(51% 0.14 240);
 
   --shadow-raised: 0 1px 0 oklch(100% 0 0 / 0.6) inset, 0 12px 32px -12px oklch(20% 0.02 270 / 0.18);
 }
@@ -65,6 +67,8 @@
   --selection: oklch(40% 0.12 285);
   --warning: oklch(82% 0.12 80);
   --warning-soft: oklch(24% 0.045 75);
+  --syntax-string: oklch(80% 0.13 155);
+  --syntax-type: oklch(78% 0.11 230);
 
   --shadow-raised: 0 1px 0 oklch(100% 0 0 / 0.06) inset, 0 16px 40px -16px oklch(0% 0 0 / 0.6);
 }
@@ -541,6 +545,18 @@
       animation: reveal 800ms var(--ease-out-expo) backwards;
       animation-delay: calc(var(--reveal-index, 0) * 70ms);
     }
+
+    /*
+     * Scroll-driven entrances: surfaces rise into place as they scroll into view, with no
+     * JavaScript. Only transform moves, never opacity, so text is always at full contrast.
+     */
+    @supports (animation-timeline: view()) {
+      .rise {
+        animation: rise linear both;
+        animation-timeline: view();
+        animation-range: entry 0% entry 70%;
+      }
+    }
   }
 
   .sr-only-focusable:not(:focus-visible) {
@@ -579,6 +595,13 @@
     100% {
       opacity: 0;
       scale: 2.4;
+    }
+  }
+
+  @keyframes rise {
+    from {
+      translate: 0 3rem;
+      scale: 0.97;
     }
   }
 

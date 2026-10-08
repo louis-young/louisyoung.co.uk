@@ -1,0 +1,190 @@
+---
+import { translatorFor } from "../../i18n/astro";
+
+interface Props {
+  class?: string;
+}
+
+const t = translatorFor(Astro);
+const { class: className } = Astro.props;
+
+/** What the site's keyboard shortcuts (src/scripts/shortcuts.ts) do, cap by cap. */
+const shortcuts = [
+  {
+    keys: [
+      ["mod", "⌘"],
+      ["k", "K"],
+    ],
+    label: t("palette.title"),
+  },
+  { keys: [["/", "/"]], label: t("terminal.cmd.search") },
+  {
+    keys: [
+      ["j", "J"],
+      ["k", "K"],
+    ],
+    label: t("home.keysStep"),
+  },
+  { keys: [["t", "T"]], label: t("terminal.cmd.theme") },
+  { keys: [["`", "`"]], label: t("terminal.title") },
+] as const;
+---
+
+<article class:list={["card shortcuts", className]} aria-labelledby="shortcuts-title">
+  <div class="shortcuts__intro">
+    <p class="label shortcuts__eyebrow">{t("home.keysEyebrow")}</p>
+    <h2 id="shortcuts-title" class="shortcuts__title">
+      {t("home.keysTitle")}
+    </h2>
+    <p class="shortcuts__lede">{t("home.keysIntro")}</p>
+    <div class="shortcuts__actions">
+      <button type="button" class="button button--small" data-palette-open>
+        {t("palette.open")}
+      </button>
+      <button type="button" class="button button--small" data-terminal-open>
+        {t("palette.terminal")}
+      </button>
+    </div>
+  </div>
+  <ul class="shortcuts__list" role="list">
+    {shortcuts.map(({ keys, label }) => (
+      <li class="shortcuts__row">
+        <span class="shortcuts__keys">
+          {keys.map(([key, cap]) => (
+            <kbd data-key={key}>{cap}</kbd>
+          ))}
+        </span>
+        <span>{label}</span>
+      </li>
+    ))}
+  </ul>
+</article>
+
+<script>
+  import { initKeyLight } from "../../scripts/key-light";
+
+  initKeyLight();
+</script>
+
+<style>
+  .shortcuts {
+    display: grid;
+    gap: 1.5rem;
+    align-items: center;
+  }
+
+  @media (width >= 56rem) {
+    .shortcuts {
+      grid-template-columns: minmax(0, 20rem) minmax(0, 1fr);
+      gap: 2.5rem;
+    }
+  }
+
+  .shortcuts__eyebrow {
+    color: var(--accent);
+  }
+
+  .shortcuts__title {
+    margin-block: 0.5rem 0.35rem;
+    font-weight: 600;
+    font-size: var(--text-step-1);
+    line-height: 1.3;
+    letter-spacing: -0.02em;
+  }
+
+  .shortcuts__lede {
+    font-size: var(--text-step--1);
+    color: var(--ink-muted);
+  }
+
+  .shortcuts__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-block-start: 1.25rem;
+  }
+
+  /* One tile per shortcut: caps on top, what they do underneath. */
+  .shortcuts__list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 8.5rem), 1fr));
+    gap: 0.5rem;
+  }
+
+  .shortcuts__row {
+    display: grid;
+    align-content: start;
+    gap: 0.85rem;
+    min-height: 6.5rem;
+    padding: 1rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-md);
+    background: var(--paper-sunken);
+    font-size: var(--text-step--1);
+    line-height: 1.35;
+    color: var(--ink-muted);
+    transition:
+      border-color var(--duration-base) ease,
+      color var(--duration-base) ease,
+      box-shadow var(--duration-slow) ease;
+  }
+
+  .shortcuts__row:has(kbd[data-lit]) {
+    border-color: color-mix(in oklch, var(--signal) 60%, var(--rule));
+    color: var(--ink);
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--signal) 18%, transparent);
+  }
+
+  .shortcuts__keys {
+    display: flex;
+    gap: 0.3rem;
+  }
+
+  /* Phones: one compact row per shortcut, caps on the left. */
+  @media (width < 30rem) {
+    .shortcuts__list {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .shortcuts__row {
+      grid-template-columns: 4.75rem 1fr;
+      align-items: center;
+      min-height: 0;
+      padding: 0.6rem 0.75rem;
+    }
+  }
+
+  .shortcuts kbd {
+    min-width: 2.1rem;
+    height: 2.1rem;
+    border-radius: 0.45rem;
+    background: var(--paper-raised);
+    font-size: var(--text-step--1);
+    color: var(--ink);
+    box-shadow: 0 1px 0 var(--rule-strong);
+    transition:
+      background-color var(--duration-fast) ease,
+      color var(--duration-fast) ease,
+      border-color var(--duration-fast) ease,
+      box-shadow var(--duration-base) ease,
+      translate var(--duration-fast) ease;
+  }
+
+  .shortcuts kbd[data-lit] {
+    border-color: transparent;
+    background: var(--signal);
+    color: var(--on-accent);
+    box-shadow:
+      0 0 0 4px color-mix(in oklch, var(--signal) 25%, transparent),
+      0 6px 18px -4px var(--glow-1);
+    translate: 0 1px;
+  }
+
+  @media (forced-colors: active) {
+    .shortcuts kbd[data-lit] {
+      forced-color-adjust: none;
+      background: Highlight;
+      color: HighlightText;
+    }
+  }
+</style>
