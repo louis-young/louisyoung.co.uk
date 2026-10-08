@@ -185,4 +185,7 @@ export const formatInZone = (date: Date, timeZone: string) =>
     second: "2-digit",
     timeZone,
     timeZoneName: "shortOffset",
-  }).format(date);
+  })
+    .format(date)
+    // Some ICU versions write a zero offset as “GMT+0”; others as plain “GMT”.
+    .replace(/GMT\+0$/u, "GMT");

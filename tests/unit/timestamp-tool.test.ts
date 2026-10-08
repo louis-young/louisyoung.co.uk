@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { formatInZone, formatTimestamp, parseTimestamp, relativeTime } from "../../src/lib/timestamp-tool";
 
@@ -144,5 +144,13 @@ describe("formatInZone", () => {
     expect(formatInZone(date, "Europe/London")).toMatch(/^Thu,? 8 Oct 2026, 10:00:00 GMT\+1$/u);
     expect(formatInZone(date, "Asia/Tokyo")).toMatch(/^Thu,? 8 Oct 2026, 18:00:00 GMT\+9$/u);
     expect(formatInZone(date, "America/New_York")).toMatch(/^Thu,? 8 Oct 2026, 05:00:00 GMT-4$/u);
+  });
+
+  it("writes a zero offset as plain GMT whichever way ICU spells it", () => {
+    const icu = vi.spyOn(Intl, "DateTimeFormat").mockImplementation(function () {
+      return { format: () => "Thu, 8 Oct 2026, 09:00:00 GMT+0" } as unknown as Intl.DateTimeFormat;
+    });
+    expect(formatInZone(new Date(instant), "UTC")).toBe("Thu, 8 Oct 2026, 09:00:00 GMT");
+    icu.mockRestore();
   });
 });
