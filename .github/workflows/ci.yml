@@ -318,6 +318,7 @@ jobs:
             --exclude linkedin\.com
             --exclude '://(www\.)?x\.com'
             --exclude twitter\.com
+            --exclude '^https://github\.com/louis-young/louisyoung\.co\.uk/(blob|tree)/'
             'dist/**/*.html'
           fail: ${{ github.event_name == 'pull_request' }}
           jobSummary: true
