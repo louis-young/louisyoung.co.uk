@@ -339,11 +339,23 @@ export const formatNumber = (value: number) => {
 
 /** Digits, operators, brackets and spaces, with at least one operator between two operands. */
 const mathsShape = /^[\d\s.+\-*/%^()]+$/u;
-/** Dates such as 2026-13-45 would otherwise be read as subtraction. */
-const dateLike = /^\d{4}-\d{1,2}(?:-\d{1,2})?$/u;
+/** Dates such as 2026-13-45 or 09/10/2026 would otherwise be read as subtraction or division. */
+const dateLike = /^(?:\d{4}-\d{1,2}(?:-\d{1,2})?|\d{1,4}([-/])\d{1,2}\1\d{1,4})$/u;
+/** Nobody writes a sum with a leading zero (`07946-000000`), but phone numbers have them. */
+const leadingZero = /(?:^|[^\d.])0\d/u;
+/** Two whole numbers joined by a hyphen with no spaces are a range (`9-5`, `2023-2024`), not a sum. */
+const range = /^\d+-\d+$/u;
 
 const mathsAnswer = (query: string): QuickAnswer | undefined => {
-  if (!mathsShape.test(query) || !/\d/u.test(query) || dateLike.test(query)) return undefined;
+  if (
+    !mathsShape.test(query) ||
+    !/\d/u.test(query) ||
+    dateLike.test(query) ||
+    leadingZero.test(query) ||
+    range.test(query)
+  ) {
+    return undefined;
+  }
   const result = evaluate(query);
   if (result === undefined) return undefined;
   const { shown, copied } = formatNumber(result);

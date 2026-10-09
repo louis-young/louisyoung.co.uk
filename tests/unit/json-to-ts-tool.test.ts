@@ -216,6 +216,22 @@ describe("generateTypes", () => {
     expect(types(1, { rootName: "api response" })).toBe("type ApiResponse = number;");
   });
 
+  // Bug hunt: a key named `record` declared an interface Record, so `Record<string, unknown>`
+  // elsewhere in the output was "not generic"; without `export`, `error` or `string` collided with
+  // the global Error and String types.
+  it("never names a type after a global type", () => {
+    expect(types({ record: { id: 1 }, meta: {} }, { export: true })).toBe(
+      "export interface Root {\n  record: Record2;\n  meta: Record<string, unknown>;\n}\n\n" +
+        "export interface Record2 {\n  id: number;\n}",
+    );
+    expect(types({ error: { code: 1 }, string: { length: "x" } }, { style: "type" })).toBe(
+      "type Root = {\n  error: Error2;\n  string: String2;\n};\n\n" +
+        "type Error2 = {\n  code: number;\n};\n\ntype String2 = {\n  length: string;\n};",
+    );
+    // In a module, a local name only shadows the global one, which is fine.
+    expect(types({ error: { code: 1 } }, { export: true })).toContain("export interface Error {");
+  });
+
   it("treats __proto__ as an ordinary key", () => {
     expect(types(JSON.parse('{"__proto__": {"a": 1}}'))).toBe(
       "interface Root {\n  __proto__: Proto;\n}\n\ninterface Proto {\n  a: number;\n}",

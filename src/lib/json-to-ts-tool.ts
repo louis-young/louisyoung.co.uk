@@ -103,6 +103,23 @@ export const propertyKey = (key: string) => (identifier.test(key) ? key : JSON.s
 
 const primitiveOrder: Primitive[] = ["string", "number", "boolean"];
 
+/** The output writes `Record<string, unknown>`, so no type may take that name. */
+const usedNames = ["Record"];
+
+/**
+ * Global types a declaration outside a module would collide with (`type Error`) or merge into
+ * (`interface String`). In a module a local name only shadows them, which is fine.
+ */
+const globalNames = [
+  ...["Array", "ArrayBuffer", "Boolean", "DataView", "Date", "Error", "EvalError", "Function", "Generator"],
+  ...["Intl", "Iterator", "JSON", "Map", "Math", "Number", "Object", "Promise", "Proxy", "RangeError"],
+  ...["ReferenceError", "Reflect", "RegExp", "Set", "String", "Symbol", "SyntaxError", "TypeError", "URIError"],
+  ...["WeakMap", "WeakSet", "Awaited", "Exclude", "Extract", "NonNullable", "Omit", "Parameters", "Partial"],
+  ...["Pick", "Readonly", "Required", "ReturnType", "Attr", "Audio", "Blob", "Comment", "Document", "Element"],
+  ...["Event", "File", "Headers", "History", "Image", "Location", "Navigator", "Node", "Notification", "Option"],
+  ...["Range", "Request", "Response", "Screen", "Selection", "Storage", "Text", "URL", "Window", "Worker"],
+];
+
 interface Declaration {
   base: string;
   name: string;
@@ -112,7 +129,7 @@ interface Declaration {
 /** Turns parsed JSON into TypeScript declarations, the root first. */
 export const generateTypes = (value: unknown, options: TypeOptions) => {
   const declarations: (Declaration | undefined)[] = [];
-  const taken = new Set<string>();
+  const taken = new Set<string>(options.export ? usedNames : [...usedNames, ...globalNames]);
   const indent = "  ";
   const modifier = options.readonly ? "readonly " : "";
   const exported = options.export ? "export " : "";

@@ -392,6 +392,30 @@ describe("quickAnswer: plain searches", () => {
     expect(answer(query)).toBeUndefined();
   });
 
+  // Bug hunt: British and American dates and phone numbers were worked out as sums.
+  it.each(["09/10/2026", "1/4/2025", "9/10/26", "10-12-2025", "2025/10/09", "07946-000000", "1-800-555-0199"])(
+    "%j is a date or a phone number, not a sum",
+    (query) => {
+      expect(answer(query)).toBeUndefined();
+    },
+  );
+
+  // A hyphen between two whole numbers with no spaces is a range: opening hours, years, scores.
+  it.each(["9-5", "2023-2024", "10-12", "1-0"])("%j is a range, not a subtraction", (query) => {
+    expect(answer(query)).toBeUndefined();
+  });
+
+  it("still subtracts when the hyphen is spaced or part of a longer sum", () => {
+    expect(answer("2023 - 2024")?.value).toBe("-1");
+    expect(answer("10-2*3")?.value).toBe("4");
+    expect(answer("1.5-0.5")?.value).toBe("1");
+  });
+
+  it("still works out sums with a zero and a decimal point", () => {
+    expect(answer("0.5 - 0.25")?.value).toBe("0.25");
+    expect(answer("100 - 50")?.value).toBe("50");
+  });
+
   it("ignores surrounding space and very long queries", () => {
     expect(answer("  2^10  ")?.value).toBe("1,024");
     expect(answer(`#${"a".repeat(250)} .b`)).toBeUndefined();

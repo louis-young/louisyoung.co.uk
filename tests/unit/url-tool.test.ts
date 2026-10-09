@@ -128,4 +128,21 @@ describe("escapes", () => {
     expect(readable("https://x.dev/caf%C3%A9?q=a%26b%20c")).toBe("https://x.dev/café?q=a%26b c");
     expect(readable("https://x.dev/%E0%A4%A")).toBe("https://x.dev/%E0%A4%A");
   });
+
+  // Bug hunt: the Decode button parses the readable URL again, and decoding %25, a line break or a
+  // backslash changed the URL: `%2525` became `%25` (a different value), a newline was stripped and
+  // `\` became a path separator.
+  it.each([
+    "https://x.dev/?next=%2Fa%3Fq%3D50%2525",
+    "https://x.dev/?q=a%0Ab",
+    "https://x.dev/a%5Cb",
+    "https://x.dev/%E2%9C%93%2F%25?q=%E2%9C%93",
+  ])("reads %s back as the same URL", (href) => {
+    expect(parsed(readable(href)).url.href).toBe(href);
+    expect(parsed(readable(href)).url.params).toEqual(parsed(href).url.params);
+  });
+
+  it("still decodes what can safely be decoded around kept escapes", () => {
+    expect(readable("https://x.dev/%E2%9C%93%25%E2%9C%93")).toBe("https://x.dev/✓%25✓");
+  });
 });

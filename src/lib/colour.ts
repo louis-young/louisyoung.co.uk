@@ -40,8 +40,10 @@ export const parseColour = (input: string): Rgb | undefined => {
   }
   const oklch = /^oklch\(\s*([\d.]+)(%?)\s+([\d.]+)\s+([\d.]+)(?:deg)?\s*(?:\/\s*[\d.]+%?\s*)?\)$/u.exec(value);
   if (oklch) {
-    const lightness = Number(oklch[1]) / (oklch[2] ? 100 : 1);
-    return oklchToRgb(lightness, Number(oklch[3]), Number(oklch[4]));
+    const [lightness, chroma, hue] = [Number(oklch[1]) / (oklch[2] ? 100 : 1), Number(oklch[3]), Number(oklch[4])];
+    // `[\d.]+` also matches `0.5.1` and `.`, which aren't numbers.
+    if ([lightness, chroma, hue].some(Number.isNaN)) return undefined;
+    return oklchToRgb(lightness, chroma, hue);
   }
   return undefined;
 };

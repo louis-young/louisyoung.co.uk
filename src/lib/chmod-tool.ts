@@ -78,8 +78,12 @@ export const specialsOf = (mode: number) => specialBits.filter((bit) => (mode & 
 export const shellQuote = (path: string) =>
   /^[\w@%+=:,./-]+$/u.test(path) ? path : `'${path.replaceAll("'", String.raw`'\''`)}'`;
 
-/** The command to run, e.g. `chmod 755 deploy.sh`. A blank path is left out. */
+/**
+ * The command to run, e.g. `chmod 755 deploy.sh`. A blank path is left out, and a path starting
+ * with a hyphen goes after `--` so chmod doesn't read it as an option (quoting alone doesn't stop that).
+ */
 export const chmodCommand = (mode: number, path: string) => {
   const target = path.trim();
-  return target === "" ? `chmod ${toOctal(mode)}` : `chmod ${toOctal(mode)} ${shellQuote(target)}`;
+  if (target === "") return `chmod ${toOctal(mode)}`;
+  return `chmod ${toOctal(mode)} ${target.startsWith("-") ? "-- " : ""}${shellQuote(target)}`;
 };

@@ -124,3 +124,11 @@ describe("parseTable", () => {
     expect(parseTable(" \n ")).toBeUndefined();
   });
 });
+
+describe("compact cells ending in a backslash", () => {
+  // `|a\|` would read as an escaped pipe, so the cell would never close.
+  it("keep their closing pipe and survive a round trip", () => {
+    const table: Table = { headers: ["path", "note"], rows: [["C:\\temp\\", "ok"]], align: ["left", "left"] };
+    expect(parseTable(toMarkdown(table, true))?.table.rows).toEqual([["C:\\temp\\", "ok"]]);
+  });
+});
