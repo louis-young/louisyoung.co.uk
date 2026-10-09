@@ -74,7 +74,7 @@ export const uuidFromBytes = (bytes: Uint8Array) => {
 const uuidAnswer = (query: string, context: QuickAnswerContext): QuickAnswer | undefined => {
   if (!/^(?:uuid|uuid ?v4|guid)$/iu.test(query)) return undefined;
   const value = context.uuid();
-  return { kind: "uuid", value, copy: value, details: [], tool: { slug: "hash" } };
+  return { kind: "uuid", value, copy: value, details: [], tool: { slug: "uuid" } };
 };
 
 // Number bases --------------------------------------------------------------------------------

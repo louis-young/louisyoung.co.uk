@@ -12,6 +12,8 @@ ignoreRegExpList:
   # Unix file modes as ls -l prints them, e.g. drwxr-xr-x, and the file-type letters before them.
   - "/[-d]?[r-][w-][xsS-][r-][w-][xsS-][r-][w-][xtT-]/g"
   - '/\[-dlcbps\]/g'
+  # JSON Web Tokens: a base64url-encoded JSON object always starts eyJ.
+  - '/\beyJ[\w-]*/g'
 words:
   - aeiou
   - alnum

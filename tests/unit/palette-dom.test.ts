@@ -476,7 +476,7 @@ describe("command palette (DOM)", () => {
       key("ArrowUp");
       expect(answer()).toBe(element);
       expect(selected()).toBe("palette-answer");
-      // The hash tool isn't in this index, so there's no way in.
+      // The UUID tool isn't in this index, so there's no way in.
       expect(document.querySelector("#palette-answer-tool")).toBeNull();
     });
 

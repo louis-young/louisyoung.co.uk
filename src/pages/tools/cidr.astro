@@ -1,0 +1,360 @@
+---
+import PageHero from "../../components/sections/PageHero.astro";
+import ShareLink from "../../components/ShareLink.astro";
+import { useTranslations } from "../../i18n";
+import { localeOf } from "../../i18n/astro";
+import Base from "../../layouts/Base.astro";
+import { contains, formatIPv4, parseCidr, parseIPv4, type RangeKind } from "../../lib/cidr-tool";
+import { toolPageProps } from "../../lib/tool-catalogue";
+import { binaryRows, cidrValues } from "../../scripts/tool-cidr";
+
+const t = useTranslations(localeOf(Astro));
+const block = "10.0.0.0/22";
+const address = "10.0.2.15";
+const ranges = {
+  public: t("tools.cidr.rangePublic"),
+  private: t("tools.cidr.rangePrivate"),
+  shared: t("tools.cidr.rangeShared"),
+  loopback: t("tools.cidr.rangeLoopback"),
+  linkLocal: t("tools.cidr.rangeLinkLocal"),
+  documentation: t("tools.cidr.rangeDocumentation"),
+  benchmarking: t("tools.cidr.rangeBenchmarking"),
+  multicast: t("tools.cidr.rangeMulticast"),
+  reserved: t("tools.cidr.rangeReserved"),
+  thisNetwork: t("tools.cidr.rangeThisNetwork"),
+  broadcast: t("tools.cidr.rangeBroadcast"),
+  mixed: t("tools.cidr.rangeMixed"),
+} satisfies Record<RangeKind, string>;
+
+// The sample's results are rendered here too, so the page doesn't shift when the script fills
+// them in. This mirrors update() in src/scripts/tool-cidr.ts.
+const result = parseCidr(block);
+if (!result.ok) throw new Error("The sample CIDR block doesn’t parse.");
+const { cidr } = result;
+const values = cidrValues(cidr, { noBroadcast: "", range: ranges[cidr.range] });
+const bits = binaryRows(cidr);
+const checked = parseIPv4(address)!;
+const rows = [
+  { key: "network", label: t("tools.cidr.network") },
+  { key: "broadcast", label: t("tools.cidr.broadcast") },
+  { key: "first", label: t("tools.cidr.first") },
+  { key: "last", label: t("tools.cidr.last") },
+  { key: "usable", label: t("tools.cidr.usable") },
+  { key: "total", label: t("tools.cidr.total") },
+  { key: "netmask", label: t("tools.cidr.netmask") },
+  { key: "wildcard", label: t("tools.cidr.wildcard") },
+  { key: "range", label: t("tools.cidr.range") },
+] as const;
+const bitRows = [
+  { key: "address", label: t("tools.cidr.address") },
+  { key: "netmask", label: t("tools.cidr.netmask") },
+  { key: "network", label: t("tools.cidr.network") },
+  { key: "broadcast", label: t("tools.cidr.broadcast") },
+] as const;
+---
+
+<Base {...toolPageProps("cidr", t)}>
+  <PageHero label={t("nav.tools")} title={t("tools.cidr.title")} lede={t("tools.cidr.summary")}>
+    <ShareLink />
+  </PageHero>
+  <div
+    class="container-page cidr"
+    data-cidr
+    data-summary={t("tools.cidr.summaryText")}
+    data-summary-one={t("tools.cidr.summaryOne")}
+    data-error-empty={t("tools.cidr.errorEmpty")}
+    data-error-ipv6={t("tools.cidr.errorIpv6")}
+    data-error-address={t("tools.cidr.errorAddress")}
+    data-error-prefix={t("tools.cidr.errorPrefix")}
+    data-error-mask={t("tools.cidr.errorMask")}
+    data-normalised={t("tools.cidr.normalised")}
+    data-assumed={t("tools.cidr.assumed")}
+    data-point-to-point={t("tools.cidr.pointToPoint")}
+    data-host={t("tools.cidr.host")}
+    data-no-broadcast-link={t("tools.cidr.noBroadcastLink")}
+    data-no-broadcast-host={t("tools.cidr.noBroadcastHost")}
+    data-check-empty={t("tools.cidr.checkEmpty")}
+    data-check-invalid={t("tools.cidr.checkInvalid")}
+    data-inside={t("tools.cidr.inside")}
+    data-outside={t("tools.cidr.outside")}
+    data-bits-summary={t("tools.cidr.bits")}
+    data-range-public={ranges.public}
+    data-range-private={ranges.private}
+    data-range-shared={ranges.shared}
+    data-range-loopback={ranges.loopback}
+    data-range-link-local={ranges.linkLocal}
+    data-range-documentation={ranges.documentation}
+    data-range-benchmarking={ranges.benchmarking}
+    data-range-multicast={ranges.multicast}
+    data-range-reserved={ranges.reserved}
+    data-range-this-network={ranges.thisNetwork}
+    data-range-broadcast={ranges.broadcast}
+    data-range-mixed={ranges.mixed}
+  >
+    <div class="cidr__input card">
+      <label class="cidr__label" for="cidr-input">
+        {t("tools.cidr.input")}
+      </label>
+      <input
+        id="cidr-input"
+        class="cidr__field"
+        type="text"
+        value={block}
+        spellcheck="false"
+        autocomplete="off"
+        autocapitalize="off"
+        inputmode="decimal"
+        aria-describedby="cidr-hint cidr-status"
+        data-input
+        data-share="cidr"
+      />
+      <p id="cidr-hint" class="cidr__hint">
+        {t("tools.cidr.hint")}
+      </p>
+      <p id="cidr-status" class="cidr__status" role="status" data-status>
+        {t("tools.cidr.summaryText", { block: values.block, total: values.total, usable: values.usable })}
+      </p>
+      <div aria-live="polite">
+        <p class="cidr__note" data-note hidden></p>
+      </div>
+
+      <label class="cidr__label" for="cidr-check">
+        {t("tools.cidr.check")}
+      </label>
+      <input
+        id="cidr-check"
+        class="cidr__field"
+        type="text"
+        value={address}
+        spellcheck="false"
+        autocomplete="off"
+        autocapitalize="off"
+        inputmode="decimal"
+        aria-describedby="cidr-check-status"
+        data-check
+        data-share="check"
+      />
+      <p
+        id="cidr-check-status"
+        class="cidr__check"
+        role="status"
+        data-check-status
+        data-in={String(contains(cidr, checked))}
+      >
+        {t(contains(cidr, checked) ? "tools.cidr.inside" : "tools.cidr.outside", {
+          address: formatIPv4(checked),
+          block: values.block,
+        })}
+      </p>
+    </div>
+
+    <div class="cidr__output" data-results>
+      <section class="cidr__card card" aria-labelledby="cidr-results">
+        <h2 id="cidr-results" class="label">
+          {t("tools.cidr.results")}
+        </h2>
+        <dl class="cidr__list">
+          {rows.map(({ key, label }) => (
+            <div>
+              <dt>{label}</dt>
+              <dd>
+                <code data-value={key}>{values[key]}</code>
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+
+      <section class="cidr__card card" aria-labelledby="cidr-binary">
+        <h2 id="cidr-binary" class="label">
+          {t("tools.cidr.binary")}
+        </h2>
+        <p class="cidr__hint">
+          <span class="cidr__key cidr__key--network">{t("tools.cidr.networkBits")}</span>
+          <span class="cidr__key">{t("tools.cidr.hostBits")}</span>
+          <span data-bits-note>{t("tools.cidr.bits", { network: cidr.prefix, host: 32 - cidr.prefix })}</span>
+        </p>
+        <dl class="cidr__list cidr__list--bits">
+          {bitRows.map(({ key, label }) => (
+            <div>
+              <dt>{label}</dt>
+              <dd>
+                <code class="cidr__bits" data-bits={key}>
+                  <span class="cidr__network">{bits[key].network}</span>
+                  <span class="cidr__host">{bits[key].host}</span>
+                </code>
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+    </div>
+  </div>
+</Base>
+
+<script>
+  import { initCidr } from "../../scripts/tool-cidr";
+  import { initShareLink } from "../../scripts/share-link";
+
+  initCidr();
+  initShareLink();
+</script>
+
+<style>
+  .cidr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+    gap: 1rem;
+    align-items: start;
+    padding-block-end: var(--spacing-section);
+  }
+
+  .cidr .card {
+    display: grid;
+    gap: 0.75rem;
+    min-width: 0;
+    padding: clamp(1.25rem, 1rem + 1vw, 2rem);
+  }
+
+  .cidr__output {
+    display: grid;
+    gap: 1rem;
+    min-width: 0;
+  }
+
+  .cidr__output[hidden],
+  .cidr__note[hidden] {
+    display: none;
+  }
+
+  .cidr__label {
+    font-weight: 500;
+    font-size: var(--text-step--1);
+  }
+
+  .cidr__field {
+    width: 100%;
+    min-width: 0;
+    min-height: 2.75rem;
+    padding: 0.7rem 1rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+    color: var(--ink);
+    font: 500 var(--text-step--1) / 1.6 var(--mono);
+  }
+
+  .cidr__field[aria-invalid="true"] {
+    border-color: var(--danger);
+  }
+
+  .cidr__field:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .cidr__hint,
+  .cidr__note {
+    color: var(--ink-muted);
+    font-size: var(--text-step--1);
+  }
+
+  .cidr__status,
+  .cidr__check {
+    padding: 0.6rem 0.9rem;
+    border-radius: var(--radius-sm);
+    background: var(--accent-soft);
+    color: var(--ink);
+    font-size: var(--text-step--1);
+    overflow-wrap: anywhere;
+  }
+
+  .cidr__status[data-invalid],
+  .cidr__check[data-in="false"] {
+    background: var(--warning-soft);
+  }
+
+  .cidr__check[data-in="true"] {
+    background: var(--success-soft);
+  }
+
+  .cidr__list {
+    display: grid;
+    min-width: 0;
+  }
+
+  .cidr__list > div {
+    display: grid;
+    grid-template-columns: minmax(0, 11rem) minmax(0, 1fr);
+    align-items: baseline;
+    gap: 0.25rem 1rem;
+    padding-block: 0.5rem;
+    border-block-start: 1px solid var(--rule);
+    font-size: var(--text-step--1);
+  }
+
+  .cidr__list > div:first-child {
+    border-block-start: 0;
+  }
+
+  .cidr__list dt {
+    color: var(--ink-muted);
+  }
+
+  .cidr__list dd {
+    min-width: 0;
+  }
+
+  .cidr__list code {
+    font: 500 var(--text-step--1) / 1.5 var(--mono);
+    overflow-wrap: anywhere;
+  }
+
+  .cidr__list--bits > div {
+    grid-template-columns: minmax(0, 7rem) minmax(0, 1fr);
+  }
+
+  .cidr__bits {
+    letter-spacing: 0.02em;
+  }
+
+  .cidr__network {
+    color: var(--accent);
+  }
+
+  .cidr__host {
+    color: var(--ink-muted);
+  }
+
+  .cidr__key {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-inline-end: 1rem;
+  }
+
+  .cidr__key::before {
+    content: "";
+    inline-size: 0.7rem;
+    block-size: 0.7rem;
+    border-radius: 0.2rem;
+    background: var(--ink-muted);
+  }
+
+  .cidr__key--network::before {
+    background: var(--accent);
+  }
+
+  @media (width < 56rem) {
+    .cidr {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  @media (width < 34rem) {
+    .cidr__list > div,
+    .cidr__list--bits > div {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

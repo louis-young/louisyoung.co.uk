@@ -76,7 +76,7 @@ test.describe("quick answers", () => {
       type: "UUID",
       query: "uuid",
       value: /^[\da-f]{8}-[\da-f]{4}-4[\da-f]{3}-[89ab][\da-f]{3}-[\da-f]{12}$/u,
-      tool: "Hash and UUID generator",
+      tool: "UUID and ULID generator",
     },
     {
       type: "cron expression",
