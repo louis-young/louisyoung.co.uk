@@ -1,0 +1,344 @@
+---
+import Icon from "../../components/Icon.astro";
+import PageHero from "../../components/sections/PageHero.astro";
+import SnippetCard from "../../components/SnippetCard.astro";
+import { useTranslations } from "../../i18n";
+import { localeOf } from "../../i18n/astro";
+import Base from "../../layouts/Base.astro";
+import { breadcrumbSchema, itemListSchema } from "../../lib/seo";
+import { searchText } from "../../lib/snippet-filter";
+import { getSnippets, languageName, languagesOf, snippetPath, tagsOf } from "../../lib/snippets";
+
+const t = useTranslations(localeOf(Astro));
+const snippets = await getSnippets();
+const languages = languagesOf(snippets).map(({ value, count }) => ({ value, count, label: languageName(value) }));
+const tags = tagsOf(snippets);
+const total = t("snippets.count", { count: snippets.length });
+const schema = [
+  itemListSchema({
+    name: t("snippets.heading"),
+    description: t("snippets.description"),
+    path: "/snippets/",
+    items: snippets.map((snippet) => ({ name: snippet.data.title, path: snippetPath(snippet) })),
+  }),
+  breadcrumbSchema([{ name: t("nav.snippets"), path: "/snippets/" }]),
+];
+---
+
+<Base title={t("nav.snippets")} description={t("snippets.description")} image="/og/snippets.png" schema={schema}>
+  <link
+    slot="head"
+    rel="alternate"
+    type="application/rss+xml"
+    title={`${t("snippets.feed")} (RSS)`}
+    href="/snippets/rss.xml"
+  />
+  <PageHero label={t("nav.snippets")} title={t("snippets.heading")} lede={t("snippets.lede")}>
+    <a href="/snippets/rss.xml" class="button button--small">
+      <Icon name="rss" size={14} />
+      {t("snippets.feed")}
+    </a>
+  </PageHero>
+
+  <div
+    class="container-page snippets"
+    data-snippets
+    data-count-all={total}
+    data-count-none={t("snippets.countNone")}
+    data-count-one={t("snippets.countOne")}
+    data-count-other={t("snippets.countOther")}
+  >
+    <div class="snippets__controls card" data-snippet-controls>
+      <div class="snippets__field">
+        <label class="snippets__label" for="snippet-search">
+          {t("snippets.search")}
+        </label>
+        <span class="snippets__search">
+          <Icon name="search" size={16} class="snippets__search-icon" />
+          <input
+            id="snippet-search"
+            type="search"
+            class="snippets__input"
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck="false"
+            aria-describedby="snippet-hint"
+            aria-controls="snippet-list"
+            data-snippet-query
+          />
+        </span>
+        <p id="snippet-hint" class="snippets__hint">
+          {t("snippets.hint")}
+        </p>
+      </div>
+      <fieldset class="snippets__field">
+        <legend class="snippets__label">{t("snippets.language")}</legend>
+        <div class="snippets__options">
+          <label class="snippets__option">
+            <input type="radio" name="language" value="" checked aria-controls="snippet-list" />
+            <span>{t("snippets.any")}</span>
+          </label>
+          {languages.map((language) => (
+            <label class="snippets__option">
+              <input type="radio" name="language" value={language.value} aria-controls="snippet-list" />
+              <span>
+                {language.label}
+                <span class="snippets__count">{language.count}</span>
+              </span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+      <fieldset class="snippets__field snippets__field--tags">
+        <legend class="snippets__label">{t("snippets.tag")}</legend>
+        <div class="snippets__options">
+          <label class="snippets__option">
+            <input type="radio" name="tag" value="" checked aria-controls="snippet-list" />
+            <span>{t("snippets.any")}</span>
+          </label>
+          {tags.map((tag) => (
+            <label class="snippets__option">
+              <input type="radio" name="tag" value={tag.value} aria-controls="snippet-list" />
+              <span>
+                {tag.value}
+                <span class="snippets__count">{tag.count}</span>
+              </span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+      <p class="snippets__status" role="status" data-snippet-status>
+        {total}
+      </p>
+    </div>
+
+    <ul id="snippet-list" class="snippets__grid" role="list" aria-label={t("nav.snippets")}>
+      {snippets.map((snippet) => (
+        <li
+          class="snippets__item"
+          data-snippet
+          data-language={snippet.data.language}
+          data-tags={snippet.data.tags.join(" ")}
+          data-text={searchText([
+            snippet.data.title,
+            snippet.data.description,
+            languageName(snippet.data.language),
+            ...snippet.data.tags,
+          ])}
+        >
+          <SnippetCard snippet={snippet} />
+        </li>
+      ))}
+    </ul>
+
+    <div class="snippets__empty card" data-snippet-empty hidden>
+      <p>{t("snippets.empty")}</p>
+      <button type="button" class="button button--small" data-snippet-clear>
+        {t("snippets.clear")}
+      </button>
+    </div>
+  </div>
+</Base>
+
+<script>
+  import { bindOpeners, lazyOpener } from "../../scripts/lazy";
+
+  // Everything is in the HTML already. The filter's code loads when someone reaches for a control,
+  // or straight away when the URL already asks for a filter.
+  const filter = lazyOpener(() =>
+    import("../../scripts/snippets").then(({ initSnippetFilter }) => {
+      initSnippetFilter();
+      return () => undefined;
+    }),
+  );
+  if (window.location.search.length > 1) filter.warm();
+  bindOpeners("[data-snippet-controls] input", filter);
+</script>
+
+<style>
+  .snippets {
+    display: grid;
+    gap: 1.5rem;
+    padding-block-end: var(--spacing-section);
+  }
+
+  .snippets__controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 1.25rem 2rem;
+    padding: clamp(1.25rem, 1rem + 1vw, 1.75rem);
+  }
+
+  /* The controls do nothing without JavaScript, so they only appear when it can run. */
+  @media (scripting: none) {
+    .snippets__controls {
+      display: none;
+    }
+  }
+
+  .snippets__field {
+    display: grid;
+    align-content: start;
+    gap: 0.6rem;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .snippets__field--tags {
+    grid-column: 1 / -1;
+  }
+
+  .snippets__label {
+    padding: 0;
+    font-weight: 500;
+    font-size: var(--text-step--1);
+  }
+
+  .snippets__search {
+    position: relative;
+    display: block;
+  }
+
+  .snippets__search :global(.snippets__search-icon) {
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline-start: 0.95rem;
+    translate: 0 -50%;
+    color: var(--ink-faint);
+    pointer-events: none;
+  }
+
+  .snippets__input {
+    width: 100%;
+    min-width: 0;
+    min-height: 3rem;
+    padding: 0.5rem 0.9rem 0.5rem 2.6rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+    color: var(--ink);
+    font: 500 var(--text-step-0) / 1.4 var(--sans);
+  }
+
+  .snippets__hint {
+    color: var(--ink-muted);
+    font-size: var(--text-step--1);
+  }
+
+  .snippets__options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .snippets__option {
+    position: relative;
+    display: grid;
+  }
+
+  .snippets__option input {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .snippets__option > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-height: 2.25rem;
+    padding: 0.2rem 0.85rem;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    background: var(--paper-sunken);
+    color: var(--ink-muted);
+    font: 500 var(--text-step--2) / 1 var(--mono);
+    pointer-events: none;
+    transition:
+      color var(--duration-fast) ease,
+      border-color var(--duration-fast) ease,
+      background-color var(--duration-fast) ease;
+  }
+
+  .snippets__option:hover > span {
+    border-color: var(--rule-strong);
+    color: var(--ink);
+  }
+
+  .snippets__option input:checked + span {
+    border-color: color-mix(in oklch, var(--accent) 45%, transparent);
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  .snippets__count {
+    display: inline-grid;
+    place-items: center;
+    min-width: 1.35rem;
+    height: 1.35rem;
+    margin-inline-end: -0.5rem;
+    padding-inline: 0.3rem;
+    border-radius: 999px;
+    background: var(--paper-raised);
+    color: var(--ink-faint);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .snippets__option input:checked + span .snippets__count {
+    color: var(--accent);
+  }
+
+  .snippets__input:focus-visible,
+  .snippets__option input:focus-visible + span {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  @media (forced-colors: active) {
+    .snippets__option input:checked + span {
+      border-color: Highlight;
+      outline: 2px solid Highlight;
+    }
+  }
+
+  .snippets__status {
+    grid-column: 1 / -1;
+    padding-block-start: 1rem;
+    border-block-start: 1px solid var(--rule);
+    color: var(--ink-muted);
+    font: 500 var(--text-step--1) / 1.4 var(--mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .snippets__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr));
+    gap: 1rem;
+  }
+
+  .snippets__item[hidden] {
+    display: none;
+  }
+
+  .snippets__empty {
+    display: grid;
+    justify-items: start;
+    gap: 1rem;
+    padding: clamp(1.5rem, 1rem + 2vw, 2.5rem);
+    color: var(--ink-muted);
+  }
+
+  .snippets__empty[hidden] {
+    display: none;
+  }
+
+  @media (width < 48rem) {
+    .snippets__controls {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

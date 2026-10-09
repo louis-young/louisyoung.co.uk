@@ -1,0 +1,75 @@
+---
+title: "Git aliases worth keeping"
+description: "A short set of Git aliases and settings for everyday work: a readable log, safer force pushes, recent branches, undoing a commit and cleaning up branches whose remote is gone."
+language: "bash"
+tags: ["git", "cli"]
+date: "2026-10-04"
+draft: false
+---
+
+Aliases pay for themselves when they turn a command you look up every week into one you type without thinking. These are the ones I'd miss. Run the block once and they're in your global `~/.gitconfig`.
+
+```bash title="aliases.sh"
+# Short status with the branch and its upstream.
+git config --global alias.st 'status --short --branch'
+
+# A compact, decorated graph of history.
+git config --global alias.lg 'log --graph --format="%C(auto)%h%d %s %C(dim)%an, %ar"'
+
+# The last commit and the files it touched.
+git config --global alias.last 'log -1 HEAD --stat'
+
+# Fold staged changes into the last commit, keeping its message.
+git config --global alias.amend 'commit --amend --no-edit'
+
+# Undo the last commit but keep its changes staged.
+git config --global alias.undo 'reset --soft HEAD~1'
+
+# Unstage files without touching your edits.
+git config --global alias.unstage 'restore --staged'
+
+# Force push, but refuse if the remote has commits you haven't seen.
+git config --global alias.pushf 'push --force-with-lease --force-if-includes'
+
+# Local branches, most recently committed to first.
+git config --global alias.recent 'branch --sort=-committerdate --format="%(committerdate:relative)%09%(refname:short)"'
+
+# Local branches whose remote branch has been deleted (merged and cleaned up).
+git config --global alias.gone '!git fetch --prune && git for-each-ref --format="%(refname:short) %(upstream:track)" refs/heads | awk "\$2 == \"[gone]\" { print \$1 }"'
+```
+
+Some settings make the defaults behave the way you'd expect:
+
+```bash title="settings.sh"
+# `git push` on a new branch sets its upstream; no more --set-upstream.
+git config --global push.autoSetupRemote true
+
+# Prune deleted remote branches on every fetch.
+git config --global fetch.prune true
+
+# Stash and restore uncommitted work around a rebase.
+git config --global rebase.autoStash true
+
+# Remember how you resolved a conflict and reuse it next time.
+git config --global rerere.enabled true
+```
+
+```bash title="usage.sh"
+git lg -15            # the last 15 commits as a graph
+git recent | head     # where was I working?
+git gone              # list branches whose remote is gone
+git gone | xargs git branch -D   # and delete them, once you've checked the list
+```
+
+## Why it works
+
+An alias is just a prefix: `git lg -15` runs `git log --graph --format=… -15`, so any flag you add still works. Aliases that start with `!` run in a shell instead, which is how `gone` can pipe Git into `awk`. Inside a `!` alias the `\$2` and `\"` escapes survive the trip through `git config` and are unescaped by the shell, leaving `awk` with `$2 == "[gone]"`.
+
+`--force-with-lease` refuses to overwrite remote commits you haven't fetched. `--force-if-includes` closes the gap that a background `git fetch` (from an editor, say) would otherwise open, by also checking that you've actually integrated what you fetched.
+
+## Gotchas
+
+- The usage example deletes with `-D` because squash-merged branches never look merged to Git. Read the list before you pipe it, and switch to `main` first: Git won't delete the branch you're on.
+- `--force-if-includes` needs Git 2.30 or later, `push.autoSetupRemote` needs 2.37, and `restore` needs 2.23.
+- An alias can't replace a built-in command: `git config alias.log …` is silently ignored.
+- `rerere` reuses resolutions automatically. If one was wrong, `git rerere forget <path>` drops it.

@@ -13,15 +13,19 @@ ignoreRegExpList:
   - "/[-d]?[r-][w-][xsS-][r-][w-][xsS-][r-][w-][xtT-]/g"
   - '/\[-dlcbps\]/g'
 words:
+  - aeiou
   - astro
   - astrojs
   - autem
   - autolink
   - autolinks
   - avif
+  - brulee
+  - brûlée
   - checkly
   - claudecode
   - codesandbox
+  - committerdate
   - cookieless
   - delectus
   - destructure
@@ -37,10 +41,13 @@ words:
   - geist
   - ghostty
   - gitleaks
+  - gotchas
   - grotesk
   - hidenavigation
   - hreflang
   - hsts
+  - ilike
+  - jsonts
   - knip
   - lede
   - lefthook
@@ -57,13 +64,16 @@ words:
   - opsz
   - ossf
   - pagefind
+  - pasteable
   - pecr
   - pnpm-lock.yaml
   - popups
   - prefetch
   - prerender
+  - pushf
   - reflow
   - rehype
+  - rerere
   - resvg
   - satori
   - schibsted
@@ -73,6 +83,7 @@ words:
   - src/i18n/pseudo.ts
   - subsetting
   - sätteri
+  - ultrawide
   - unauthorised
   - unhighlighted
   - unist

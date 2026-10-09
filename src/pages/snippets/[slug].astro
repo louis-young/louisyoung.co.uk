@@ -1,0 +1,289 @@
+---
+import { render } from "astro:content";
+
+import CopyLink from "../../components/CopyLink.astro";
+import Icon from "../../components/Icon.astro";
+import Callout from "../../components/mdx/Callout.astro";
+import SnippetCard from "../../components/SnippetCard.astro";
+import { formatDate, isoDate, useTranslations } from "../../i18n";
+import { localeOf } from "../../i18n/astro";
+import Base from "../../layouts/Base.astro";
+import { getRelated } from "../../lib/articles";
+import { codeSnippetSchema } from "../../lib/seo";
+import { getSnippets, languageName, snippetPath, type Snippet } from "../../lib/snippets";
+import { site } from "../../site.config";
+
+export const getStaticPaths = async () => {
+  const snippets = await getSnippets();
+  return snippets.map((snippet) => ({ params: { slug: snippet.id }, props: { snippet, snippets } }));
+};
+
+interface Props {
+  snippet: Snippet;
+  snippets: Snippet[];
+}
+
+const { snippet, snippets } = Astro.props;
+const { data } = snippet;
+const { Content } = await render(snippet);
+const locale = localeOf(Astro);
+const t = useTranslations(locale);
+const path = snippetPath(snippet);
+const ogImage = `/og/snippets-${snippet.id}.png`;
+const language = languageName(data.language);
+const related = getRelated(snippets, snippet, 3);
+const editUrl = `${site.repository}/edit/${site.defaultBranch}/content/snippets/${snippet.id}/index.mdx`;
+---
+
+<Base
+  title={data.title}
+  description={data.description}
+  image={ogImage}
+  type="article"
+  published={data.date}
+  updated={data.updated}
+  schema={codeSnippetSchema({
+    title: data.title,
+    description: data.description,
+    path,
+    image: ogImage,
+    language,
+    published: data.date,
+    updated: data.updated,
+    tags: data.tags,
+    section: { name: t("nav.snippets"), path: "/snippets/" },
+  })}
+>
+  <article class="snippet" data-pagefind-body>
+    <header class="container-page snippet__header">
+      <nav class="snippet__crumbs reveal" aria-label={t("breadcrumb.label")} data-pagefind-ignore>
+        <ol class="label" role="list">
+          <li>
+            <a href="/">{t("nav.home")}</a>
+          </li>
+          <li>
+            <a href="/snippets/">{t("nav.snippets")}</a>
+          </li>
+        </ol>
+      </nav>
+      <h1 class="page-title snippet__title reveal" style="--reveal-index: 1">
+        {data.title}
+      </h1>
+      <p class="page-lede snippet__lede reveal" style="--reveal-index: 2">
+        {data.description}
+      </p>
+      <dl
+        class:list={["snippet__facts card reveal", { "snippet__facts--updated": data.updated }]}
+        style="--reveal-index: 3"
+        data-pagefind-ignore
+      >
+        <div class="snippet__fact">
+          <dt class="label">{t("snippets.language")}</dt>
+          <dd>{language}</dd>
+        </div>
+        <div class="snippet__fact">
+          <dt class="label">{t("snippets.published")}</dt>
+          <dd>
+            <time datetime={isoDate(data.date)}>{formatDate(data.date, locale)}</time>
+          </dd>
+        </div>
+        {data.updated && (
+          <div class="snippet__fact">
+            <dt class="label">{t("article.updated")}</dt>
+            <dd>
+              <time datetime={isoDate(data.updated)}>{formatDate(data.updated, locale)}</time>
+            </dd>
+          </div>
+        )}
+        <div class="snippet__fact snippet__fact--tags">
+          <dt class="label">{t("article.tags")}</dt>
+          <dd>
+            <ul class="snippet__tags" role="list">
+              {data.tags.map((tag) => (
+                <li class="tag" data-pagefind-filter="tag">
+                  {tag}
+                </li>
+              ))}
+            </ul>
+          </dd>
+        </div>
+      </dl>
+    </header>
+
+    <div class="container-page snippet__layout">
+      <div class="snippet__body prose" data-code-label={t("article.codeLabel")}>
+        <Content components={{ Callout }} />
+      </div>
+      <div class="snippet__actions" data-pagefind-ignore>
+        <CopyLink />
+        <a class="button" href={editUrl} rel="noopener noreferrer">
+          <Icon name="edit" size={16} />
+          {t("article.editOnGitHub")}
+        </a>
+        <a class="button" href="/snippets/">
+          <Icon name="arrow-left" size={16} />
+          {t("snippets.all")}
+        </a>
+      </div>
+    </div>
+  </article>
+
+  {related.length > 0 && (
+    <aside class="container-page related" aria-labelledby="related-title" data-pagefind-ignore>
+      <h2 id="related-title" class="section-title related__title">
+        {t("snippets.related")}
+      </h2>
+      <ul class="related__grid" role="list">
+        {related.map((item) => (
+          <li>
+            <SnippetCard snippet={item} headingLevel="h3" />
+          </li>
+        ))}
+      </ul>
+    </aside>
+  )}
+</Base>
+
+<script>
+  import { labelCodeRegions } from "../../scripts/code-labels";
+
+  labelCodeRegions();
+</script>
+
+<style>
+  .snippet__header {
+    padding-block: clamp(3rem, 1.5rem + 5vw, 6rem) clamp(2rem, 1rem + 3vw, 3rem);
+  }
+
+  .snippet__crumbs ol {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    color: var(--ink-faint);
+  }
+
+  .snippet__crumbs li + li::before {
+    content: "/";
+    margin-inline-end: 0.6rem;
+    color: var(--ink-faint);
+  }
+
+  .snippet__crumbs a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .snippet__crumbs a:hover {
+    text-decoration: underline;
+  }
+
+  .snippet__title {
+    margin-block-start: 1.25rem;
+    max-width: 22ch;
+    text-wrap: balance;
+  }
+
+  .snippet__lede {
+    margin-block-start: 1.25rem;
+    max-width: 60ch;
+  }
+
+  .snippet__facts {
+    display: grid;
+    grid-template-columns: auto auto minmax(0, 1fr);
+    margin-block-start: clamp(1.75rem, 3vw, 2.75rem);
+  }
+
+  .snippet__facts--updated {
+    grid-template-columns: auto auto auto minmax(0, 1fr);
+  }
+
+  .snippet__fact {
+    display: grid;
+    align-content: start;
+    gap: 0.5rem;
+    min-width: 0;
+    padding: 1.1rem 1.5rem;
+  }
+
+  .snippet__fact + .snippet__fact {
+    border-inline-start: 1px solid var(--rule);
+  }
+
+  .snippet__fact dd {
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+
+  .snippet__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+
+  .snippet__tags .tag {
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  @media (width < 40rem) {
+    .snippet__facts,
+    .snippet__facts--updated {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .snippet__fact:nth-child(odd) {
+      border-inline-start: 0;
+    }
+
+    .snippet__fact--tags {
+      grid-column: 1 / -1;
+    }
+
+    .snippet__fact:nth-child(n + 3) {
+      border-block-start: 1px solid var(--rule);
+    }
+
+    .snippet__fact--tags {
+      border-inline-start: 0 !important;
+    }
+  }
+
+  .snippet__layout {
+    display: grid;
+    grid-template-columns: minmax(0, 52rem);
+    gap: 2.5rem;
+  }
+
+  /* The column is left-aligned with the header, so code fills it rather than breaking out. */
+  .snippet__body {
+    --breakout: 0px;
+    min-width: 0;
+  }
+
+  .snippet__body > :global(:first-child) {
+    margin-block-start: 0;
+  }
+
+  .snippet__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding-block-start: 2rem;
+    border-block-start: 1px solid var(--rule);
+  }
+
+  .related {
+    padding-block: var(--spacing-section);
+  }
+
+  .related__title {
+    padding-block-end: 1.5rem;
+  }
+
+  .related__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr));
+    gap: 1rem;
+  }
+</style>

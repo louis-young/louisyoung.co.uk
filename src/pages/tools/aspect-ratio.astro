@@ -1,0 +1,461 @@
+---
+import PageHero from "../../components/sections/PageHero.astro";
+import { useTranslations } from "../../i18n";
+import { localeOf } from "../../i18n/astro";
+import Base from "../../layouts/Base.astro";
+import {
+  aspectRatioCss,
+  decimalRatio,
+  nearestRatio,
+  type PresetId,
+  presets,
+  reduceRatio,
+} from "../../lib/aspect-ratio-tool";
+import { toolPageProps } from "../../lib/tool-catalogue";
+
+const t = useTranslations(localeOf(Astro));
+const presetNames: Record<PresetId, string> = {
+  fullHd: t("tools.aspect.presetFullHd"),
+  hd: t("tools.aspect.presetHd"),
+  uhd: t("tools.aspect.presetUhd"),
+  ultrawide: t("tools.aspect.presetUltrawide"),
+  laptop: t("tools.aspect.presetLaptop"),
+  ipad: t("tools.aspect.presetIpad"),
+  photo: t("tools.aspect.presetPhoto"),
+  og: t("tools.aspect.presetOg"),
+  square: t("tools.aspect.presetSquare"),
+  portrait: t("tools.aspect.presetPortrait"),
+  story: t("tools.aspect.presetStory"),
+};
+const width = 1920;
+const height = 1080;
+const reduced = reduceRatio(width, height)!;
+const ratio = `${reduced.width}:${reduced.height}`;
+const nearest = nearestRatio(width, height);
+---
+
+<Base {...toolPageProps("aspect-ratio", t)}>
+  <PageHero label={t("nav.tools")} title={t("tools.aspect.title")} lede={t("tools.aspect.summary")} />
+  <div
+    class="container-page aspect"
+    data-aspect
+    data-copied={t("tools.copied")}
+    data-status-text={t("tools.aspect.status")}
+    data-exact={t("tools.aspect.exact")}
+    data-near={t("tools.aspect.near")}
+    data-invalid={t("tools.aspect.invalid")}
+    data-ratio-hint={t("tools.aspect.ratioHint")}
+    data-error-ratio={t("tools.aspect.errorRatio")}
+  >
+    <div class="aspect__inputs card">
+      <fieldset class="aspect__fieldset">
+        <legend class="label">{t("tools.aspect.dimensions")}</legend>
+        <div class="aspect__sizes">
+          <div class="aspect__field">
+            <label class="aspect__label" for="aspect-width">
+              {t("tools.aspect.width")}
+            </label>
+            <input
+              id="aspect-width"
+              type="number"
+              class="aspect__input"
+              value={width}
+              min="0"
+              step="any"
+              inputmode="decimal"
+              aria-describedby="aspect-status"
+              data-width
+            />
+          </div>
+          <span class="aspect__times" aria-hidden="true">
+            ×
+          </span>
+          <div class="aspect__field">
+            <label class="aspect__label" for="aspect-height">
+              {t("tools.aspect.height")}
+            </label>
+            <input
+              id="aspect-height"
+              type="number"
+              class="aspect__input"
+              value={height}
+              min="0"
+              step="any"
+              inputmode="decimal"
+              aria-describedby="aspect-status"
+              data-height
+            />
+          </div>
+        </div>
+        <div class="aspect__field">
+          <label class="aspect__label" for="aspect-ratio">
+            {t("tools.aspect.ratio")}
+          </label>
+          <input
+            id="aspect-ratio"
+            type="text"
+            class="aspect__input"
+            value={ratio}
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck="false"
+            aria-describedby="aspect-ratio-hint"
+            data-ratio
+          />
+          <p id="aspect-ratio-hint" class="aspect__hint" data-ratio-message>
+            {t("tools.aspect.ratioHint")}
+          </p>
+        </div>
+        <label class="aspect__check">
+          <input type="checkbox" aria-describedby="aspect-lock-hint" data-lock />
+          <span>{t("tools.aspect.lock")}</span>
+        </label>
+        <p id="aspect-lock-hint" class="aspect__hint">
+          {t("tools.aspect.lockHint")}
+        </p>
+      </fieldset>
+
+      <section class="aspect__section" aria-labelledby="aspect-presets">
+        <h2 id="aspect-presets" class="label">
+          {t("tools.aspect.presets")}
+        </h2>
+        <ul class="aspect__presets" role="list">
+          {presets.map((preset) => (
+            <li>
+              <button
+                type="button"
+                class="aspect__preset"
+                data-preset-width={preset.width}
+                data-preset-height={preset.height}
+              >
+                <span class="aspect__preset-name">{presetNames[preset.id]}</span>
+                <span class="aspect__preset-size">
+                  {preset.width} × {preset.height}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </section>
+    </div>
+
+    <div class="aspect__result card">
+      <p id="aspect-status" class="aspect__status" role="status" data-status></p>
+      <dl class="aspect__facts">
+        <div>
+          <dt class="label">{t("tools.aspect.reduced")}</dt>
+          <dd class="aspect__fact" data-reduced>
+            {ratio}
+          </dd>
+        </div>
+        <div>
+          <dt class="label">{t("tools.aspect.decimal")}</dt>
+          <dd class="aspect__fact" data-decimal>
+            {decimalRatio(width, height)}
+          </dd>
+        </div>
+        <div>
+          <dt class="label">{t("tools.aspect.nearest")}</dt>
+          <dd class="aspect__fact" data-nearest>
+            {nearest.id}
+          </dd>
+        </div>
+      </dl>
+      <section class="aspect__section" aria-labelledby="aspect-preview">
+        <h2 id="aspect-preview" class="label">
+          {t("tools.aspect.preview")}
+        </h2>
+        <div class="aspect__stage">
+          <div class="aspect__box" data-box>
+            <span class="aspect__box-ratio" data-box-ratio>
+              {ratio}
+            </span>
+            <span class="aspect__box-size" data-box-size>
+              {width} × {height}
+            </span>
+          </div>
+        </div>
+      </section>
+      <section class="aspect__section" aria-labelledby="aspect-css">
+        <h2 id="aspect-css" class="label">
+          {t("tools.aspect.css")}
+        </h2>
+        <div class="aspect__command">
+          <code data-css>{aspectRatioCss(width, height)}</code>
+          <button type="button" class="button button--small" data-copy>
+            <span data-copy-label>{t("tools.copy")}</span>
+            <span class="visually-hidden">{t("tools.aspect.css")}</span>
+          </button>
+        </div>
+      </section>
+    </div>
+  </div>
+</Base>
+
+<script>
+  import { initAspectRatio } from "../../scripts/tool-aspect-ratio";
+
+  initAspectRatio();
+</script>
+
+<style>
+  .aspect {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+    gap: 1rem;
+    align-items: start;
+    padding-block-end: var(--spacing-section);
+  }
+
+  .aspect > .card {
+    display: grid;
+    gap: 1.5rem;
+    min-width: 0;
+    padding: clamp(1.25rem, 1rem + 1vw, 2rem);
+  }
+
+  .aspect__fieldset {
+    display: grid;
+    gap: 0.9rem;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .aspect__fieldset > legend {
+    float: left;
+    width: 100%;
+    padding: 0;
+  }
+
+  .aspect__sizes {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: end;
+    gap: 0.75rem;
+  }
+
+  .aspect__times {
+    padding-block-end: 0.7rem;
+    color: var(--ink-muted);
+    font: 500 var(--text-step-1) / 1 var(--mono);
+  }
+
+  .aspect__field,
+  .aspect__section {
+    display: grid;
+    align-content: start;
+    gap: 0.5rem;
+    min-width: 0;
+  }
+
+  .aspect__label {
+    font-weight: 500;
+    font-size: var(--text-step--1);
+  }
+
+  .aspect__input {
+    width: 100%;
+    min-width: 0;
+    min-height: 3rem;
+    padding: 0.5rem 0.9rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+    color: var(--ink);
+    font: 600 var(--text-step-1) / 1.3 var(--mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .aspect__input[aria-invalid="true"] {
+    border-color: var(--warning);
+  }
+
+  .aspect__hint {
+    color: var(--ink-muted);
+    font-size: var(--text-step--1);
+  }
+
+  .aspect__hint[data-invalid] {
+    padding: 0.4rem 0.65rem;
+    border-radius: var(--radius-sm);
+    background: var(--warning-soft);
+    color: var(--ink);
+  }
+
+  .aspect__check {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-height: 2.75rem;
+    font-weight: 500;
+    font-size: var(--text-step--1);
+    cursor: pointer;
+  }
+
+  .aspect__check input {
+    width: 1.1rem;
+    height: 1.1rem;
+    margin: 0;
+    accent-color: var(--accent);
+  }
+
+  .aspect__check + .aspect__hint {
+    margin-block-start: -0.6rem;
+  }
+
+  .aspect__presets {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 10.5rem), 1fr));
+    gap: 0.5rem;
+  }
+
+  .aspect__preset {
+    display: grid;
+    gap: 0.15rem;
+    width: 100%;
+    min-height: 2.75rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+    color: var(--ink);
+    font-size: var(--text-step--1);
+    text-align: start;
+    cursor: pointer;
+  }
+
+  .aspect__preset:hover {
+    border-color: var(--accent);
+  }
+
+  .aspect__preset-name {
+    font-weight: 500;
+  }
+
+  .aspect__preset-size {
+    color: var(--ink-muted);
+    font: 400 var(--text-step--2) / 1.4 var(--mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .aspect__input:focus-visible,
+  .aspect__check input:focus-visible,
+  .aspect__preset:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .aspect__status {
+    padding: 0.9rem 1.1rem;
+    border-radius: var(--radius-sm);
+    background: var(--accent-soft);
+    color: var(--ink);
+    font-size: var(--text-step--1);
+    line-height: 1.6;
+  }
+
+  .aspect__status[data-invalid] {
+    background: var(--warning-soft);
+  }
+
+  .aspect__facts {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .aspect__facts > div {
+    display: grid;
+    gap: 0.35rem;
+    min-width: 0;
+  }
+
+  .aspect__fact {
+    color: var(--ink);
+    font: 600 var(--text-step-2) / 1.15 var(--mono);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    overflow-wrap: anywhere;
+  }
+
+  .aspect__stage {
+    display: grid;
+    place-items: center;
+    height: clamp(12rem, 30vw, 17rem);
+    padding: 1rem;
+    border: 1px dashed var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+    container-type: size;
+  }
+
+  .aspect__box {
+    --ratio: 1.7778;
+
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 0.25rem;
+    width: min(100cqw, 100cqh * var(--ratio));
+    min-width: 2px;
+    min-height: 2px;
+    aspect-ratio: var(--ratio);
+    overflow: hidden;
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-sm);
+    background: var(--accent-soft);
+    color: var(--ink);
+    transition: width 0.2s ease;
+  }
+
+  .aspect__box-ratio {
+    font: 600 var(--text-step-1) / 1.1 var(--mono);
+  }
+
+  .aspect__box-size {
+    color: var(--ink);
+    font: 400 var(--text-step--2) / 1.3 var(--mono);
+  }
+
+  .aspect__command {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+  }
+
+  .aspect__command code {
+    flex: 1;
+    min-width: 0;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+    font: 500 var(--text-step--1) / 1.5 var(--mono);
+    overflow-wrap: anywhere;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .aspect__box {
+      transition: none;
+    }
+  }
+
+  @media (width < 56rem) {
+    .aspect {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  @media (width < 30rem) {
+    .aspect__facts {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    .aspect__facts > div:last-child {
+      grid-column: 1 / -1;
+    }
+  }
+</style>

@@ -9,6 +9,12 @@ export interface TerminalArticle {
   tags: readonly string[];
 }
 
+/** A code snippet, listed by `ls snippets` and opened at /snippets/<slug>/. */
+interface TerminalSnippet {
+  slug: string;
+  title: string;
+}
+
 interface TerminalPage {
   name: string;
   href: string;
@@ -32,6 +38,7 @@ type MessageKey =
 
 export interface TerminalContext {
   articles: readonly TerminalArticle[];
+  snippets?: readonly TerminalSnippet[];
   pages: readonly TerminalPage[];
   email: string;
   /** Translated messages; `{name}` placeholders are filled in by `fill`. */
@@ -78,9 +85,9 @@ const isCommand = (value: string): value is Command => (COMMANDS as readonly str
 
 const pad = (value: string | number, width: number) => String(value).padStart(width, " ");
 
-const listArticles = (articles: readonly TerminalArticle[]) => {
-  const width = String(articles.length).length;
-  return articles.map((article, index) => `${pad(index + 1, width)}  ${article.title}`);
+const listNumbered = (items: readonly { title: string }[]) => {
+  const width = String(items.length).length;
+  return items.map((item, index) => `${pad(index + 1, width)}  ${item.title}`);
 };
 
 /** Finds an article by its list number, exact slug, or a unique slug/title fragment. */
@@ -122,7 +129,8 @@ export const runCommand = (input: string, context: TerminalContext): Result => {
     case "ls": {
       const target = (args[0] ?? "").toLowerCase();
       if (target === "") return { lines: pages.map((page) => `${page.name}/`) };
-      if (target === "writing" || target === "articles") return { lines: listArticles(articles) };
+      if (target === "writing" || target === "articles") return { lines: listNumbered(articles) };
+      if (target === "snippets") return { lines: listNumbered(context.snippets ?? []) };
       if (target === "tags") {
         const tags = [...new Set(articles.flatMap((article) => article.tags))].sort();
         return { lines: [tags.map((tag) => `#${tag}`).join("  ")] };
@@ -138,7 +146,18 @@ export const runCommand = (input: string, context: TerminalContext): Result => {
       if (page)
         return { lines: [fill(messages.opening, { title: page.href })], effect: { type: "navigate", href: page.href } };
       const article = findArticle(articles, rest);
-      if (!article) return { lines: [fill(messages.noMatch, { query: rest })] };
+      if (!article) {
+        const slug = rest
+          .toLowerCase()
+          .replace(/^\/?snippets\//u, "")
+          .replace(/\/$/u, "");
+        const snippet = context.snippets?.find((item) => item.slug === slug);
+        if (!snippet) return { lines: [fill(messages.noMatch, { query: rest })] };
+        return {
+          lines: [fill(messages.opening, { title: snippet.title })],
+          effect: { type: "navigate", href: `/snippets/${snippet.slug}/` },
+        };
+      }
       return {
         lines: [fill(messages.opening, { title: article.title })],
         effect: { type: "navigate", href: `/${article.slug}/` },
@@ -177,8 +196,8 @@ export const runCommand = (input: string, context: TerminalContext): Result => {
   }
 };
 
-/** Tab completion for a command name, a page name or an article slug. Returns the input unchanged when ambiguous. */
-export const complete = (input: string, context: Pick<TerminalContext, "articles" | "pages">) => {
+/** Tab completion for a command name, a page name, or an article or snippet slug. Returns the input unchanged when ambiguous. */
+export const complete = (input: string, context: Pick<TerminalContext, "articles" | "pages" | "snippets">) => {
   const parts = input.split(" ");
   if (parts.length === 1) {
     const matches = COMMANDS.filter((command) => command.startsWith(input.toLowerCase()));
@@ -188,8 +207,12 @@ export const complete = (input: string, context: Pick<TerminalContext, "articles
   const partial = rest.join(" ").toLowerCase();
   const candidates =
     command === "ls"
-      ? ["writing", "tags"]
-      : [...context.pages.map((page) => page.name), ...context.articles.map((article) => article.slug)];
+      ? ["writing", "snippets", "tags"]
+      : [
+          ...context.pages.map((page) => page.name),
+          ...context.articles.map((article) => article.slug),
+          ...(context.snippets ?? []).map((snippet) => snippet.slug),
+        ];
   const matches = candidates.filter((candidate) => candidate.startsWith(partial));
   return matches.length === 1 ? `${command} ${matches[0]}` : input;
 };

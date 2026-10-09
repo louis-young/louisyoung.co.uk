@@ -28,6 +28,10 @@ export const tools = [
   { slug: "semver", title: "tools.semver.title", summary: "tools.semver.summary", icon: "^1" },
   { slug: "chmod", title: "tools.chmod.title", summary: "tools.chmod.summary", icon: "755" },
   { slug: "css-generator", title: "tools.css.title", summary: "tools.css.summary", icon: "css" },
+  { slug: "json-to-ts", title: "tools.jsonts.title", summary: "tools.jsonts.summary", icon: "{T}" },
+  { slug: "case", title: "tools.case.title", summary: "tools.case.summary", icon: "aA" },
+  { slug: "aspect-ratio", title: "tools.aspect.title", summary: "tools.aspect.summary", icon: "16:9" },
+  { slug: "sql", title: "tools.sql.title", summary: "tools.sql.summary", icon: "SQL" },
 ] as const satisfies readonly Tool[];
 
 type ToolSlug = (typeof tools)[number]["slug"];

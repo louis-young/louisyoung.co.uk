@@ -3,6 +3,7 @@ import { profile } from "../../content/data/profile";
 import { translatorFor } from "../i18n/astro";
 import { getArticles } from "../lib/articles";
 import { filled } from "../lib/placeholders";
+import { getSnippets } from "../lib/snippets";
 import type { COMMANDS, TerminalContext } from "../lib/terminal";
 
 interface Props {
@@ -16,12 +17,14 @@ const articles = (await getArticles()).map((article) => ({
   title: article.data.title,
   tags: article.data.tags,
 }));
+const snippets = (await getSnippets()).map((snippet) => ({ slug: snippet.id, title: snippet.data.title }));
 
 const country = filled(profile.location.city)
   ? `${profile.location.city}, ${profile.location.country}`
   : profile.location.country;
 const context: Omit<TerminalContext, "now"> = {
   articles,
+  snippets,
   pages: Astro.props.pages.map((name) => ({ name, href: `/${name}/` })),
   email: profile.email,
   messages: {

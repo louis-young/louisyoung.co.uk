@@ -1,0 +1,55 @@
+---
+title: "Focus rings that survive forced colours"
+description: "Visible :focus-visible rings for keyboard users that keep working in Windows high contrast and other forced-colour modes, even when the design calls for a box-shadow ring."
+language: "css"
+tags: ["css", "accessibility", "focus"]
+date: "2026-09-25"
+draft: false
+---
+
+A custom focus ring usually starts with `outline: none` and a pretty `box-shadow`. It looks great until someone turns on a forced-colour mode, such as Windows contrast themes, where the browser removes every box-shadow and the ring disappears. Keyboard users are left with no idea where they are on the page.
+
+Start with an outline. Outlines survive forced colours, follow `border-radius` in every current browser, and don't take up layout space.
+
+```css title="focus.css"
+:focus-visible {
+  outline: 2px solid var(--focus-ring, #5b21b6);
+  outline-offset: 2px;
+}
+```
+
+If the design needs a box-shadow ring (two-tone, or inset on a tight button group), keep a transparent outline alongside it. It's invisible normally, but forced-colour mode repaints outline colours with a system colour, so the outline appears exactly when the shadow is taken away.
+
+```css title="focus-shadow.css"
+.button:focus-visible {
+  /* Invisible until forced colours remove the shadow and paint it. */
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow:
+    0 0 0 2px var(--surface, #fff),
+    0 0 0 4px var(--focus-ring, #5b21b6);
+}
+```
+
+To choose the colour in forced-colour mode, use a system colour. `Highlight` is the user's own selection colour, so it's guaranteed to contrast with their background.
+
+```css title="focus-forced-colours.css"
+@media (forced-colors: active) {
+  :focus-visible {
+    outline-color: Highlight;
+  }
+}
+```
+
+## Why it works
+
+Forced-colour modes replace author colours with a small palette the user has chosen, and set `box-shadow` (and background images) to `none`. Outline _colours_ are forced too, but the outline itself is kept, so a 2px transparent outline becomes a 2px visible one. System colour keywords such as `Highlight`, `CanvasText` and `ButtonText` are left alone, because they already come from the user's palette.
+
+`:focus-visible` only matches when the browser decides a focus indicator is helpful: always for keyboard focus and text inputs, but not for a mouse click on a button. That's why the old `:focus:not(:focus-visible)` dance is no longer needed.
+
+## Gotchas
+
+- Never remove the outline without replacing it. `outline: none` on its own fails WCAG 2.4.7 (Focus visible).
+- Two-tone rings (light inner, dark outer, or the reverse) stay visible on any background, which helps you meet the 3:1 contrast that WCAG 2.4.13 asks of a focus indicator.
+- Test it: in Chrome DevTools, open the Rendering panel and emulate `forced-colors: active`, then tab through the page.
+- `overflow: hidden` on a parent clips an outside outline. Use a negative `outline-offset` for controls inside scroll containers.

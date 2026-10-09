@@ -11,12 +11,13 @@ interface Item {
 interface Props {
   work: readonly Item[];
   articles: readonly Item[];
+  snippets?: readonly Item[];
   /** Pages hidden from the navigation while they are drafts. */
   hidden?: readonly string[];
 }
 
 const t = translatorFor(Astro);
-const { work, articles, hidden = [] } = Astro.props;
+const { work, articles, snippets = [], hidden = [] } = Astro.props;
 
 interface Option {
   title: string;
@@ -36,6 +37,7 @@ const groups: { id: string; label: string; options: Option[] }[] = [
       { title: t("nav.home"), href: "/", hint: "/" },
       { title: t("nav.work"), href: "/work/", hint: "/work" },
       { title: t("nav.writing"), href: "/writing/", hint: "/writing" },
+      { title: t("nav.snippets"), href: "/snippets/", hint: "/snippets", keywords: "code copy paste toolbox" },
       { title: t("nav.hire"), href: "/hire/", hint: "/hire" },
       { title: t("nav.cv"), href: "/cv/", hint: "/cv" },
       { title: t("nav.now"), href: "/now/", hint: "/now" },
@@ -63,6 +65,26 @@ const groups: { id: string; label: string; options: Option[] }[] = [
       { title: t("tools.semver.title"), href: "/tools/semver/", keywords: "semantic version range npm caret tilde" },
       { title: t("tools.chmod.title"), href: "/tools/chmod/", keywords: "unix file permissions octal 755 rwx" },
       { title: t("tools.css.title"), href: "/tools/css-generator/", keywords: "box-shadow linear radial gradient css" },
+      {
+        title: t("tools.jsonts.title"),
+        href: "/tools/json-to-ts/",
+        keywords: "typescript interface type generate json schema ts",
+      },
+      {
+        title: t("tools.case.title"),
+        href: "/tools/case/",
+        keywords: "camel pascal snake kebab title sentence slug uppercase lowercase text",
+      },
+      {
+        title: t("tools.aspect.title"),
+        href: "/tools/aspect-ratio/",
+        keywords: "aspect ratio 16:9 4:3 resize width height video image",
+      },
+      {
+        title: t("tools.sql.title"),
+        href: "/tools/sql/",
+        keywords: "sql query format beautify minify prettify database",
+      },
       { title: t("nav.stats"), href: "/stats/", hint: "/stats" },
       {
         title: t("changelog.title"),
@@ -100,7 +122,8 @@ const groups: { id: string; label: string; options: Option[] }[] = [
   },
   { id: "work", label: t("palette.work"), options: work.map((item) => ({ ...item })) },
   { id: "writing", label: t("palette.writing"), options: articles.map((item) => ({ ...item })) },
-];
+  { id: "snippets", label: t("palette.snippets"), options: snippets.map((item) => ({ ...item })) },
+].filter((group) => group.options.length > 0);
 ---
 
 <dialog

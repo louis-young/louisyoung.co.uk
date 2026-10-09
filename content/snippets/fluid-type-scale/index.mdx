@@ -1,0 +1,112 @@
+---
+title: "A fluid type scale with clamp()"
+description: "A modular type scale that grows smoothly from phone to desktop with CSS clamp(), no breakpoints, plus the small TypeScript function that generates it so the numbers aren't magic."
+language: "css"
+tags: ["css", "typography"]
+date: "2026-10-02"
+draft: false
+---
+
+Breakpoint-based type jumps from one size to the next as the window crosses a line. A fluid scale interpolates instead: each step has a minimum size at a small viewport, a maximum at a large one, and `clamp()` slides smoothly between them. This one runs from 320px to 1280px, with a 16px base and a 1.2 ratio on phones growing to an 18px base and a 1.25 ratio on desktops.
+
+```css title="type-scale.css"
+:root {
+  --step--2: clamp(0.6944rem, 0.6859rem + 0.0426vw, 0.72rem);
+  --step--1: clamp(0.8333rem, 0.8111rem + 0.1111vw, 0.9rem);
+  --step-0: clamp(1rem, 0.9583rem + 0.2083vw, 1.125rem);
+  --step-1: clamp(1.2rem, 1.1312rem + 0.3438vw, 1.4063rem);
+  --step-2: clamp(1.44rem, 1.3341rem + 0.5297vw, 1.7578rem);
+  --step-3: clamp(1.728rem, 1.5716rem + 0.7821vw, 2.1973rem);
+  --step-4: clamp(2.0736rem, 1.8493rem + 1.1216vw, 2.7466rem);
+  --step-5: clamp(2.4883rem, 2.1734rem + 1.5748vw, 3.4332rem);
+}
+
+body {
+  font-size: var(--step-0);
+}
+
+h1 {
+  font-size: var(--step-5);
+}
+
+h2 {
+  font-size: var(--step-3);
+}
+
+small {
+  font-size: var(--step--1);
+}
+```
+
+The numbers come from this function. Change the inputs, run it, and paste the output over the custom properties above. For a single value, the [clamp() generator](/tools/clamp/) does the same in the browser.
+
+```ts title="fluid-scale.ts"
+export interface FluidScaleOptions {
+  /** Viewport widths in px where the scale stops shrinking and stops growing. */
+  minViewport: number;
+  maxViewport: number;
+  /** Base (step 0) font size in px at each end. */
+  minBase: number;
+  maxBase: number;
+  /** Ratio between steps at each end, e.g. 1.2 (minor third) and 1.25 (major third). */
+  minRatio: number;
+  maxRatio: number;
+  steps: readonly number[];
+  /** Root font size in px, for converting to rem. */
+  root?: number;
+}
+
+const round = (value: number) => Number(value.toFixed(4));
+
+export function fluidScale(options: FluidScaleOptions): Record<`--step-${number}`, string> {
+  const {
+    minViewport,
+    maxViewport,
+    minBase,
+    maxBase,
+    minRatio,
+    maxRatio,
+    steps,
+    root = 16,
+  } = options;
+  const scale: Record<`--step-${number}`, string> = {};
+
+  for (const step of steps) {
+    const min = (minBase * minRatio ** step) / root;
+    const max = (maxBase * maxRatio ** step) / root;
+    // Straight line through (minViewport, min) and (maxViewport, max), in rem per rem of viewport.
+    const slope = (max - min) / ((maxViewport - minViewport) / root);
+    const intercept = min - slope * (minViewport / root);
+    const preferred = `${round(intercept)}rem + ${round(slope * 100)}vw`;
+    scale[`--step-${step}`] =
+      `clamp(${round(Math.min(min, max))}rem, ${preferred}, ${round(Math.max(min, max))}rem)`;
+  }
+
+  return scale;
+}
+
+console.log(
+  fluidScale({
+    minViewport: 320,
+    maxViewport: 1280,
+    minBase: 16,
+    maxBase: 18,
+    minRatio: 1.2,
+    maxRatio: 1.25,
+    steps: [-2, -1, 0, 1, 2, 3, 4, 5],
+  }),
+);
+```
+
+## Why it works
+
+`clamp(min, preferred, max)` uses the preferred value until it crosses either limit. The preferred value is a straight line: a `rem` intercept plus a `vw` slope, chosen so the line passes through the minimum size at 320px and the maximum at 1280px. Between the two it scales continuously; outside them it holds still.
+
+Because each end has its own ratio, headings grow faster than body text. Large screens get more contrast between levels, and small screens don't get headings that fill half the viewport.
+
+## Gotchas
+
+- Keep a `rem` part in the preferred value. A value in `vw` alone ignores browser zoom and the user's default font size, which fails WCAG 1.4.4 (Resize text).
+- Keep each maximum within 2.5 times its minimum. Beyond that, zooming to 200% can no longer double the text size at every width.
+- `clamp()` needs its minimum below its maximum. The function sorts them, so a scale that shrinks small steps on large screens still works.
+- The `rem` values assume a 16px root. If you change the root font size, pass it as `root`.

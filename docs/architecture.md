@@ -4,7 +4,8 @@ A static site: `pnpm build` writes HTML, CSS, a little JavaScript, images, feeds
 
 ```
 content/articles/<slug>/     MDX articles, their images and demo components (the slug is the URL)
-src/content.config.ts        Article schema (Zod), validated at build time
+content/snippets/<slug>/     Short code snippets, published at /snippets/<slug>/
+src/content.config.ts        Content schemas (Zod), validated at build time
 src/pages/                   Routes: home, [slug], tags, search, design, 404, feeds, OG images, icons
 src/layouts/Base.astro       Document shell: <head>, header, footer, theme and shortcut scripts
 src/components/              UI components; components/mdx/ are available inside articles

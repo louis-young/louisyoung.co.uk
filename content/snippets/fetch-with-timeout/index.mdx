@@ -1,0 +1,68 @@
+---
+title: "Fetch with a timeout and cancellation"
+description: "Give every request a deadline with AbortSignal.timeout, still let callers cancel it, and tell the two apart when it fails. No wrapper library needed."
+language: "ts"
+tags: ["typescript", "fetch", "async"]
+date: "2026-09-22"
+draft: false
+---
+
+`fetch` has no timeout. A request to a slow or hung server will wait as long as the browser lets it, which is far longer than anyone will look at a spinner. Two built-ins fix that: `AbortSignal.timeout()` gives a request a deadline, and `AbortSignal.any()` combines it with a signal the caller controls, so a component can still cancel when it unmounts.
+
+```ts title="fetch-with-timeout.ts"
+export interface FetchWithTimeoutOptions extends RequestInit {
+  /** Milliseconds before the request is aborted with a `TimeoutError`. */
+  timeout?: number;
+}
+
+export function fetchWithTimeout(
+  input: RequestInfo | URL,
+  { timeout = 8000, signal, ...init }: FetchWithTimeoutOptions = {},
+): Promise<Response> {
+  const deadline = AbortSignal.timeout(timeout);
+  return fetch(input, { ...init, signal: signal ? AbortSignal.any([signal, deadline]) : deadline });
+}
+
+export const isTimeout = (error: unknown) =>
+  error instanceof DOMException && error.name === "TimeoutError";
+
+export const isAbort = (error: unknown) =>
+  error instanceof DOMException && error.name === "AbortError";
+```
+
+```ts title="search.ts"
+import { fetchWithTimeout, isAbort, isTimeout } from "./fetch-with-timeout";
+
+export async function search(
+  query: string,
+  signal: AbortSignal | null = null,
+): Promise<string[] | undefined> {
+  try {
+    const response = await fetchWithTimeout(`/api/search?q=${encodeURIComponent(query)}`, {
+      timeout: 5000,
+      signal,
+    });
+    if (!response.ok) throw new Error(`Search failed with ${response.status}`);
+    return (await response.json()) as string[];
+  } catch (error) {
+    // The caller cancelled (a newer query, or the component unmounted): not an error.
+    if (isAbort(error)) return undefined;
+    if (isTimeout(error))
+      throw new Error("Search is taking too long. Try again in a moment.", { cause: error });
+    throw error;
+  }
+}
+```
+
+## Why it works
+
+`AbortSignal.timeout(ms)` returns a signal that aborts itself after `ms` milliseconds with a `DOMException` named `TimeoutError`. A signal you abort by hand rejects with `AbortError` instead, which is how `isTimeout` and `isAbort` tell "too slow" from "no longer needed".
+
+`AbortSignal.any([a, b])` aborts as soon as either input does, and passes on that input's reason, so the error names survive the combination.
+
+## Gotchas
+
+- The deadline covers reading the body as well as the headers. If the timer fires during `response.json()`, that rejects with the same `TimeoutError`. That's usually what you want: a slow stream is still a slow request.
+- The timer pauses while the page is in the back/forward cache or otherwise inactive, so a timeout won't fire in the background and surprise the user on return.
+- `AbortSignal.any()` needs Chrome 116, Safari 17.4, Firefox 124 or Node 20.3. On older targets, wire an `AbortController` to both signals' `abort` events yourself.
+- Pick the timeout per endpoint. Uploads and reports need longer than an autocomplete, which should give up quickly and let the next keystroke try again.

@@ -14,6 +14,7 @@ import { getEntry } from "astro:content";
 
 import { cv } from "../../content/data/cv";
 import { filled } from "../lib/placeholders";
+import { getSnippets, languageName, snippetPath } from "../lib/snippets";
 import { getWork, isPagePublished, workPath } from "../lib/work";
 
 type Props = Parameters<typeof Head>[0];
@@ -40,6 +41,11 @@ const paletteArticles = (await getArticles()).map((article) => ({
   href: articlePath(article),
   keywords: article.data.tags.join(" "),
 }));
+const paletteSnippets = (await getSnippets()).map((snippet) => ({
+  title: snippet.data.title,
+  href: snippetPath(snippet),
+  keywords: `snippet ${languageName(snippet.data.language)} ${snippet.data.tags.join(" ")}`,
+}));
 ---
 
 <!doctype html>
@@ -61,6 +67,7 @@ const paletteArticles = (await getArticles()).map((article) => ({
     <Palette
       work={paletteWork}
       articles={paletteArticles}
+      snippets={paletteSnippets}
       hidden={[
         ...(sections.work ? [] : ["/work/"]),
         ...(sections.now ? [] : ["/now/"]),
@@ -72,6 +79,7 @@ const paletteArticles = (await getArticles()).map((article) => ({
       pages={[
         ...(sections.work ? ["work"] : []),
         "writing",
+        "snippets",
         "hire",
         ...(sections.cv ? ["cv"] : []),
         ...(sections.now ? ["now"] : []),
