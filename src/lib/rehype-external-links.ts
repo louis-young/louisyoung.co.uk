@@ -1,6 +1,8 @@
 import type { Element, Root } from "hast";
 import { visit } from "unist-util-visit";
 
+import { useTranslations } from "../i18n";
+
 const isExternal = (href: string, siteHost: string) => {
   if (!/^https?:\/\//u.test(href)) return false;
   return new URL(href).host !== siteHost;
@@ -8,12 +10,14 @@ const isExternal = (href: string, siteHost: string) => {
 
 /**
  * Marks absolute links to other hosts as external so they get safe `rel` values and the
- * ↗ affordance in CSS. Links open in the same tab; readers decide where links go.
+ * ↗ affordance in CSS. Links open in the same tab; readers decide where links go. Since the
+ * arrow is decorative, visually hidden text says the same thing to assistive technology.
  */
 export const rehypeExternalLinks =
-  (options: { siteHost?: string } = {}) =>
+  (options: { siteHost?: string; label?: string } = {}) =>
   (tree: Root) => {
     const siteHost = options.siteHost ?? "louisyoung.co.uk";
+    const label = options.label ?? useTranslations()("article.externalLink");
     visit(tree, "element", (node: Element) => {
       if (node.tagName !== "a") return;
       const href = node.properties.href;
@@ -21,5 +25,11 @@ export const rehypeExternalLinks =
       delete node.properties.target;
       node.properties.rel = ["noopener", "noreferrer"];
       node.properties.dataExternal = "";
+      node.children.push({
+        type: "element",
+        tagName: "span",
+        properties: { className: ["visually-hidden"], dataPagefindIgnore: "" },
+        children: [{ type: "text", value: ` ${label}` }],
+      });
     });
   };

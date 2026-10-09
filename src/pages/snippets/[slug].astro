@@ -4,6 +4,7 @@ import { render } from "astro:content";
 import CopyLink from "../../components/CopyLink.astro";
 import Icon from "../../components/Icon.astro";
 import Callout from "../../components/mdx/Callout.astro";
+import ReadingTools from "../../components/ReadingTools.astro";
 import SnippetCard from "../../components/SnippetCard.astro";
 import { formatDate, isoDate, useTranslations } from "../../i18n";
 import { localeOf } from "../../i18n/astro";
@@ -111,7 +112,7 @@ const editUrl = `${site.repository}/edit/${site.defaultBranch}/content/snippets/
     </header>
 
     <div class="container-page snippet__layout">
-      <div class="snippet__body prose" data-code-label={t("article.codeLabel")}>
+      <div class="snippet__body prose" data-code-label={t("article.codeLabel")} data-quote-scope>
         <Content components={{ Callout }} />
       </div>
       <div class="snippet__actions" data-pagefind-ignore>
@@ -126,6 +127,7 @@ const editUrl = `${site.repository}/edit/${site.defaultBranch}/content/snippets/
         </a>
       </div>
     </div>
+    <ReadingTools title={data.title} />
   </article>
 
   {related.length > 0 && (

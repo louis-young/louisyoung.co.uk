@@ -75,3 +75,29 @@ export const initHeadingLinks = (signal?: AbortSignal) => {
     { signal } as AddEventListenerOptions,
   );
 };
+
+/**
+ * Calls `load` once, the first time the reader selects text inside `scope`, saying whether the
+ * selection was made with the keyboard. Used to fetch the quote-sharing toolbar only for readers
+ * who select something.
+ */
+export const loadOnSelection = (scope: Element, load: (keyboard: boolean) => void, signal?: AbortSignal) => {
+  const controller = new AbortController();
+  signal?.addEventListener("abort", () => {
+    controller.abort();
+  });
+  const options = { signal: controller.signal, capture: true };
+  let keyboard = false;
+  document.addEventListener("keydown", () => (keyboard = true), options);
+  document.addEventListener("pointerdown", () => (keyboard = false), options);
+  document.addEventListener(
+    "selectionchange",
+    () => {
+      const selection = document.getSelection();
+      if (!selection || selection.isCollapsed || !scope.contains(selection.anchorNode)) return;
+      controller.abort();
+      load(keyboard);
+    },
+    options,
+  );
+};

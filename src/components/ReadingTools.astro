@@ -1,0 +1,189 @@
+---
+import { translatorFor } from "../i18n/astro";
+import { site } from "../site.config";
+import Icon from "./Icon.astro";
+
+interface Props {
+  /** The page's title, credited when a quote is copied. */
+  title: string;
+}
+
+const { title } = Astro.props;
+const t = translatorFor(Astro);
+---
+
+<!--
+  Progressive enhancements for long-form prose marked with data-quote-scope: heading links copy
+  their URL, and selected text can be shared as a text-fragment link or a Markdown quote.
+-->
+<p
+  class="visually-hidden"
+  role="status"
+  data-anchor-status
+  data-message={t("article.copied")}
+  data-copied-label={t("article.copiedShort")}
+></p>
+<p class="visually-hidden" role="status" data-quote-hint data-message={t("quote.instructions")}></p>
+
+<div
+  class="quote-toolbar"
+  role="toolbar"
+  aria-label={t("quote.toolbar")}
+  hidden
+  data-quote-toolbar
+  data-title={title}
+  data-attribution={t("quote.attribution", { author: site.author.name, title: "{title}" })}
+  data-pagefind-ignore
+>
+  <button type="button" class="quote-toolbar__button" data-quote-action="link" data-done={t("quote.linkCopied")}>
+    <Icon name="link" size={15} class="quote-toolbar__icon" />
+    <Icon name="check" size={15} class="quote-toolbar__done" />
+    <span>{t("quote.copyLink")}</span>
+  </button>
+  <span class="quote-toolbar__divider" aria-hidden="true"></span>
+  <button
+    type="button"
+    class="quote-toolbar__button"
+    data-quote-action="quote"
+    data-done={t("quote.quoteCopied")}
+    tabindex="-1"
+  >
+    <Icon name="quote" size={15} class="quote-toolbar__icon" />
+    <Icon name="check" size={15} class="quote-toolbar__done" />
+    <span>{t("quote.copyQuote")}</span>
+  </button>
+</div>
+
+<script>
+  import { initHeadingLinks, loadOnSelection } from "../scripts/reading";
+
+  initHeadingLinks();
+  const scope = document.querySelector<HTMLElement>("[data-quote-scope]");
+  if (scope) {
+    loadOnSelection(scope, (keyboard) => {
+      void import("../scripts/quote-share").then(({ initQuoteShare }) => {
+        initQuoteShare(scope, { keyboard });
+      });
+    });
+  }
+</script>
+
+<style>
+  .quote-toolbar {
+    --arrow-x: 50%;
+
+    position: absolute;
+    z-index: 15;
+    display: flex;
+    align-items: center;
+    gap: 0.125rem;
+    max-width: calc(100vw - 1rem);
+    padding: 0.25rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: 999px;
+    background: var(--paper-raised);
+    box-shadow: var(--shadow-raised);
+    color: var(--ink);
+    font: 500 var(--text-step--1) / 1 var(--sans);
+    white-space: nowrap;
+    animation: quote-toolbar-in var(--duration-base) var(--ease-out-expo);
+  }
+
+  /* A small notch pointing at the selection. */
+  .quote-toolbar::after {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    left: var(--arrow-x);
+    width: 0.6rem;
+    height: 0.6rem;
+    border-right: 1px solid var(--rule-strong);
+    border-bottom: 1px solid var(--rule-strong);
+    border-bottom-right-radius: 0.15rem;
+    background: inherit;
+    translate: -50% 0;
+    rotate: 45deg;
+  }
+
+  .quote-toolbar[data-placement="above"]::after {
+    inset-block-end: calc(-0.3rem - 1px);
+  }
+
+  .quote-toolbar[data-placement="below"]::after {
+    inset-block-start: calc(-0.3rem - 1px);
+    rotate: 225deg;
+  }
+
+  .quote-toolbar__button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-height: 2rem;
+    padding: 0.45rem 0.8rem;
+    border-radius: 999px;
+    color: inherit;
+    cursor: pointer;
+    transition:
+      background-color var(--duration-fast) ease,
+      color var(--duration-fast) ease;
+  }
+
+  .quote-toolbar__button:hover {
+    background: var(--paper-sunken);
+  }
+
+  .quote-toolbar__button:focus-visible {
+    outline-offset: 0;
+  }
+
+  .quote-toolbar__button :global(svg) {
+    flex: none;
+    color: var(--accent);
+  }
+
+  .quote-toolbar__button :global(.quote-toolbar__done),
+  .quote-toolbar__button[data-copied] :global(.quote-toolbar__icon) {
+    display: none;
+  }
+
+  .quote-toolbar__button[data-copied] :global(.quote-toolbar__done) {
+    display: block;
+  }
+
+  .quote-toolbar__divider {
+    align-self: stretch;
+    width: 1px;
+    margin-block: 0.35rem;
+    background: var(--rule);
+  }
+
+  /* The narrowest phones: tighter buttons so both still fit beside each other. */
+  @media (width < 24rem) {
+    .quote-toolbar__button {
+      gap: 0.35rem;
+      padding-inline: 0.6rem;
+    }
+  }
+
+  @keyframes quote-toolbar-in {
+    from {
+      opacity: 0;
+      scale: 0.96;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .quote-toolbar,
+    .quote-toolbar::after {
+      border-color: CanvasText;
+    }
+
+    .quote-toolbar__divider {
+      background: CanvasText;
+    }
+
+    .quote-toolbar__button :global(svg) {
+      color: ButtonText;
+    }
+  }
+</style>
