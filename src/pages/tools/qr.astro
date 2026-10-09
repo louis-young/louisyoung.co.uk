@@ -1,0 +1,421 @@
+---
+import PageHero from "../../components/sections/PageHero.astro";
+import ShareLink from "../../components/ShareLink.astro";
+import { useTranslations } from "../../i18n";
+import { localeOf } from "../../i18n/astro";
+import Base from "../../layouts/Base.astro";
+import { errorCorrectionLevels, recovery } from "../../lib/qr-tool";
+import { toolPageProps } from "../../lib/tool-catalogue";
+
+const t = useTranslations(localeOf(Astro));
+const sample = "https://louisyoung.co.uk/";
+const levels = errorCorrectionLevels.map((level) => ({
+  level,
+  label: t("tools.qr.levelOption").replace("{level}", level).replace("{percent}", String(recovery[level])),
+}));
+---
+
+<Base {...toolPageProps("qr", t)}>
+  <PageHero label={t("nav.tools")} title={t("tools.qr.title")} lede={t("tools.qr.summary")}>
+    <ShareLink />
+  </PageHero>
+  <div
+    class="container-page qr"
+    data-qr
+    data-copied={t("tools.copied")}
+    data-label={t("tools.qr.label")}
+    data-empty={t("tools.qr.empty")}
+    data-status-text={t("tools.qr.status")}
+    data-too-long={t("tools.qr.tooLong")}
+    data-modules-value={t("tools.qr.modulesValue")}
+    data-data-value={t("tools.qr.dataValue")}
+    data-contrast={t("tools.qr.contrast")}
+    data-low-contrast={t("tools.qr.lowContrast")}
+    data-inverted={t("tools.qr.inverted")}
+  >
+    <div class="qr__input card">
+      <label class="qr__label" for="qr-text">
+        {t("tools.qr.input")}
+      </label>
+      <textarea
+        id="qr-text"
+        class="qr__area"
+        rows="4"
+        spellcheck="false"
+        autocomplete="off"
+        autocapitalize="off"
+        aria-describedby="qr-hint"
+        data-text
+        data-share="text"
+      >{sample}</textarea>
+      <p id="qr-hint" class="qr__hint">
+        {t("tools.qr.hint")}
+      </p>
+
+      <fieldset class="qr__group">
+        <legend class="qr__label">{t("tools.qr.level")}</legend>
+        <div class="qr__segments">
+          {levels.map(({ level, label }) => (
+            <label class="qr__segment">
+              <input
+                type="radio"
+                name="qr-level"
+                value={level}
+                checked={level === "M"}
+                aria-describedby="qr-level-hint"
+                data-level
+                data-share="level"
+              />
+              <span>{label}</span>
+            </label>
+          ))}
+        </div>
+        <p id="qr-level-hint" class="qr__hint">
+          {t("tools.qr.levelHint")}
+        </p>
+      </fieldset>
+
+      <fieldset class="qr__group">
+        <legend class="qr__label">{t("tools.qr.colours")}</legend>
+        <div class="qr__colours">
+          <div class="qr__colour">
+            <input
+              id="qr-foreground"
+              type="color"
+              value="#000000"
+              aria-describedby="qr-contrast"
+              data-foreground
+              data-share="fg"
+            />
+            <label for="qr-foreground">{t("tools.qr.foreground")}</label>
+            <code data-foreground-value>#000000</code>
+          </div>
+          <div class="qr__colour">
+            <input
+              id="qr-background"
+              type="color"
+              value="#ffffff"
+              aria-describedby="qr-contrast"
+              data-background
+              data-share="bg"
+            />
+            <label for="qr-background">{t("tools.qr.background")}</label>
+            <code data-background-value>#ffffff</code>
+          </div>
+        </div>
+        <p id="qr-contrast" class="qr__contrast" aria-live="polite" data-contrast-note></p>
+      </fieldset>
+    </div>
+
+    <section class="qr__result card" aria-labelledby="qr-preview">
+      <h2 id="qr-preview" class="label">
+        {t("tools.qr.preview")}
+      </h2>
+      <div class="qr__canvas" data-preview></div>
+      <p id="qr-status" class="qr__status" role="status" data-status></p>
+      <dl class="qr__stats" data-stats>
+        <div>
+          <dt>{t("tools.qr.version")}</dt>
+          <dd data-stat="version"></dd>
+        </div>
+        <div>
+          <dt>{t("tools.qr.modules")}</dt>
+          <dd data-stat="modules"></dd>
+        </div>
+        <div>
+          <dt>{t("tools.qr.data")}</dt>
+          <dd data-stat="data"></dd>
+        </div>
+        <div>
+          <dt>{t("tools.qr.mask")}</dt>
+          <dd data-stat="mask"></dd>
+        </div>
+      </dl>
+      <div class="qr__actions">
+        <button type="button" class="button button--primary button--small" data-download-svg>
+          {t("tools.qr.downloadSvg")}
+        </button>
+        <button type="button" class="button button--small" data-download-png>
+          {t("tools.qr.downloadPng")}
+        </button>
+        <button type="button" class="button button--small" data-copy-svg>
+          <span data-copy-label>{t("tools.qr.copySvg")}</span>
+        </button>
+      </div>
+    </section>
+  </div>
+</Base>
+
+<script>
+  import { initQr } from "../../scripts/tool-qr";
+  import { initShareLink } from "../../scripts/share-link";
+
+  initQr();
+  initShareLink();
+</script>
+
+<style>
+  .qr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 1rem;
+    align-items: start;
+    padding-block-end: var(--spacing-section);
+  }
+
+  .qr > .card {
+    display: grid;
+    gap: 0.75rem;
+    min-width: 0;
+    padding: clamp(1.25rem, 1rem + 1vw, 2rem);
+  }
+
+  .qr__label {
+    font-weight: 500;
+    font-size: var(--text-step--1);
+  }
+
+  .qr__area {
+    width: 100%;
+    min-width: 0;
+    min-height: 7rem;
+    padding: 0.8rem 1rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+    color: var(--ink);
+    font: 400 var(--text-step--1) / 1.6 var(--mono);
+    overflow-wrap: anywhere;
+    resize: vertical;
+  }
+
+  .qr__hint {
+    color: var(--ink-muted);
+    font-size: var(--text-step--1);
+  }
+
+  .qr__group {
+    display: grid;
+    gap: 0.5rem;
+    min-width: 0;
+    margin: 0;
+    margin-block-start: 0.5rem;
+    padding: 1.25rem 0 0;
+    border: 0;
+    border-block-start: 1px solid var(--rule);
+  }
+
+  /* Floating the legend lays it out inside the fieldset rather than across its border. */
+  .qr__group > legend {
+    float: left;
+    width: 100%;
+    padding: 0;
+  }
+
+  .qr__segments {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    padding: 0.2rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+  }
+
+  .qr__segment {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-height: 2.5rem;
+    padding-inline: 0.25rem;
+    border-radius: calc(var(--radius-sm) - 0.15rem);
+    font: 500 var(--text-step--1) / 1.2 var(--mono);
+    text-align: center;
+    cursor: pointer;
+  }
+
+  .qr__segment input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .qr__segment:has(input:checked) {
+    background: var(--accent-soft);
+    color: var(--ink);
+    box-shadow: inset 0 0 0 1px var(--accent);
+  }
+
+  .qr__segment:has(input:focus-visible) {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .qr__colours {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+
+  .qr__colour {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    column-gap: 0.75rem;
+    align-items: center;
+    min-width: 0;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+  }
+
+  .qr__colour input {
+    grid-row: span 2;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: none;
+    cursor: pointer;
+  }
+
+  .qr__colour input:focus-visible,
+  .qr__area:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .qr__colour label {
+    font-weight: 500;
+    font-size: var(--text-step--1);
+  }
+
+  .qr__colour code {
+    color: var(--ink-muted);
+    font: 500 var(--text-step--2) / 1.4 var(--mono);
+  }
+
+  .qr__contrast {
+    color: var(--ink-muted);
+    font-size: var(--text-step--1);
+  }
+
+  .qr__contrast[data-warning] {
+    padding: 0.6rem 0.9rem;
+    border-radius: var(--radius-sm);
+    background: var(--warning-soft);
+    color: var(--ink);
+  }
+
+  .qr__canvas {
+    display: grid;
+    place-items: center;
+    min-height: 12rem;
+    padding: 1rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-md);
+    background: var(--paper-sunken);
+  }
+
+  .qr__canvas :global(svg) {
+    display: block;
+    width: min(100%, 22rem);
+    height: auto;
+    aspect-ratio: 1;
+    border-radius: var(--radius-sm);
+  }
+
+  .qr__status {
+    padding: 0.6rem 0.9rem;
+    border-radius: var(--radius-sm);
+    background: var(--accent-soft);
+    color: var(--ink);
+    font-size: var(--text-step--1);
+    overflow-wrap: anywhere;
+  }
+
+  .qr__status[data-invalid] {
+    background: var(--warning-soft);
+  }
+
+  .qr__stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+  }
+
+  .qr__stats div {
+    display: grid;
+    gap: 0.2rem;
+    min-width: 0;
+    padding: 0.6rem 0.75rem;
+  }
+
+  .qr__stats div + div {
+    border-inline-start: 1px solid var(--rule);
+  }
+
+  .qr__stats dt {
+    color: var(--ink-faint);
+    font: 500 var(--text-step--2) / 1.2 var(--mono);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .qr__stats dd {
+    font: 600 var(--text-step--1) / 1.3 var(--mono);
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+  }
+
+  .qr__stats[hidden] {
+    display: none;
+  }
+
+  .qr__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  @media (forced-colors: active) {
+    .qr__segment:has(input:checked) {
+      outline: 2px solid Highlight;
+    }
+  }
+
+  @media (width < 56rem) {
+    .qr {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  @media (width < 34rem) {
+    .qr__segment {
+      font-size: var(--text-step--2);
+    }
+
+    .qr__colours {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .qr__stats {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .qr__stats div:nth-child(3) {
+      border-inline-start: 0;
+    }
+
+    .qr__stats div:nth-child(n + 3) {
+      border-block-start: 1px solid var(--rule);
+    }
+  }
+</style>

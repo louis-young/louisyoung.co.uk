@@ -20,7 +20,7 @@ const markup = `
     <select data-share="indent"><option value="2">2</option><option value="4">4</option></select>
     <output data-result></output>
   </div>
-  <button type="button" data-share-link data-copied="Copied" data-manual="Copy it by hand"
+  <button type="button" disabled data-share-link data-copied="Copied" data-manual="Copy it by hand"
     data-too-long="Too long" data-restored="Restored"></button>
   <p role="status" data-share-status></p>`;
 
@@ -129,6 +129,13 @@ describe("share link DOM helper", () => {
     expect(get("[data-share-status]").hasAttribute("data-error")).toBe(true);
     expect(writeText).not.toHaveBeenCalled();
     expect(window.location.hash).toBe("");
+  });
+
+  it("keeps the button disabled until its click handler is attached", () => {
+    document.body.innerHTML = markup;
+    expect(get("[data-share-link]")).toHaveProperty("disabled", true);
+    initShareLink();
+    expect(get("[data-share-link]")).toHaveProperty("disabled", false);
   });
 
   it("does nothing on a page without the button", () => {
