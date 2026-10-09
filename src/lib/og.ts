@@ -78,6 +78,20 @@ const label = (text: string) =>
     text,
   );
 
+/**
+ * Satori wraps every CSS gradient in a mask of plain white covering the whole canvas. Such a mask
+ * changes nothing, but resvg composites it at full size, which made each card take ~770 ms of the
+ * build instead of ~150 ms (see docs/performance-audit.md). Only masks covering the full canvas go.
+ */
+export const withoutCanvasMasks = (svg: string, width: number, height: number) => {
+  const canvas = new RegExp(
+    `<mask id="([^"]+)"><rect x="0" y="0" width="${width}" height="${height}" fill="#fff"/></mask>`,
+    "g",
+  );
+  const ids = new Set(Array.from(svg.matchAll(canvas), ([, id]) => id));
+  return svg.replace(/ mask="url\(#([^)"]+)\)"/g, (attribute, id: string) => (ids.has(id) ? "" : attribute));
+};
+
 export const cardSvg = async ({ title, eyebrow }: { title: string; eyebrow: string }) =>
   satori(
     h(
@@ -118,7 +132,7 @@ export const cardSvg = async ({ title, eyebrow }: { title: string; eyebrow: stri
       ],
     ) as never,
     { width: 1200, height: 630, fonts: await loadFonts() },
-  );
+  ).then((svg) => withoutCanvasMasks(svg, 1200, 630));
 
 export const svgToPng = (svg: string, width: number) =>
   new Resvg(svg, { fitTo: { mode: "width", value: width } }).render().asPng();

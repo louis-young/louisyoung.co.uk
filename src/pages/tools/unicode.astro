@@ -5,7 +5,15 @@ import { useTranslations } from "../../i18n";
 import { localeOf } from "../../i18n/astro";
 import Base from "../../layouts/Base.astro";
 import { toolPageProps } from "../../lib/tool-catalogue";
-import { normalisationForms } from "../../lib/unicode-tool";
+import {
+  counts,
+  type FlagKind,
+  flagSummary,
+  graphemes,
+  mixedScriptWords,
+  normalisationForms,
+  normalise,
+} from "../../lib/unicode-tool";
 
 const t = useTranslations(localeOf(Astro));
 // The tricky characters are code points, so they stay visible in the source: a combining acute
@@ -14,6 +22,32 @@ const t = useTranslations(localeOf(Astro));
 const sample = ["Cafe", 0x301, " 👩🏽", 0x200d, "💻 p", 0x430, "y", "pal", 0x200b, ".com ", 0xfb01, "le", 0xa0, "🇬🇧"]
   .map((part) => (typeof part === "number" ? String.fromCodePoint(part) : part))
   .join("");
+
+// The results for the sample are rendered here too, so the page doesn't shift when the script
+// fills them in. This mirrors update() in src/scripts/tool-unicode.ts.
+const clusters = graphemes(sample);
+const total = counts(sample, clusters);
+const summary = flagSummary(clusters);
+const flagMessages = {
+  invisible: "tools.unicode.invisible",
+  bidi: "tools.unicode.bidi",
+  space: "tools.unicode.space",
+  confusable: "tools.unicode.confusable",
+  control: "tools.unicode.control",
+} as const satisfies Record<FlagKind, string>;
+const issues = (Object.keys(flagMessages) as FlagKind[]).filter((kind) => summary[kind] > 0);
+const mixed = [...new Set(mixedScriptWords(sample))];
+const checkItems = [
+  ...issues.map((kind) => t(flagMessages[kind], { count: summary[kind] })),
+  ...(mixed.length > 0 ? [t("tools.unicode.mixed", { words: mixed.join(", ") })] : []),
+];
+const flagged = issues.reduce((sum, kind) => sum + summary[kind], 0);
+const statusText = t("tools.unicode.status", {
+  graphemes: total.graphemes.toLocaleString("en-GB"),
+  codePoints: total.codePoints.toLocaleString("en-GB"),
+  issues: flagged > 0 ? t("tools.unicode.statusIssues", { count: flagged }) : t("tools.unicode.statusClean"),
+});
+const forms = new Map(normalise(sample).map((form) => [form.form, form]));
 const categories = {
   Lu: t("tools.unicode.gc.Lu"),
   Ll: t("tools.unicode.gc.Ll"),
@@ -51,7 +85,7 @@ const stats = [
   { key: "codePoints", label: t("tools.unicode.codePoints") },
   { key: "graphemes", label: t("tools.unicode.graphemes") },
   { key: "utf8", label: t("tools.unicode.utf8") },
-];
+] as const;
 ---
 
 <Base {...toolPageProps("unicode", t)}>
@@ -98,7 +132,9 @@ const stats = [
           data-input
           data-share="text"
         >{sample}</textarea>
-        <p id="uni-status" class="uni__status" role="status" data-status></p>
+        <p id="uni-status" class="uni__status" role="status" data-status data-invalid={flagged > 0 ? "" : undefined}>
+          {statusText}
+        </p>
         <section class="uni__section" aria-labelledby="uni-counts">
           <h2 id="uni-counts" class="label">
             {t("tools.unicode.counts")}
@@ -107,7 +143,7 @@ const stats = [
             {stats.map((stat) => (
               <div>
                 <dt>{stat.label}</dt>
-                <dd data-count={stat.key} />
+                <dd data-count={stat.key}>{total[stat.key].toLocaleString("en-GB")}</dd>
               </div>
             ))}
           </dl>
@@ -119,7 +155,13 @@ const stats = [
           <h2 id="uni-checks" class="label">
             {t("tools.unicode.checks")}
           </h2>
-          <ul class="uni__checks" role="list" data-checks></ul>
+          <ul class="uni__checks" role="list" data-checks>
+            {checkItems.length > 0 ? (
+              checkItems.map((item) => <li>{item}</li>)
+            ) : (
+              <li data-clean>{t("tools.unicode.clean")}</li>
+            )}
+          </ul>
         </section>
 
         <section class="uni__card card" aria-labelledby="uni-forms">
@@ -139,10 +181,14 @@ const stats = [
                 <tr data-form={form}>
                   <th scope="row">{form}</th>
                   <td>
-                    <span class="uni__verdict" data-verdict />
-                    <code class="uni__normalised" data-text />
+                    <span class="uni__verdict" data-verdict data-changed={forms.get(form)?.changed ? "" : undefined}>
+                      {t(forms.get(form)?.changed ? "tools.unicode.differs" : "tools.unicode.same")}
+                    </span>
+                    <code class="uni__normalised" data-text>
+                      {forms.get(form)?.text}
+                    </code>
                   </td>
-                  <td data-length />
+                  <td data-length>{forms.get(form)?.codePoints.toLocaleString("en-GB")}</td>
                 </tr>
               ))}
             </tbody>

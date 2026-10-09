@@ -36,8 +36,10 @@ export const initCssGenerator = (root: ParentNode = document) => {
   const output = tool.querySelector<HTMLElement>("[data-output]")!;
   const announce = tool.querySelector<HTMLElement>("[data-announce]")!;
   const copy = tool.querySelector<HTMLButtonElement>("[data-copy]")!;
-  const layerTemplate = tool.querySelector<HTMLTemplateElement>("[data-layer-template]")!;
-  const stopTemplate = tool.querySelector<HTMLTemplateElement>("[data-stop-template]")!;
+  // The page renders the default layers and stops, so nothing shifts when the script takes over;
+  // the first of each is the pattern for every item rendered from then on.
+  const layerTemplate = layersList.querySelector<HTMLElement>("fieldset")!.cloneNode(true) as HTMLElement;
+  const stopTemplate = stopsList.querySelector<HTMLElement>("fieldset")!.cloneNode(true) as HTMLElement;
   const message = (key: string) => tool.dataset[key] ?? "";
   const layers: ShadowLayer[] = defaultLayers();
   const gradient: Gradient = defaultGradient();
@@ -52,12 +54,11 @@ export const initCssGenerator = (root: ParentNode = document) => {
     addStop.disabled = gradient.stops.length >= maxStops;
   };
 
-  /** Builds one fieldset per item from a template, filling in its name and values. */
-  const render = (list: HTMLElement, template: HTMLTemplateElement, items: Item[], nameKey: string) => {
+  /** Builds one fieldset per item from a pattern, filling in its name and values. */
+  const render = (list: HTMLElement, template: HTMLElement, items: Item[], nameKey: string) => {
     list.replaceChildren(
       ...items.map((item, i) => {
-        const fragment = template.content.cloneNode(true) as DocumentFragment;
-        const fieldset = fragment.firstElementChild as HTMLElement;
+        const fieldset = template.cloneNode(true) as HTMLElement;
         for (const name of fieldset.querySelectorAll("[data-name]")) {
           name.textContent = fill(message(nameKey), { number: i + 1 });
         }

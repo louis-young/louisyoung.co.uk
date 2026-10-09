@@ -4,7 +4,7 @@ import ShareLink from "../../components/ShareLink.astro";
 import { useTranslations } from "../../i18n";
 import { localeOf } from "../../i18n/astro";
 import Base from "../../layouts/Base.astro";
-import { MAX_EXPANSIONS } from "../../lib/glob-tool";
+import { MAX_EXPANSIONS, matchPaths } from "../../lib/glob-tool";
 import { toolPageProps } from "../../lib/tool-catalogue";
 
 const t = useTranslations(localeOf(Astro));
@@ -18,6 +18,9 @@ const paths = [
   "test/setup.ts",
   "README.md",
 ].join("\n");
+// The default results are rendered here too, so the page doesn't shift when the script fills them in.
+const initial = matchPaths(pattern, paths);
+const matched = initial.matches.filter((match) => match.matched).length;
 ---
 
 <Base {...toolPageProps("glob", t)}>
@@ -98,8 +101,17 @@ const paths = [
         <h2 id="glob-results" class="label">
           {t("tools.glob.results")}
         </h2>
-        <p id="glob-status" class="glob__status" role="status" data-status></p>
-        <ul class="glob__list" role="list" data-list></ul>
+        <p id="glob-status" class="glob__status" role="status" data-status>
+          {t("tools.glob.matchCount", { matched, total: initial.matches.length })}
+        </p>
+        <ul class="glob__list" role="list" data-list>
+          {initial.matches.map((match) => (
+            <li data-matched={match.matched ? "" : undefined}>
+              <code>{match.path}</code>
+              <span class="glob__badge">{t(match.matched ? "tools.glob.match" : "tools.glob.noMatch")}</span>
+            </li>
+          ))}
+        </ul>
       </section>
 
       <section class="glob__card card" aria-labelledby="glob-regex">
@@ -112,7 +124,9 @@ const paths = [
             <span class="visually-hidden">{t("tools.glob.regex")}</span>
           </button>
         </div>
-        <code class="glob__regex" data-regex></code>
+        <code class="glob__regex" data-regex>
+          {initial.result.ok ? String(initial.result.regex) : ""}
+        </code>
         <p class="glob__note" data-negated hidden>
           {t("tools.glob.negated")}
         </p>
