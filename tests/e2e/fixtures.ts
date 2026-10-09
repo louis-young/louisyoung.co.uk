@@ -84,7 +84,7 @@ export const test = base.extend<{ consoleErrors: string[] }>({
       // navigates before the prefetch finishes. The navigation itself is unaffected.
       const isTeardownNoise = (text: string) =>
         text.startsWith("Transition was aborted because of invalid state") ||
-        /\/\/localhost:\d+\/\S* due to access control checks\.$/u.test(text);
+        /\/localhost:\d+\/\S* due to access control checks\.$/u.test(text);
       page.on("console", (message) => {
         if (message.type() === "error" && !isTeardownNoise(message.text())) errors.push(message.text());
       });
