@@ -68,6 +68,24 @@ test.describe("forced colours", () => {
   }
 });
 
+test.describe("not obscured by the sticky header (WCAG 2.4.11)", () => {
+  // The header is taller on narrow screens, where its navigation wraps onto a second row, so the
+  // page's scroll padding has to grow with it or anything scrolled to the top lands underneath it.
+  for (const width of [390, 1280]) {
+    test(`at ${width}px, a control scrolled to the top stays clear of the header`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 700 });
+      await page.goto("/tools/diff/");
+      const gap = await page.getByRole("radio", { name: "Side by side" }).evaluate((radio) => {
+        radio.scrollIntoView({ block: "start" });
+        const header = document.querySelector(".site-header")?.getBoundingClientRect();
+        return header ? radio.getBoundingClientRect().top - header.bottom : null;
+      });
+      expect(gap).not.toBeNull();
+      expect(gap).toBeGreaterThanOrEqual(0);
+    });
+  }
+});
+
 test.describe("target size (WCAG 2.5.8)", () => {
   const keyPages = [
     "/",
