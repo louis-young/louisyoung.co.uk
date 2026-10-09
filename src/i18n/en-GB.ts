@@ -1088,7 +1088,8 @@ export const enGB = {
   "tools.password.titleWords": "Capitalised",
   "tools.password.upperWords": "UPPER CASE",
   "tools.password.digit": "Add a digit to one word",
-  "tools.password.wordlist": "Words come from the EFF’s short wordlist of 1,296, so each adds about 10.3 bits.",
+  "tools.password.wordlist":
+    "Words come from the Electronic Frontier Foundation’s short wordlist of 1,296 (CC BY 3.0 US), so each adds about 10.3 bits.",
   "tools.password.count": "How many",
   "tools.password.generate": "Generate",
   "tools.password.copyAll": "Copy all",
