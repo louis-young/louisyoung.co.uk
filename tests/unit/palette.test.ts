@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { moveIndex, rankCommands, sameOriginPath, scoreCommand } from "../../src/lib/palette";
+import {
+  moveIndex,
+  paletteTextKeys,
+  parsePaletteIndex,
+  rankCommands,
+  sameOriginPath,
+  scoreCommand,
+} from "../../src/lib/palette";
 
 const commands = [
   { title: "Home" },
@@ -65,5 +72,47 @@ describe("sameOriginPath", () => {
     ["http://[", undefined],
   ])("resolves %j to %j", (href, expected) => {
     expect(sameOriginPath(href, origin)).toBe(expected);
+  });
+});
+
+describe("parsePaletteIndex", () => {
+  const text = Object.fromEntries(paletteTextKeys.map((key) => [key, key]));
+  const valid = {
+    groups: [
+      {
+        id: "pages",
+        options: [
+          { title: "Home", href: "/", hint: "/" },
+          { title: "Theme", action: "theme" },
+        ],
+      },
+    ],
+    text,
+    answers: { hex: "Hex", cron: { at: "At {times}" } },
+  };
+
+  it("accepts the index the build writes", () => {
+    expect(parsePaletteIndex(valid)).toBe(valid);
+    expect(parsePaletteIndex({ ...valid, groups: [] })).toBeDefined();
+  });
+
+  it.each([
+    ["nothing", undefined],
+    ["an array", []],
+    ["no groups", { ...valid, groups: undefined }],
+    ["a group without an id", { ...valid, groups: [{ options: [] }] }],
+    ["a group without options", { ...valid, groups: [{ id: "pages" }] }],
+    ["an option without a title", { ...valid, groups: [{ id: "pages", options: [{ href: "/" }] }] }],
+    ["an option with a non-string field", { ...valid, groups: [{ id: "pages", options: [{ title: "A", href: 1 }] }] }],
+    [
+      "an option with an unknown field",
+      { ...valid, groups: [{ id: "pages", options: [{ title: "A", onclick: "x" }] }] },
+    ],
+    ["missing text", { ...valid, text: { answer: "Answer" } }],
+    ["no answers", { ...valid, answers: undefined }],
+    ["answers without cron", { ...valid, answers: { hex: "Hex" } }],
+    ["a non-string answer label", { ...valid, answers: { hex: 1, cron: {} } }],
+  ])("rejects %s", (_name, value) => {
+    expect(parsePaletteIndex(value)).toBeUndefined();
   });
 });

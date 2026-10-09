@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { encodeShareState, SHARE_PREFIX } from "../../src/lib/share-state";
-import { applyShareState, initShareLink, readShareState } from "../../src/scripts/share-link";
+import { decodeShareState, encodeShareState, SHARE_PREFIX } from "../../src/lib/share-state";
+import { applyShareState, initShareLink, readShareState, sharePath } from "../../src/scripts/share-link";
 
 afterEach(() => {
   document.body.innerHTML = "";
@@ -143,5 +143,17 @@ describe("share link DOM helper", () => {
     expect(() => {
       initShareLink();
     }).not.toThrow();
+  });
+});
+
+describe("sharePath", () => {
+  it("links to a tool with its inputs in the fragment", () => {
+    const href = sharePath("/tools/cron/", { expression: "0 9 * * 1-5" });
+    expect(href.startsWith(`/tools/cron/${SHARE_PREFIX}`)).toBe(true);
+    expect(decodeShareState(href.slice("/tools/cron/".length))).toEqual({ expression: "0 9 * * 1-5" });
+  });
+
+  it("falls back to the plain path when the state is too long to share", () => {
+    expect(sharePath("/tools/specificity/", { selectors: "a".repeat(5000) })).toBe("/tools/specificity/");
   });
 });

@@ -58,6 +58,15 @@ export const applyShareState = (state: ShareState, root: ParentNode = document) 
 };
 
 /**
+ * `path` with `state` as its share fragment, so the tool there opens prefilled; the plain path
+ * when the state is too long to share. The ⌘K palette's quick answers link to tools with it.
+ */
+export const sharePath = (path: string, state: ShareState) => {
+  const result = encodeShareState(state);
+  return result.ok ? `${path}${result.hash}` : path;
+};
+
+/**
  * The "Copy share link" button (`ShareLink.astro`). Call it after the tool itself has started, so
  * the inputs restored from the link's fragment update the tool. The state only ever lives in the
  * fragment: see `src/lib/share-state.ts` for why it must never go in the query string.
