@@ -23,6 +23,7 @@ export const reservedSlugs = [
   "changelog.xml",
   "colophon",
   "accessibility",
+  "snippets",
 ];
 
 const articles = defineCollection({
@@ -74,6 +75,35 @@ const work = defineCollection({
   }),
 });
 
+/** Languages a snippet can be filed under. Its code blocks may use others too. */
+export const snippetLanguages = ["ts", "tsx", "js", "css", "html", "bash", "sql", "json"] as const;
+
+/** Frontmatter for a code snippet. Exported so the content tests validate against the same rules. */
+export const snippetSchema = z
+  .object({
+    title: z.string().min(10).max(70),
+    description: z.string().min(50).max(240),
+    /** The main language, shown as a chip and used by the language filter. */
+    language: z.enum(snippetLanguages),
+    tags: z
+      .array(z.string().regex(/^[a-z0-9-]+$/u))
+      .min(1)
+      .max(4),
+    date: z.coerce.date(),
+    updated: z.coerce.date().optional(),
+    draft: z.boolean().default(false),
+  })
+  .refine((data) => !data.updated || data.updated >= data.date, {
+    message: "`updated` must not be before `date`",
+    path: ["updated"],
+  });
+
+/** Short, copy-pasteable code snippets, at `/snippets/<slug>/`. */
+const snippets = defineCollection({
+  loader: glob({ pattern: "*/index.mdx", base: "./content/snippets", generateId: ({ entry }) => entry.split("/")[0]! }),
+  schema: snippetSchema,
+});
+
 /** Standalone pages written in MDX: `/now/` and `/uses/`. */
 const pages = defineCollection({
   loader: glob({ pattern: "*.mdx", base: "./content/pages" }),
@@ -86,4 +116,4 @@ const pages = defineCollection({
   }),
 });
 
-export const collections = { articles, work, pages };
+export const collections = { articles, work, pages, snippets };

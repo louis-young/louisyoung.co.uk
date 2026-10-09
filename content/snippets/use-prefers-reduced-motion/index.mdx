@@ -1,0 +1,66 @@
+---
+title: "A usePrefersReducedMotion hook"
+description: "Read prefers-reduced-motion (or any media query) in React with useSyncExternalStore: no effect, no flash of the wrong value, safe on the server, and live when the setting changes."
+language: "ts"
+tags: ["react", "hooks", "accessibility"]
+date: "2026-09-30"
+draft: false
+---
+
+Most motion preferences belong in CSS, in a `prefers-reduced-motion` media query. Some don't: smooth scrolling started from JavaScript, a canvas animation, or a library that takes a `duration` option. For those, read the media query in React. `useSyncExternalStore` is the right primitive: the browser owns the value, React subscribes to it.
+
+```ts title="use-media-query.ts"
+import { useCallback, useSyncExternalStore } from "react";
+
+export function useMediaQuery(query: string, serverValue = false): boolean {
+  const subscribe = useCallback(
+    (onChange: () => void) => {
+      const list = window.matchMedia(query);
+      list.addEventListener("change", onChange);
+      return () => list.removeEventListener("change", onChange);
+    },
+    [query],
+  );
+
+  return useSyncExternalStore(
+    subscribe,
+    () => window.matchMedia(query).matches,
+    () => serverValue,
+  );
+}
+
+/** True when the user has asked for less motion. Assumes so on the server, to be safe. */
+export function usePrefersReducedMotion(): boolean {
+  return useMediaQuery("(prefers-reduced-motion: reduce)", true);
+}
+```
+
+```tsx title="back-to-top.tsx"
+import { usePrefersReducedMotion } from "./use-media-query";
+
+export function BackToTop() {
+  const reduceMotion = usePrefersReducedMotion();
+
+  return (
+    <button
+      type="button"
+      onClick={() => window.scrollTo({ top: 0, behavior: reduceMotion ? "instant" : "smooth" })}
+    >
+      Back to top
+    </button>
+  );
+}
+```
+
+## Why it works
+
+`useSyncExternalStore` takes three functions: one to subscribe to changes, one to read the current value, and one to read it during server rendering and hydration. React reads the snapshot during render, so the very first client render already has the right answer. A `useState` plus `useEffect` version renders the wrong value first and corrects it a frame later, which is exactly the flash of animation you were trying to avoid.
+
+The `change` listener keeps it live: toggle "Reduce motion" in the operating system's settings and every component using the hook re-renders.
+
+## Gotchas
+
+- Keep `subscribe` stable. A new function on every render makes React unsubscribe and subscribe again each time, which is why it's wrapped in `useCallback`.
+- During hydration React uses the server value, then re-renders if the real one differs. Choose the server value that's safe when wrong: for motion, assume it's reduced.
+- Prefer CSS where you can. `@media (prefers-reduced-motion: reduce)` needs no JavaScript and can't run late.
+- Reduced motion means less motion, not none. Swap a large slide for a quick fade rather than removing every transition.

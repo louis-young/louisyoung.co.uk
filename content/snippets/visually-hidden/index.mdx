@@ -1,0 +1,63 @@
+---
+title: "A visually hidden utility class"
+description: "Hide text from sight but keep it for screen readers, with a focusable variant for skip links. The modern clip-path version, and why each declaration is there."
+language: "css"
+tags: ["css", "accessibility"]
+date: "2026-09-27"
+draft: false
+---
+
+Icon-only buttons, form hints and live regions often need text that screen readers announce but nobody sees. `display: none` and the `hidden` attribute remove content from the accessibility tree too, so they're the wrong tool. This class keeps it in the tree and takes it out of view.
+
+```css title="visually-hidden.css"
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  margin: -1px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  clip-path: inset(50%) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* For skip links and the like: hidden until focused, then shown in place. */
+.visually-hidden-focusable:not(:focus, :focus-within) {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  margin: -1px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  clip-path: inset(50%) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+```
+
+```html title="close-button.html"
+<button type="button" class="icon-button">
+  <svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 16 16">
+    <path d="M3 3l10 10M13 3 3 13" stroke="currentColor" stroke-width="2" />
+  </svg>
+  <span class="visually-hidden">Close dialog</span>
+</button>
+
+<a class="visually-hidden-focusable" href="#main">Skip to content</a>
+```
+
+## Why it works
+
+- **`position: absolute`** takes the element out of the flow, so it doesn't leave a gap.
+- **1px by 1px with `overflow: hidden`** keeps a real, non-zero box. Some screen readers skip elements with no size at all.
+- **`clip-path: inset(50%)`** clips that last pixel away. It replaces the deprecated `clip: rect(0 0 0 0)`.
+- **`white-space: nowrap`** stops the text wrapping inside its 1px box. Wrapped text can be read as one run-together word.
+- **`!important`** is deliberate: a utility that only works sometimes is worse than none, so nothing should override it by accident.
+
+## Gotchas
+
+- Don't use it to hide something focusable, except with the focusable variant. A sighted keyboard user would tab to an invisible control.
+- An `aria-label` is often simpler for a single control, but visually hidden text is real content, so in-browser translation tools translate it reliably, which isn't true of every attribute.
+- If the hidden text duplicates something visible, screen reader users hear it twice. Hide the decorative copy with `aria-hidden="true"` instead.
+- The class makes its element absolutely positioned, so put it on a `<span>` wrapped around the text, not on a table cell, list item or anything else the layout depends on.

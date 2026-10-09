@@ -11,12 +11,13 @@ interface Item {
 interface Props {
   work: readonly Item[];
   articles: readonly Item[];
+  snippets?: readonly Item[];
   /** Pages hidden from the navigation while they are drafts. */
   hidden?: readonly string[];
 }
 
 const t = translatorFor(Astro);
-const { work, articles, hidden = [] } = Astro.props;
+const { work, articles, snippets = [], hidden = [] } = Astro.props;
 
 interface Option {
   title: string;
@@ -36,6 +37,7 @@ const groups: { id: string; label: string; options: Option[] }[] = [
       { title: t("nav.home"), href: "/", hint: "/" },
       { title: t("nav.work"), href: "/work/", hint: "/work" },
       { title: t("nav.writing"), href: "/writing/", hint: "/writing" },
+      { title: t("nav.snippets"), href: "/snippets/", hint: "/snippets", keywords: "code copy paste toolbox" },
       { title: t("nav.hire"), href: "/hire/", hint: "/hire" },
       { title: t("nav.cv"), href: "/cv/", hint: "/cv" },
       { title: t("nav.now"), href: "/now/", hint: "/now" },
@@ -120,7 +122,8 @@ const groups: { id: string; label: string; options: Option[] }[] = [
   },
   { id: "work", label: t("palette.work"), options: work.map((item) => ({ ...item })) },
   { id: "writing", label: t("palette.writing"), options: articles.map((item) => ({ ...item })) },
-];
+  { id: "snippets", label: t("palette.snippets"), options: snippets.map((item) => ({ ...item })) },
+].filter((group) => group.options.length > 0);
 ---
 
 <dialog

@@ -10,11 +10,17 @@ export const workSlugs = readdirSync(new URL("../../content/work/", import.meta.
   .filter((entry) => entry.isDirectory())
   .map((entry) => entry.name);
 
+export const snippetSlugs = readdirSync(new URL("../../content/snippets/", import.meta.url), { withFileTypes: true })
+  .filter((entry) => entry.isDirectory())
+  .map((entry) => entry.name);
+
 export const pages = [
   "/",
   "/work/",
   ...workSlugs.map((slug) => `/work/${slug}/`),
   "/writing/",
+  "/snippets/",
+  ...snippetSlugs.map((slug) => `/snippets/${slug}/`),
   "/hire/",
   "/cv/",
   "/now/",

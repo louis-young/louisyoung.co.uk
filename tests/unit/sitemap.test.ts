@@ -27,12 +27,17 @@ describe("content index", () => {
     expect(contentPath("articles", "a")).toBe("/a/");
     expect(contentPath("pages", "now")).toBe("/now/");
     expect(contentPath("work", "b")).toBe("/work/b/");
+    expect(contentPath("snippets", "c")).toBe("/snippets/c/");
   });
 
-  it("indexes articles, case studies and pages", () => {
+  it("indexes articles, case studies, snippets and pages", () => {
     expect(index.get("/why-functional-state-updates-are-important/")?.lastmod).toBeInstanceOf(Date);
     expect(index.has("/now/")).toBe(true);
     expect([...index.keys()].some((path) => path.startsWith("/work/"))).toBe(true);
+    expect(index.get("/snippets/exhaustive-switch/")).toEqual({
+      lastmod: new Date("2026-09-14T00:00:00Z"),
+      draft: false,
+    });
   });
 
   it("lists published pages and keeps drafts and the design page out", () => {

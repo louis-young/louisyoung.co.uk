@@ -25,6 +25,7 @@ words:
   - checkly
   - claudecode
   - codesandbox
+  - committerdate
   - cookieless
   - delectus
   - destructure
@@ -40,6 +41,7 @@ words:
   - geist
   - ghostty
   - gitleaks
+  - gotchas
   - grotesk
   - hidenavigation
   - hreflang
@@ -62,13 +64,16 @@ words:
   - opsz
   - ossf
   - pagefind
+  - pasteable
   - pecr
   - pnpm-lock.yaml
   - popups
   - prefetch
   - prerender
+  - pushf
   - reflow
   - rehype
+  - rerere
   - resvg
   - satori
   - schibsted

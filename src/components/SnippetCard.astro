@@ -1,0 +1,111 @@
+---
+import { translatorFor } from "../i18n/astro";
+import { languageName, snippetPath, type Snippet } from "../lib/snippets";
+
+interface Props {
+  snippet: Snippet;
+  headingLevel?: "h2" | "h3";
+}
+
+const { snippet, headingLevel: Heading = "h2" } = Astro.props;
+const { data } = snippet;
+const t = translatorFor(Astro);
+---
+
+<article class="snippet-card card card--interactive">
+  <p class="snippet-card__language" data-language={data.language}>
+    <span class="snippet-card__dot" aria-hidden="true"></span>
+    {languageName(data.language)}
+  </p>
+  <Heading class="snippet-card__title">
+    <a href={snippetPath(snippet)} class="stretched-link">
+      {data.title}
+    </a>
+  </Heading>
+  <p class="snippet-card__description">{data.description}</p>
+  <ul class="snippet-card__tags" role="list" aria-label={t("article.tags")}>
+    {data.tags.map((tag) => (
+      <li class="tag">{tag}</li>
+    ))}
+  </ul>
+</article>
+
+<style>
+  .snippet-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    height: 100%;
+    padding: clamp(1.25rem, 1rem + 0.75vw, 1.6rem);
+  }
+
+  .snippet-card__language {
+    --dot: var(--syntax-type);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    align-self: flex-start;
+    min-height: 1.75rem;
+    padding: 0.15rem 0.7rem 0.15rem 0.6rem;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    background: var(--paper-sunken);
+    color: var(--ink);
+    font: 500 var(--text-step--2) / 1 var(--mono);
+  }
+
+  .snippet-card__language[data-language="css"],
+  .snippet-card__language[data-language="html"] {
+    --dot: var(--accent);
+  }
+
+  .snippet-card__language[data-language="bash"] {
+    --dot: var(--success);
+  }
+
+  .snippet-card__language[data-language="sql"],
+  .snippet-card__language[data-language="json"] {
+    --dot: var(--warning);
+  }
+
+  .snippet-card__dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: var(--dot);
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--dot) 22%, transparent);
+  }
+
+  .snippet-card__title {
+    font-weight: 600;
+    font-size: var(--text-step-1);
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  .snippet-card__title a {
+    text-decoration: none;
+  }
+
+  .snippet-card__description {
+    color: var(--ink-muted);
+    font-size: var(--text-step--1);
+    line-height: 1.55;
+  }
+
+  .snippet-card__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-block-start: auto;
+    padding-block-start: 0.5rem;
+  }
+
+  @media (forced-colors: active) {
+    .snippet-card__dot {
+      forced-color-adjust: none;
+      background: CanvasText;
+    }
+  }
+</style>

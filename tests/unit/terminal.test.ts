@@ -8,6 +8,10 @@ const context: TerminalContext = {
     { slug: "utilising-context-api-react", title: "Utilising the Context API", tags: ["react", "context"] },
     { slug: "implicit-explicit-returns-javascript", title: "Implicit and explicit returns", tags: ["javascript"] },
   ],
+  snippets: [
+    { slug: "exhaustive-switch", title: "Exhaustive switch statements" },
+    { slug: "visually-hidden", title: "A visually hidden utility class" },
+  ],
   pages: [
     { name: "writing", href: "/writing/" },
     { name: "hire", href: "/hire/" },
@@ -88,6 +92,29 @@ describe("runCommand", () => {
     expect(runCommand("ls nope", context).lines).toEqual(["No articles tagged nope", "Usage: ls [writing|tags|<tag>]"]);
   });
 
+  it("lists snippets, and copes when there are none", () => {
+    expect(runCommand("ls snippets", context).lines).toEqual([
+      "1  Exhaustive switch statements",
+      "2  A visually hidden utility class",
+    ]);
+    expect(runCommand("ls snippets", { ...context, snippets: [] }).lines).toEqual([]);
+    const { snippets, ...withoutSnippets } = context;
+    expect(snippets).toHaveLength(2);
+    expect(runCommand("ls snippets", withoutSnippets).lines).toEqual([]);
+    expect(runCommand("open visually-hidden", withoutSnippets).lines).toEqual(["No match for “visually-hidden”"]);
+  });
+
+  it("opens snippets by slug, with or without the snippets/ prefix", () => {
+    expect(runCommand("open visually-hidden", context)).toEqual({
+      lines: ["Opening A visually hidden utility class…"],
+      effect: { type: "navigate", href: "/snippets/visually-hidden/" },
+    });
+    expect(runCommand("open /snippets/exhaustive-switch/", context).effect).toEqual({
+      type: "navigate",
+      href: "/snippets/exhaustive-switch/",
+    });
+  });
+
   it("opens pages and articles", () => {
     expect(runCommand("open", context).lines).toEqual(["Usage: open <number|slug|page>"]);
     expect(runCommand("open hire/", context).effect).toEqual({ type: "navigate", href: "/hire/" });
@@ -147,6 +174,9 @@ describe("complete", () => {
     expect(complete("open hi", context)).toBe("open hire");
     expect(complete("open util", context)).toBe("open utilising-context-api-react");
     expect(complete("ls ta", context)).toBe("ls tags");
+    expect(complete("ls sn", context)).toBe("ls snippets");
+    expect(complete("open exh", context)).toBe("open exhaustive-switch");
+    expect(complete("open exh", { articles: [], pages: [] })).toBe("open exh");
     expect(complete("open zzz", context)).toBe("open zzz");
   });
 });

@@ -1,0 +1,125 @@
+---
+title: "Typed debounce and throttle"
+description: "Dependency-free debounce and throttle that keep the wrapped function's argument types, with cancel and flush, and the right way to use them inside a React component."
+language: "ts"
+tags: ["typescript", "performance", "react"]
+date: "2026-10-08"
+draft: false
+---
+
+Debounce waits for a pause: it runs once the calls have stopped for `wait` milliseconds, which suits search-as-you-type. Throttle limits the rate: it runs at most once every `interval` milliseconds, straight away on the first call and again at the end with the latest arguments, which suits scroll and resize handlers. Each is a few lines; the useful part is keeping the argument types and being able to cancel.
+
+```ts title="rate-limit.ts"
+export interface RateLimited<Args extends unknown[]> {
+  (...args: Args): void;
+  /** Drops the pending call, if there is one. */
+  cancel: () => void;
+  /** Runs the pending call now, if there is one. */
+  flush: () => void;
+}
+
+export function debounce<Args extends unknown[]>(
+  fn: (...args: Args) => void,
+  wait: number,
+): RateLimited<Args> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let pending: Args | undefined;
+
+  const cancel = () => {
+    clearTimeout(timer);
+    timer = undefined;
+    pending = undefined;
+  };
+
+  const flush = () => {
+    const args = pending;
+    cancel();
+    if (args) fn(...args);
+  };
+
+  const debounced = (...args: Args) => {
+    pending = args;
+    clearTimeout(timer);
+    timer = setTimeout(flush, wait);
+  };
+
+  return Object.assign(debounced, { cancel, flush });
+}
+
+export function throttle<Args extends unknown[]>(
+  fn: (...args: Args) => void,
+  interval: number,
+): RateLimited<Args> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let pending: Args | undefined;
+  let last = -Infinity;
+
+  const cancel = () => {
+    clearTimeout(timer);
+    timer = undefined;
+    pending = undefined;
+  };
+
+  const flush = () => {
+    const args = pending;
+    cancel();
+    if (!args) return;
+    last = performance.now();
+    fn(...args);
+  };
+
+  const throttled = (...args: Args) => {
+    pending = args;
+    const remaining = interval - (performance.now() - last);
+    if (remaining <= 0) flush();
+    else timer ??= setTimeout(flush, remaining);
+  };
+
+  return Object.assign(throttled, { cancel, flush });
+}
+```
+
+```tsx title="search-box.tsx"
+import { useEffect, useMemo } from "react";
+
+import { debounce } from "./rate-limit";
+
+export function SearchBox({ onSearch }: { onSearch: (query: string) => void }) {
+  // One debounced function per `onSearch`, not a new one (with a new timer) every render.
+  const search = useMemo(() => debounce(onSearch, 300), [onSearch]);
+
+  // Don't search after the component has gone.
+  useEffect(() => () => search.cancel(), [search]);
+
+  return (
+    <input
+      type="search"
+      aria-label="Search"
+      onChange={(event) => search(event.currentTarget.value)}
+    />
+  );
+}
+```
+
+```ts title="scroll.ts"
+import { throttle } from "./rate-limit";
+
+const onScroll = throttle(() => {
+  document.documentElement.toggleAttribute("data-scrolled", window.scrollY > 0);
+}, 100);
+
+window.addEventListener("scroll", onScroll, { passive: true });
+```
+
+## Why it works
+
+`Args extends unknown[]` captures the wrapped function's parameter list as a tuple, so `debounce(onSearch, 300)` accepts exactly a `string` and nothing else. The returned function is the wrapper with `cancel` and `flush` attached by `Object.assign`, which TypeScript types as the intersection that `RateLimited` describes.
+
+Both keep only the latest arguments in `pending`. Debounce restarts its timer on every call; throttle runs immediately when the interval has passed and otherwise schedules one trailing call, which `??=` stops it scheduling twice.
+
+## Gotchas
+
+- Create the wrapper once. A `debounce(…)` call in a component body makes a new timer on every render, and nothing is ever debounced. `useMemo` keyed on the callback fixes that; so does keeping the callback stable with `useCallback` in the parent.
+- Return values are dropped. If you need the result, debounce the thing that triggers the work and keep the work itself synchronous, or reach for a request library that de-duplicates.
+- `performance.now()` is monotonic, so throttle isn't confused when the system clock changes. `Date.now()` can jump backwards.
+- For work tied to painting, such as reading layout on scroll, `requestAnimationFrame` is often a better throttle than a fixed interval.

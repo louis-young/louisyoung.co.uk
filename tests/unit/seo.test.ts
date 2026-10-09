@@ -4,6 +4,7 @@ import {
   absoluteUrl,
   articleSchema,
   breadcrumbSchema,
+  codeSnippetSchema,
   describeList,
   itemListSchema,
   jsonLd,
@@ -94,6 +95,45 @@ describe("seo", () => {
     expect(app).toHaveProperty("browserRequirements");
     expect(breadcrumb).toMatchObject({ "@type": "BreadcrumbList" });
     expect(JSON.stringify(breadcrumb)).toContain("https://louisyoung.co.uk/tools/json/");
+  });
+
+  it("describes a snippet as SoftwareSourceCode with a breadcrumb through its section", () => {
+    const [code, breadcrumb] = codeSnippetSchema({
+      title: "Exhaustive switch statements",
+      description: "A never helper.",
+      path: "/snippets/exhaustive-switch/",
+      image: "/og/snippets-exhaustive-switch.png",
+      language: "TypeScript",
+      published: new Date("2026-09-14T00:00:00Z"),
+      tags: ["typescript", "patterns"],
+      section: { name: "Snippets", path: "/snippets/" },
+    });
+    expect(code).toMatchObject({
+      "@type": "SoftwareSourceCode",
+      url: "https://louisyoung.co.uk/snippets/exhaustive-switch/",
+      image: "https://louisyoung.co.uk/og/snippets-exhaustive-switch.png",
+      programmingLanguage: "TypeScript",
+      datePublished: "2026-09-14T00:00:00.000Z",
+      dateModified: "2026-09-14T00:00:00.000Z",
+      keywords: "typescript, patterns",
+    });
+    expect(breadcrumb.itemListElement.map((item) => item.item)).toEqual([
+      "https://louisyoung.co.uk/",
+      "https://louisyoung.co.uk/snippets/",
+      "https://louisyoung.co.uk/snippets/exhaustive-switch/",
+    ]);
+    const [updated] = codeSnippetSchema({
+      title: "T",
+      description: "D",
+      path: "/snippets/t/",
+      image: "/og/t.png",
+      language: "CSS",
+      published: new Date("2026-09-14T00:00:00Z"),
+      updated: new Date("2026-10-01T00:00:00Z"),
+      tags: [],
+      section: { name: "Snippets", path: "/snippets/" },
+    });
+    expect(updated.dateModified).toBe("2026-10-01T00:00:00.000Z");
   });
 
   it("lists pages in order", () => {

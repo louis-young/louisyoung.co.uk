@@ -134,5 +134,39 @@ export const articleSchema = (input: ArticleSchemaInput) =>
     breadcrumbSchema([...(input.section ? [input.section] : []), { name: input.title, path: input.url }]),
   ] as const;
 
+interface CodeSnippetSchemaInput {
+  title: string;
+  description: string;
+  path: string;
+  image: string;
+  /** The programming language's display name, e.g. "TypeScript". */
+  language: string;
+  published: Date;
+  updated?: Date | undefined;
+  tags: readonly string[];
+  section: Crumb;
+}
+
+/** A code snippet: SoftwareSourceCode plus its breadcrumb trail. */
+export const codeSnippetSchema = (input: CodeSnippetSchemaInput) =>
+  [
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareSourceCode",
+      name: input.title,
+      description: input.description,
+      url: absoluteUrl(input.path),
+      image: absoluteUrl(input.image),
+      programmingLanguage: input.language,
+      datePublished: input.published.toISOString(),
+      dateModified: (input.updated ?? input.published).toISOString(),
+      keywords: input.tags.join(", "),
+      inLanguage: site.defaultLocale,
+      isAccessibleForFree: true,
+      author: person,
+    },
+    breadcrumbSchema([input.section, { name: input.title, path: input.path }]),
+  ] as const;
+
 /** Serialises JSON-LD safely for inline `<script>` use. */
 export const jsonLd = (data: unknown) => JSON.stringify(data).replace(/</gu, "\\u003c");

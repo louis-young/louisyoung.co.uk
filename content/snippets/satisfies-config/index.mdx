@@ -1,0 +1,63 @@
+---
+title: "Type-safe config objects with satisfies"
+description: "Check a config object against a type without throwing away its exact keys and literal values. When to reach for satisfies instead of a type annotation, and how it pairs with as const."
+language: "ts"
+tags: ["typescript", "patterns"]
+date: "2026-10-06"
+draft: false
+---
+
+{/* cspell:ignore setings */}
+
+A type annotation checks an object, then forgets everything the annotation doesn't say. Annotate a route table as `Record<string, Route>` and TypeScript no longer knows which routes exist, so `routes.setings` compiles. `satisfies` checks the object against the type and keeps the object's own, narrower type.
+
+```ts title="routes.ts"
+interface Route {
+  path: `/${string}`;
+  title: string;
+  requiresAuth?: boolean;
+}
+
+export const routes = {
+  home: { path: "/", title: "Home" },
+  settings: { path: "/settings", title: "Settings", requiresAuth: true },
+  article: { path: "/articles/:slug", title: "Article" },
+} satisfies Record<string, Route>;
+
+// "home" | "settings" | "article", not string.
+export type RouteName = keyof typeof routes;
+
+export function pathTo(name: RouteName): string {
+  return routes[name].path;
+}
+```
+
+Add `as const` when you also want the values frozen as literals, for example design tokens whose exact values other types are built from:
+
+```ts title="tokens.ts"
+export const tokens = {
+  colour: { accent: "#5b21b6", ink: "#111827", paper: "#ffffff" },
+  space: [0, 4, 8, 16, 32, 64],
+} as const satisfies {
+  colour: Record<string, `#${string}`>;
+  space: readonly number[];
+};
+
+// "accent" | "ink" | "paper"
+export type ColourName = keyof typeof tokens.colour;
+
+// 0 | 4 | 8 | 16 | 32 | 64
+export type Space = (typeof tokens.space)[number];
+```
+
+## Why it works
+
+`satisfies` is a check, not a conversion. TypeScript verifies that the expression is assignable to the type, reporting missing properties, wrong values and (for object literals) misspelt extra keys such as `requireAuth`, then gives the variable the type it would have had anyway. You get the safety of the annotation and the precision of inference.
+
+`as const satisfies T` applies `as const` first, so every value becomes a readonly literal, and then checks the result against `T`. That's why `T` uses `readonly number[]`: a mutable array type wouldn't accept a readonly tuple.
+
+## Gotchas
+
+- Reach for an annotation when you want the wider type, for instance a `let` you'll reassign later, or a public API whose exact shape you don't want to promise.
+- `satisfies` doesn't change what the variable accepts afterwards. Without `as const`, `routes.home.title = 42` is still an error, but `routes.home.title = "Anything"` is fine.
+- It needs TypeScript 4.9 or later, and some older tools (Babel presets, ESLint parsers) need upgrading before they parse it.

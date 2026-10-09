@@ -2,10 +2,11 @@ import { getCollection, type CollectionEntry } from "astro:content";
 
 export type Article = CollectionEntry<"articles">;
 
-export const isPublished = (article: Article, includeDrafts = import.meta.env.DEV) =>
-  includeDrafts || !article.data.draft;
+export const isPublished = (entry: { data: { draft: boolean } }, includeDrafts = import.meta.env.DEV) =>
+  includeDrafts || !entry.data.draft;
 
-export const byNewest = (a: Article, b: Article) => b.data.date.getTime() - a.data.date.getTime();
+export const byNewest = (a: { data: { date: Date } }, b: { data: { date: Date } }) =>
+  b.data.date.getTime() - a.data.date.getTime();
 
 export const getArticles = async () => (await getCollection("articles", (entry) => isPublished(entry))).sort(byNewest);
 

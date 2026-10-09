@@ -1,0 +1,109 @@
+---
+title: "A typed useEventListener hook"
+description: "Subscribe to window, document or element events from a React component with the right event type inferred, the latest handler always called, and clean-up handled by an AbortController."
+language: "ts"
+tags: ["react", "hooks", "typescript"]
+date: "2026-09-18"
+draft: false
+---
+
+Every codebase grows a handful of `useEffect` blocks that add an event listener and (hopefully) remove it again. This hook does it once, properly: the event type is inferred from its name, the handler can change on every render without re-subscribing, and one `abort()` removes the listener however it was added.
+
+```ts title="use-event-listener.ts"
+import { useEffect, useRef, type RefObject } from "react";
+
+type Options = boolean | AddEventListenerOptions;
+
+export function useEventListener<K extends keyof WindowEventMap>(
+  type: K,
+  handler: (event: WindowEventMap[K]) => void,
+  target?: Window | null,
+  options?: Options,
+): void;
+export function useEventListener<K extends keyof DocumentEventMap>(
+  type: K,
+  handler: (event: DocumentEventMap[K]) => void,
+  target: Document | null,
+  options?: Options,
+): void;
+export function useEventListener<K extends keyof HTMLElementEventMap>(
+  type: K,
+  handler: (event: HTMLElementEventMap[K]) => void,
+  target: RefObject<HTMLElement | null>,
+  options?: Options,
+): void;
+export function useEventListener(
+  type: string,
+  handler: (event: Event) => void,
+  target?: Window | Document | RefObject<HTMLElement | null> | null,
+  options?: Options,
+): void {
+  // Keep the latest handler in a ref, so a new function every render doesn't re-subscribe.
+  const handlerRef = useRef(handler);
+  useEffect(() => {
+    handlerRef.current = handler;
+  });
+
+  const resolved: AddEventListenerOptions =
+    typeof options === "boolean" ? { capture: options } : (options ?? {});
+  const { capture = false, once = false, passive } = resolved;
+
+  useEffect(() => {
+    const element: EventTarget | null =
+      target === undefined ? window : target && "current" in target ? target.current : target;
+    if (!element) return;
+
+    const controller = new AbortController();
+    const listenerOptions: AddEventListenerOptions = { capture, once, signal: controller.signal };
+    if (passive !== undefined) listenerOptions.passive = passive;
+
+    element.addEventListener(type, (event) => handlerRef.current(event), listenerOptions);
+    return () => controller.abort();
+  }, [type, target, capture, once, passive]);
+}
+```
+
+```tsx title="dialog.tsx"
+import { useRef, type ReactNode } from "react";
+
+import { useEventListener } from "./use-event-listener";
+
+export function Dialog({ onClose, children }: { onClose: () => void; children: ReactNode }) {
+  const panel = useRef<HTMLDivElement>(null);
+
+  // `event` is a KeyboardEvent, inferred from "keydown".
+  useEventListener("keydown", (event) => {
+    if (event.key === "Escape") onClose();
+  });
+
+  // Listen on an element through its ref. `event` is a PointerEvent.
+  useEventListener(
+    "pointerdown",
+    (event) => {
+      if (event.target === panel.current) onClose();
+    },
+    panel,
+  );
+
+  return (
+    <div ref={panel} className="dialog-backdrop">
+      <div role="dialog" aria-modal="true">
+        {children}
+      </div>
+    </div>
+  );
+}
+```
+
+## Why it works
+
+- **Overloads give you the event type.** Each overload maps the event name to the right event map, so `"keydown"` on the window gives a `KeyboardEvent` and `"pointerdown"` on an element gives a `PointerEvent`, with no casts at the call site.
+- **The ref holds the latest handler.** The effect that subscribes doesn't depend on `handler`, so an inline arrow function doesn't tear the listener down and add it again on every render. The listener calls whatever handler is current.
+- **`AbortController` cleans up.** Passing a `signal` means the listener is removed by `controller.abort()`, with no need to keep a reference to the exact function and options for `removeEventListener`.
+- **Options are primitives in the dependency list.** Destructuring `capture`, `once` and `passive` means `{ passive: true }` written inline doesn't count as a new value every render.
+
+## Gotchas
+
+- The ref is read when the effect runs, after the element mounts. If the element appears later (it's rendered conditionally), the listener won't attach until something in the dependency list changes. Put the hook in the component that owns the element.
+- On React 19.2 and later, `useEffectEvent` replaces the ref-and-effect pair for the handler.
+- Leaving `passive` undefined matters: browsers make `touchstart`, `touchmove` and `wheel` listeners on the window passive by default, and forcing `false` there costs scroll performance.

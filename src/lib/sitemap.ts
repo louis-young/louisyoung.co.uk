@@ -11,7 +11,7 @@ interface PageInfo {
 
 type ContentIndex = ReadonlyMap<string, PageInfo>;
 
-type Collection = "articles" | "work" | "pages";
+type Collection = "articles" | "work" | "snippets" | "pages";
 
 const frontmatter = (source: string) => /^---\r?\n(?<body>[\s\S]*?)\r?\n---/u.exec(source)?.groups?.["body"] ?? "";
 
@@ -31,15 +31,16 @@ export const pageInfo = (source: string): PageInfo => {
   };
 };
 
-export const contentPath = (collection: Collection, id: string) => (collection === "work" ? `/work/${id}/` : `/${id}/`);
+export const contentPath = (collection: Collection, id: string) =>
+  collection === "work" || collection === "snippets" ? `/${collection}/${id}/` : `/${id}/`;
 
-/** Reads `content/{articles,work}/<slug>/index.mdx` and `content/pages/<slug>.mdx`. */
+/** Reads `content/{articles,work,snippets}/<slug>/index.mdx` and `content/pages/<slug>.mdx`. */
 export const readContentIndex = (root: URL): ContentIndex => {
   const index = new Map<string, PageInfo>();
   const read = (collection: Collection, id: string, file: URL) => {
     index.set(contentPath(collection, id), pageInfo(readFileSync(file, "utf8")));
   };
-  for (const collection of ["articles", "work"] as const) {
+  for (const collection of ["articles", "work", "snippets"] as const) {
     for (const entry of readdirSync(new URL(`${collection}/`, root), { withFileTypes: true })) {
       if (entry.isDirectory()) read(collection, entry.name, new URL(`${collection}/${entry.name}/index.mdx`, root));
     }
