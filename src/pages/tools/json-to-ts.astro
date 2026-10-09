@@ -1,0 +1,338 @@
+---
+import PageHero from "../../components/sections/PageHero.astro";
+import { useTranslations } from "../../i18n";
+import { localeOf } from "../../i18n/astro";
+import Base from "../../layouts/Base.astro";
+import { toolPageProps } from "../../lib/tool-catalogue";
+
+const t = useTranslations(localeOf(Astro));
+const styles = [
+  { value: "interface", label: t("tools.jsonts.interface") },
+  { value: "type", label: t("tools.jsonts.type") },
+];
+const sample = JSON.stringify(
+  {
+    id: 42,
+    name: "Ada Lovelace",
+    email: null,
+    roles: ["admin", "editor"],
+    address: { city: "London", "post-code": "SW1A 1AA" },
+    projects: [
+      { id: 1, title: "Analytical Engine", tags: ["maths"] },
+      { id: 2, title: "Notes", published: true },
+    ],
+  },
+  null,
+  2,
+);
+---
+
+<Base {...toolPageProps("json-to-ts", t)}>
+  <PageHero label={t("nav.tools")} title={t("tools.jsonts.title")} lede={t("tools.jsonts.summary")} />
+  <div
+    class="container-page jsonts"
+    data-jsonts
+    data-empty={t("tools.jsonts.empty")}
+    data-count-one={t("tools.jsonts.countOne")}
+    data-count-other={t("tools.jsonts.countOther")}
+    data-error-at={t("tools.json.errorAt")}
+    data-error-token={t("tools.json.errorToken")}
+    data-error-end={t("tools.json.errorEnd")}
+    data-error-depth={t("tools.json.errorDepth")}
+    data-copied={t("tools.copied")}
+  >
+    <div class="jsonts__input card">
+      <label class="jsonts__label" for="jsonts-input">
+        {t("tools.jsonts.input")}
+      </label>
+      <textarea
+        id="jsonts-input"
+        class="jsonts__area"
+        rows="16"
+        spellcheck="false"
+        autocomplete="off"
+        autocapitalize="off"
+        aria-describedby="jsonts-status"
+        data-input
+      >{sample}</textarea>
+      <fieldset class="jsonts__options">
+        <legend class="label">{t("tools.jsonts.options")}</legend>
+        <div class="jsonts__field">
+          <label class="jsonts__label" for="jsonts-root">
+            {t("tools.jsonts.rootName")}
+          </label>
+          <input
+            id="jsonts-root"
+            type="text"
+            class="jsonts__text"
+            value="User"
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck="false"
+            data-root
+          />
+        </div>
+        <fieldset class="jsonts__radios">
+          <legend class="jsonts__label">{t("tools.jsonts.style")}</legend>
+          <div class="jsonts__segments">
+            {styles.map((style, index) => (
+              <label class="jsonts__segment">
+                <input type="radio" name="jsonts-style" value={style.value} checked={index === 0} data-style />
+                <code>{style.label}</code>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+        <div class="jsonts__checks">
+          <label class="jsonts__check">
+            <input type="checkbox" data-readonly />
+            <span>{t("tools.jsonts.readonly")}</span>
+          </label>
+          <label class="jsonts__check">
+            <input type="checkbox" checked data-export />
+            <span>{t("tools.jsonts.export")}</span>
+          </label>
+        </div>
+      </fieldset>
+    </div>
+
+    <div class="jsonts__result card">
+      <div class="jsonts__head">
+        <label class="label" for="jsonts-output">
+          {t("tools.jsonts.output")}
+        </label>
+        <button type="button" class="button button--small" data-copy>
+          <span data-copy-label>{t("tools.copy")}</span>
+          <span class="visually-hidden">{t("tools.jsonts.output")}</span>
+        </button>
+      </div>
+      <p id="jsonts-status" class="jsonts__status" role="status" data-status></p>
+      <textarea
+        id="jsonts-output"
+        class="jsonts__area jsonts__area--output"
+        rows="16"
+        readonly
+        spellcheck="false"
+        data-output
+      ></textarea>
+    </div>
+  </div>
+</Base>
+
+<script>
+  import { initJsonToTs } from "../../scripts/tool-json-to-ts";
+
+  initJsonToTs();
+</script>
+
+<style>
+  .jsonts {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 1rem;
+    align-items: start;
+    padding-block-end: var(--spacing-section);
+  }
+
+  .jsonts > .card {
+    display: grid;
+    gap: 0.75rem;
+    min-width: 0;
+    padding: clamp(1.25rem, 1rem + 1vw, 2rem);
+  }
+
+  .jsonts__label {
+    font-weight: 500;
+    font-size: var(--text-step--1);
+  }
+
+  .jsonts__area {
+    width: 100%;
+    min-width: 0;
+    min-height: 22rem;
+    padding: 0.8rem 1rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+    color: var(--ink);
+    font: 400 var(--text-step--1) / 1.6 var(--mono);
+    tab-size: 2;
+    white-space: pre;
+    overflow-wrap: normal;
+    overflow-x: auto;
+    resize: vertical;
+  }
+
+  .jsonts__area--output {
+    min-height: 34rem;
+  }
+
+  .jsonts__area[aria-invalid="true"] {
+    border-color: var(--warning);
+  }
+
+  .jsonts__options,
+  .jsonts__radios {
+    display: grid;
+    gap: 0.75rem;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .jsonts__options {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 1rem 1.25rem;
+    margin-block-start: 0.5rem;
+    padding-block-start: 1.25rem;
+    border-block-start: 1px solid var(--rule);
+  }
+
+  /* Floating the legend lays it out inside the fieldset rather than across its border. */
+  .jsonts__options > legend,
+  .jsonts__radios > legend {
+    float: left;
+    grid-column: 1 / -1;
+    width: 100%;
+    padding: 0;
+  }
+
+  .jsonts__radios {
+    gap: 0.4rem;
+  }
+
+  .jsonts__field {
+    display: grid;
+    align-content: start;
+    gap: 0.4rem;
+    min-width: 0;
+  }
+
+  .jsonts__text {
+    width: 100%;
+    min-width: 0;
+    min-height: 2.75rem;
+    padding: 0.5rem 0.8rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+    color: var(--ink);
+    font: 500 var(--text-step--1) / 1.4 var(--mono);
+  }
+
+  .jsonts__segments {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 0.2rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+  }
+
+  .jsonts__segment {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-height: 2.25rem;
+    border-radius: calc(var(--radius-sm) - 0.15rem);
+    font-size: var(--text-step--1);
+    cursor: pointer;
+  }
+
+  .jsonts__segment input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .jsonts__segment code {
+    font: 500 var(--text-step--1) / 1 var(--mono);
+  }
+
+  .jsonts__segment:has(input:checked) {
+    background: var(--accent-soft);
+    color: var(--ink);
+    box-shadow: inset 0 0 0 1px var(--accent);
+  }
+
+  .jsonts__segment:has(input:focus-visible) {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .jsonts__checks {
+    display: flex;
+    flex-wrap: wrap;
+    grid-column: 1 / -1;
+    gap: 0.25rem 1.5rem;
+  }
+
+  .jsonts__check {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-height: 2.75rem;
+    font-size: var(--text-step--1);
+    cursor: pointer;
+  }
+
+  .jsonts__check input {
+    width: 1.1rem;
+    height: 1.1rem;
+    accent-color: var(--accent);
+  }
+
+  .jsonts__area:focus-visible,
+  .jsonts__text:focus-visible,
+  .jsonts__check input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .jsonts__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .jsonts__status {
+    padding: 0.6rem 0.9rem;
+    border-radius: var(--radius-sm);
+    background: color-mix(in oklch, var(--success) 14%, transparent);
+    color: var(--ink);
+    font-size: var(--text-step--1);
+    overflow-wrap: anywhere;
+  }
+
+  .jsonts__status[data-invalid] {
+    background: var(--warning-soft);
+  }
+
+  @media (forced-colors: active) {
+    .jsonts__segment:has(input:checked) {
+      outline: 2px solid Highlight;
+    }
+  }
+
+  @media (width < 56rem) {
+    .jsonts {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .jsonts__area--output {
+      min-height: 22rem;
+    }
+  }
+
+  @media (width < 26rem) {
+    .jsonts__options {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

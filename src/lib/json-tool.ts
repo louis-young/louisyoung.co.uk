@@ -128,17 +128,35 @@ const sortKeys = (value: unknown): unknown => {
 
 const indents: Record<Indent, string | number> = { "2": 2, "4": 4, tab: "\t", minify: 0 };
 
+const failure = (input: string, error: unknown): { error: JsonError } => {
+  const index = error instanceof ScanError ? error.index : 0;
+  const reason = error instanceof ScanError ? (index >= input.length ? "end" : "token") : "depth";
+  const token = reason === "token" ? JSON.stringify(input[index]).slice(1, -1) : "";
+  return { error: { reason, token, ...locate(input, index) } };
+};
+
+/** Checks the grammar first so a mistake gets a position, then lets the engine build the value. */
+const parse = (input: string) => {
+  scan(input);
+  return JSON.parse(input) as unknown;
+};
+
+/** Parses JSON, or explains where it first goes wrong. */
+export const parseJson = (input: string): { value: unknown } | { error: JsonError } => {
+  try {
+    return { value: parse(input) };
+  } catch (error) {
+    return failure(input, error);
+  }
+};
+
 /** Validates JSON and re-serialises it with the chosen indent, optionally sorting object keys. */
 export const formatJson = (input: string, options: { indent: Indent; sort: boolean }): JsonResult => {
   if (input.trim() === "") return { output: "" };
   try {
-    scan(input);
-    const parsed: unknown = JSON.parse(input);
-    return { output: JSON.stringify(options.sort ? sortKeys(parsed) : parsed, null, indents[options.indent]) };
+    const value = parse(input);
+    return { output: JSON.stringify(options.sort ? sortKeys(value) : value, null, indents[options.indent]) };
   } catch (error) {
-    const index = error instanceof ScanError ? error.index : 0;
-    const reason = error instanceof ScanError ? (index >= input.length ? "end" : "token") : "depth";
-    const token = reason === "token" ? JSON.stringify(input[index]).slice(1, -1) : "";
-    return { error: { reason, token, ...locate(input, index) } };
+    return failure(input, error);
   }
 };

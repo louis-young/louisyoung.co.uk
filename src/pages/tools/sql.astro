@@ -1,0 +1,330 @@
+---
+import PageHero from "../../components/sections/PageHero.astro";
+import { useTranslations } from "../../i18n";
+import { localeOf } from "../../i18n/astro";
+import Base from "../../layouts/Base.astro";
+import { toolPageProps } from "../../lib/tool-catalogue";
+
+const t = useTranslations(localeOf(Astro));
+const cases = [
+  { value: "upper", label: t("tools.sql.upper") },
+  { value: "lower", label: t("tools.sql.lower") },
+  { value: "preserve", label: t("tools.sql.preserve") },
+];
+const indents = [
+  { value: "2", label: t("tools.json.indentTwo") },
+  { value: "4", label: t("tools.json.indentFour") },
+  { value: "tab", label: t("tools.json.indentTab") },
+];
+const sample = [
+  "with recent_orders as (select customer_id, count(*) as orders, sum(total) as spent from orders",
+  "where created_at >= '2026-01-01' group by customer_id)",
+  "select c.id, c.name, r.orders, case when r.spent > 1000 then 'vip' when r.spent > 0 then 'active' else 'new' end as tier",
+  "from customers c left join recent_orders r on r.customer_id = c.id -- customers without orders too",
+  "where c.country = 'GB' and c.deleted_at is null order by r.spent desc limit 20;",
+].join("\n");
+---
+
+<Base {...toolPageProps("sql", t)}>
+  <PageHero label={t("nav.tools")} title={t("tools.sql.title")} lede={t("tools.sql.summary")} />
+  <div
+    class="container-page sql"
+    data-sql
+    data-copied={t("tools.copied")}
+    data-empty={t("tools.sql.empty")}
+    data-formatted-one={t("tools.sql.formattedOne")}
+    data-formatted-other={t("tools.sql.formattedOther")}
+    data-minified-one={t("tools.sql.minifiedOne")}
+    data-minified-other={t("tools.sql.minifiedOther")}
+    data-unterminated={t("tools.sql.unterminated")}
+    data-unchanged={t("tools.sql.unchanged")}
+  >
+    <div class="sql__input card">
+      <label class="sql__label" for="sql-input">
+        {t("tools.sql.input")}
+      </label>
+      <textarea
+        id="sql-input"
+        class="sql__area"
+        rows="14"
+        spellcheck="false"
+        autocomplete="off"
+        autocapitalize="off"
+        aria-describedby="sql-status"
+        data-input
+      >{sample}</textarea>
+      <fieldset class="sql__options">
+        <legend class="label">{t("tools.sql.options")}</legend>
+        <fieldset class="sql__radios">
+          <legend class="sql__label">{t("tools.sql.keywordCase")}</legend>
+          <div class="sql__segments">
+            {cases.map((option, index) => (
+              <label class="sql__segment">
+                <input type="radio" name="sql-case" value={option.value} checked={index === 0} data-case />
+                <span>{option.label}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+        <div class="sql__field">
+          <label class="sql__label" for="sql-indent">
+            {t("tools.sql.indent")}
+          </label>
+          <select id="sql-indent" class="sql__select" data-indent>
+            {indents.map((indent) => (
+              <option value={indent.value}>{indent.label}</option>
+            ))}
+          </select>
+        </div>
+        <label class="sql__check">
+          <input type="checkbox" aria-describedby="sql-minify-hint" data-minify />
+          <span>{t("tools.sql.minify")}</span>
+        </label>
+        <p id="sql-minify-hint" class="sql__hint">
+          {t("tools.sql.minifyHint")}
+        </p>
+      </fieldset>
+    </div>
+
+    <div class="sql__result card">
+      <div class="sql__head">
+        <label class="label" for="sql-output">
+          {t("tools.sql.output")}
+        </label>
+        <button type="button" class="button button--small" data-copy>
+          <span data-copy-label>{t("tools.copy")}</span>
+          <span class="visually-hidden">{t("tools.sql.output")}</span>
+        </button>
+      </div>
+      <p id="sql-status" class="sql__status" role="status" data-status></p>
+      <textarea
+        id="sql-output"
+        class="sql__area sql__area--output"
+        rows="14"
+        readonly
+        spellcheck="false"
+        data-output
+      ></textarea>
+    </div>
+  </div>
+</Base>
+
+<script>
+  import { initSql } from "../../scripts/tool-sql";
+
+  initSql();
+</script>
+
+<style>
+  .sql {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 1rem;
+    align-items: start;
+    padding-block-end: var(--spacing-section);
+  }
+
+  .sql > .card {
+    display: grid;
+    gap: 0.75rem;
+    min-width: 0;
+    padding: clamp(1.25rem, 1rem + 1vw, 2rem);
+  }
+
+  .sql__label {
+    font-weight: 500;
+    font-size: var(--text-step--1);
+  }
+
+  .sql__area {
+    width: 100%;
+    min-width: 0;
+    min-height: 18rem;
+    padding: 0.8rem 1rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+    color: var(--ink);
+    font: 400 var(--text-step--1) / 1.6 var(--mono);
+    tab-size: 4;
+    white-space: pre;
+    overflow-wrap: normal;
+    overflow-x: auto;
+    resize: vertical;
+  }
+
+  .sql__area--output {
+    min-height: 34rem;
+  }
+
+  .sql__options,
+  .sql__radios {
+    display: grid;
+    gap: 0.75rem;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .sql__options {
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+    align-items: end;
+    gap: 1rem 1.25rem;
+    margin-block-start: 0.5rem;
+    padding-block-start: 1.25rem;
+    border-block-start: 1px solid var(--rule);
+  }
+
+  /* Floating the legend lays it out inside the fieldset rather than across its border. */
+  .sql__options > legend,
+  .sql__radios > legend {
+    float: left;
+    grid-column: 1 / -1;
+    width: 100%;
+    padding: 0;
+  }
+
+  .sql__radios {
+    gap: 0.4rem;
+  }
+
+  .sql__segments {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding: 0.2rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+  }
+
+  .sql__segment {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-height: 2.25rem;
+    padding-inline: 0.25rem;
+    border-radius: calc(var(--radius-sm) - 0.15rem);
+    font-weight: 500;
+    font-size: var(--text-step--1);
+    text-align: center;
+    cursor: pointer;
+  }
+
+  .sql__segment input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .sql__segment:has(input:checked) {
+    background: var(--accent-soft);
+    color: var(--ink);
+    box-shadow: inset 0 0 0 1px var(--accent);
+  }
+
+  .sql__segment:has(input:focus-visible) {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .sql__field {
+    display: grid;
+    gap: 0.4rem;
+    min-width: 0;
+  }
+
+  .sql__select {
+    width: 100%;
+    min-height: 2.75rem;
+    padding: 0.5rem 0.8rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+    color: var(--ink);
+    font: inherit;
+    font-size: var(--text-step--1);
+  }
+
+  .sql__select:disabled {
+    color: var(--ink-muted);
+    cursor: not-allowed;
+  }
+
+  .sql__check {
+    display: inline-flex;
+    grid-column: 1 / -1;
+    align-items: center;
+    gap: 0.6rem;
+    min-height: 2.75rem;
+    font-size: var(--text-step--1);
+    cursor: pointer;
+  }
+
+  .sql__check input {
+    width: 1.1rem;
+    height: 1.1rem;
+    margin: 0;
+    accent-color: var(--accent);
+  }
+
+  .sql__hint {
+    grid-column: 1 / -1;
+    margin-block-start: -0.9rem;
+    color: var(--ink-muted);
+    font-size: var(--text-step--1);
+  }
+
+  .sql__area:focus-visible,
+  .sql__select:focus-visible,
+  .sql__check input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .sql__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .sql__status {
+    padding: 0.6rem 0.9rem;
+    border-radius: var(--radius-sm);
+    background: color-mix(in oklch, var(--success) 14%, transparent);
+    color: var(--ink);
+    font-size: var(--text-step--1);
+    overflow-wrap: anywhere;
+  }
+
+  .sql__status[data-invalid] {
+    background: var(--warning-soft);
+  }
+
+  @media (forced-colors: active) {
+    .sql__segment:has(input:checked) {
+      outline: 2px solid Highlight;
+    }
+  }
+
+  @media (width < 56rem) {
+    .sql {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .sql__area--output {
+      min-height: 24rem;
+    }
+  }
+
+  @media (width < 26rem) {
+    .sql__options {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

@@ -257,4 +257,67 @@ test.describe("tools", () => {
     await expect(output).toContainText("radial-gradient(circle, #7c6cf0 0%, #22d3ee 100%)");
     await expect(page.getByRole("slider", { name: "Angle (degrees)" })).toBeHidden();
   });
+
+  test("the JSON to TypeScript generator names, merges and options its types", async ({ page }) => {
+    await page.goto("/tools/json-to-ts/");
+    const input = page.getByLabel("JSON", { exact: true });
+    const output = page.getByLabel("TypeScript", { exact: true });
+    await input.fill('{"user-id": 1, "tags": [{"a": 1}, {"b": null}]}');
+    await page.getByLabel("Root type name").fill("payload");
+    await expect(output).toHaveValue(
+      'export interface Payload {\n  "user-id": number;\n  tags: Tag[];\n}\n\nexport interface Tag {\n  a?: number;\n  b?: null;\n}\n',
+    );
+    await page.getByRole("radio", { name: "type" }).check();
+    await page.getByLabel("Readonly properties").check();
+    await page.getByLabel("Export each type").uncheck();
+    await expect(output).toHaveValue(/^type Payload = \{\n {2}readonly "user-id": number;/u);
+    await input.fill('{\n  "a": 1,\n}');
+    await expect(page.locator("#jsonts-status")).toHaveText("Line 3, column 1: unexpected “}”.");
+    await expect(input).toHaveAttribute("aria-invalid", "true");
+  });
+
+  test("the case converter writes every case, line by line", async ({ page }) => {
+    await page.goto("/tools/case/");
+    await page.getByLabel("Text to convert").fill("parseHTTPResponse\nCrème brûlée");
+    await expect(page.locator('[data-value="camel"]')).toHaveText("parseHttpResponse\ncrèmeBrûlée");
+    await expect(page.locator('[data-value="title"]')).toHaveText("Parse HTTP Response\nCrème Brûlée");
+    await expect(page.locator('[data-value="slug"]')).toHaveText("parse-http-response\ncreme-brulee");
+    await expect(page.locator("#case-status")).toHaveText("2 lines converted");
+    await expect(page.getByRole("button", { name: "Copy SCREAMING_SNAKE_CASE" })).toBeVisible();
+  });
+
+  test("the aspect ratio calculator reduces, solves and previews a ratio", async ({ page }) => {
+    await page.goto("/tools/aspect-ratio/");
+    await page.getByRole("button", { name: /Laptop/u }).click();
+    await expect(page.locator("#aspect-status")).toHaveText("1440 × 900 is 8:5: exactly 16:10.");
+    await page.getByLabel("Lock the ratio").check();
+    await page.getByLabel("Width", { exact: true }).fill("1920");
+    await expect(page.getByLabel("Height", { exact: true })).toHaveValue("1200");
+    await page.getByLabel("Ratio", { exact: true }).fill("21:9");
+    await expect(page.getByLabel("Height", { exact: true })).toHaveValue("822.86");
+    await expect(page.locator("[data-css]")).toHaveText("aspect-ratio: 7 / 3;");
+    const box = await page.locator("[data-box]").boundingBox();
+    expect(box!.width / box!.height).toBeCloseTo(7 / 3, 1);
+  });
+
+  test("the SQL formatter lays out a query without touching its strings", async ({ page, context, browserName }) => {
+    await page.goto("/tools/sql/");
+    const output = page.getByLabel("Formatted SQL");
+    await page.getByLabel("SQL to format").fill("select a, 'x  from  y' as b from t where c = 1 and d = 2");
+    await expect(output).toHaveValue("SELECT\n  a,\n  'x  from  y' AS b\nFROM\n  t\nWHERE\n  c = 1\n  AND d = 2");
+    await page.getByRole("radio", { name: "lower" }).check();
+    await page.getByLabel("Indent").selectOption({ label: "4 spaces" });
+    await expect(output).toHaveValue(/^select\n {4}a,/u);
+    await page.getByLabel("Minify").check();
+    await expect(output).toHaveValue("select a,'x  from  y' as b from t where c=1 and d=2");
+    await expect(page.locator("#sql-status")).toHaveText("1 statement minified");
+    if (browserName === "chromium") {
+      await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+      await page.getByRole("button", { name: "Copy Formatted SQL" }).click();
+      await expect(page.getByRole("button", { name: "Copied Formatted SQL" })).toBeVisible();
+      expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
+        "select a,'x  from  y' as b from t where c=1 and d=2",
+      );
+    }
+  });
 });
