@@ -109,7 +109,9 @@ const rangeValues = (body: string) => {
   if (numeric) {
     const [from, to] = [Number(numeric[1]), Number(numeric[2])];
     const step = Math.abs(Number(numeric[3] ?? 1)) || 1;
-    const width = /^-?0\d/u.test(numeric[1]!) || /^-?0\d/u.test(numeric[2]!) ? numeric[1]!.length : 0;
+    // As in Bash: a leading zero on either end pads every value to the wider end.
+    const padded = /^-?0\d/u.test(numeric[1]!) || /^-?0\d/u.test(numeric[2]!);
+    const width = padded ? Math.max(numeric[1]!.length, numeric[2]!.length) : 0;
     const values: string[] = [];
     const direction = from <= to ? 1 : -1;
     for (let value = from; direction > 0 ? value <= to : value >= to; value += step * direction) {

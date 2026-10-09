@@ -113,11 +113,29 @@ export const decode = (text: string) => {
 /** Percent-encodes everything but unreserved characters. */
 export const encode = (text: string) => encodeURIComponent(text);
 
-/** The URL with escapes decoded wherever that keeps it unambiguous (`%2F`, `%26` and friends stay). */
-export const readable = (href: string) => {
-  try {
-    return decodeURI(href);
-  } catch {
-    return href;
-  }
-};
+/**
+ * Bytes that stay escaped: the delimiters `decodeURI` keeps (`%2F`, `%26` and friends), plus `%`
+ * itself, controls and `\`, which would read back as a different URL (`%2541` as `%41`, a line
+ * break stripped, `\` as `/`).
+ */
+const keptByte = (byte: number) => byte < 0x20 || byte === 0x7f || ";/?:@&=+$,#%\\".includes(String.fromCharCode(byte));
+
+/** The URL with escapes decoded wherever that keeps it unambiguous, so it reads back as the same URL. */
+export const readable = (href: string) =>
+  href.replace(/(?:%[\da-f]{2})+/giu, (run) => {
+    let result = "";
+    let pending = "";
+    const flush = () => {
+      result += decode(pending) ?? pending;
+      pending = "";
+    };
+    for (const escape of run.match(/%[\da-f]{2}/giu)!) {
+      // Kept bytes are ASCII, so they never split a multi-byte UTF-8 character.
+      if (keptByte(Number.parseInt(escape.slice(1), 16))) {
+        flush();
+        result += escape;
+      } else pending += escape;
+    }
+    flush();
+    return result;
+  });

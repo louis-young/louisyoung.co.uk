@@ -19,6 +19,12 @@ describe("parseColour", () => {
     expect(parseColour("#12345")).toBeUndefined();
     expect(parseColour("rgb(300, 0, 0)")).toBeUndefined();
   });
+
+  // Bug hunt: a number with two decimal points became NaN channels, shown as #NaNNaNNaN.
+  it("rejects oklch() numbers that aren't numbers", () => {
+    expect(parseColour("oklch(0.5.1 0.1 30)")).toBeUndefined();
+    expect(parseColour("oklch(50% . 30)")).toBeUndefined();
+  });
 });
 
 describe("contrast", () => {

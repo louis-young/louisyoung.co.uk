@@ -264,9 +264,8 @@ const sameTokens = (a: Token[], b: Token[]) => {
   );
 };
 
-/** Formats SQL. Only whitespace and the case of keywords ever change; the result is checked for that. */
-export const formatSql = (sql: string, options: SqlOptions): SqlResult => {
-  const backslashes = usesBackslashes(sql);
+/** Formats SQL read one way: with or without backslash escapes. */
+const formatReading = (sql: string, options: SqlOptions, backslashes: boolean) => {
   const tokens = tokenize(sql, backslashes);
   const items: Item[] = [];
   let gap: Item["gap"] = "";
@@ -517,10 +516,23 @@ export const formatSql = (sql: string, options: SqlOptions): SqlResult => {
     previousKeyword = keyword;
   }
   if (statementOpen) statements++;
+  return { output, statements };
+};
 
-  const unterminated = isUnclosed(tokens);
-  if (!sameTokens(tokens, tokenize(output, backslashes))) {
-    return { output: sql, statements, unterminated, unchanged: true };
-  }
-  return { output, statements, unterminated, unchanged: false };
+/** Formats SQL. Only whitespace and the case of keywords ever change; the result is checked for that. */
+export const formatSql = (sql: string, options: SqlOptions): SqlResult => {
+  const preferred = usesBackslashes(sql);
+  // When reading `\'` either way closes every string, the dialect is only a guess, so the result
+  // has to keep every token under both readings: what one calls spaces between words can be inside
+  // a string to the other.
+  const readings = sql.includes("\\") && !isUnclosed(tokenize(sql, !preferred)) ? [preferred, !preferred] : [preferred];
+  const keepsTokens = (output: string) =>
+    readings.every((backslashes) => sameTokens(tokenize(sql, backslashes), tokenize(output, backslashes)));
+  const unterminated = isUnclosed(tokenize(sql, preferred));
+  const results = readings.map((backslashes) => formatReading(sql, options, backslashes));
+  const kept = results.find((result) => keepsTokens(result.output));
+  const { statements } = results[0]!;
+  return kept
+    ? { output: kept.output, statements: kept.statements, unterminated, unchanged: false }
+    : { output: sql, statements, unterminated, unchanged: true };
 };

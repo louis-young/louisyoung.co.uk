@@ -150,6 +150,14 @@ describe("expandBraces", () => {
     expect(expandBraces("{0..10..0}")).toHaveLength(11);
   });
 
+  // Bug hunt: only the first end's width counted, so `{1..010}` wasn't padded and `{01..100}`
+  // padded to two digits. Bash and picomatch pad every value to the wider end.
+  it("pads a range to its wider end when either end has a leading zero", () => {
+    expect(expandBraces("{8..010}")).toEqual(["008", "009", "010"]);
+    expect(expandBraces("{01..100}").slice(0, 2)).toEqual(["001", "002"]);
+    expect(isMatch("img001.png", "img{01..100}.png")).toBe(true);
+  });
+
   it("leaves escaped braces, braces in classes and lone braces alone", () => {
     expect(expandBraces(String.raw`\{a,b}`)).toEqual([String.raw`\{a,b}`]);
     expect(expandBraces("[{]a,b}")).toEqual(["[{]a,b}"]);

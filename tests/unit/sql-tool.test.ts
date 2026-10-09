@@ -399,6 +399,17 @@ describe("formatSql never changes what a query means", () => {
     for (const options of allOptions) expect(verbatim(formatSql(sql, options).output)).toEqual(verbatim(sql));
   });
 
+  // Bug hunt: two MySQL strings with escaped quotes also close when read as standard SQL, which
+  // put the spaces and words inside them between tokens, where formatting changed them.
+  it("keeps MySQL strings whole when standard SQL would also close them", () => {
+    const sql = String.raw`INSERT INTO t VALUES ('it\'s   a select', 'don\'t')`;
+    for (const options of allOptions) {
+      const output = formatSql(sql, options).output;
+      expect(output, JSON.stringify(options)).toContain(String.raw`'it\'s   a select'`);
+    }
+    expect(format(sql)).toBe(`INSERT INTO\n  t\nVALUES\n  (${String.raw`'it\'s   a select', 'don\'t'`})`);
+  });
+
   it.each(corpus)("is stable when run twice on %j", (sql) => {
     const once = format(sql);
     expect(format(once)).toBe(once);
