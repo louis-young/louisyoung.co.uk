@@ -6,11 +6,13 @@ test.describe("internal links", () => {
     const checked = new Map<string, number>();
     for (const path of pages) {
       await page.goto(path);
-      const hrefs = await page
-        .locator("a[href]")
-        .evaluateAll((links) =>
-          links.map((link) => (link as HTMLAnchorElement).href).filter((href) => href.startsWith(location.origin)),
-        );
+      const hrefs = await page.locator("a[href]").evaluateAll((links) =>
+        links
+          // Resolve the attribute rather than read `.href`: on an SVG <a> (the /map/ nodes) that
+          // property is an SVGAnimatedString, not a URL.
+          .map((link) => new URL(link.getAttribute("href") ?? "", location.href).href)
+          .filter((href) => href.startsWith(location.origin)),
+      );
       for (const href of new Set(hrefs)) {
         const url = new URL(href);
         if (url.hash) {

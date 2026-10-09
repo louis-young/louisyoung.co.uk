@@ -47,6 +47,10 @@ const pairs: [string, string, number][] = [
   ["syntax-string", "paper-raised", 4.5],
   ["syntax-type", "paper-sunken", 4.5],
   ["syntax-type", "paper-raised", 4.5],
+  // The /map/ node shapes (non-text graphics, 3:1) on the map's raised surface and the filter
+  // chips' paper. Accent and ink on both are already held to text contrast above.
+  ["syntax-string", "paper", 3],
+  ["syntax-type", "paper", 3],
   // The /hire/ enquiry form: inline errors on its card, and the error and success notices.
   ["danger", "paper", 4.5],
   ["danger", "paper-raised", 4.5],

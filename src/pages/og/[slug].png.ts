@@ -24,6 +24,7 @@ export const getStaticPaths = (async () => {
     ["tools", { title: t("tools.heading"), eyebrow: t("nav.tools") }],
     ["snippets", { title: t("snippets.heading"), eyebrow: t("nav.snippets") }],
     ["stats", { title: t("stats.heading"), eyebrow: t("nav.stats") }],
+    ["map", { title: t("map.heading"), eyebrow: t("map.title") }],
     ["changelog", { title: t("changelog.heading"), eyebrow: t("changelog.title") }],
     ...tools.map((tool): [string, Card] => [`tools-${tool.slug}`, { title: t(tool.title), eyebrow: t("nav.tools") }]),
     ...(await getCollection("pages", isPagePublished)).map((page): [string, Card] => [

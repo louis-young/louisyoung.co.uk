@@ -1,0 +1,1050 @@
+---
+import PageHero from "../components/sections/PageHero.astro";
+import { useTranslations } from "../i18n";
+import { localeOf } from "../i18n/astro";
+import Base from "../layouts/Base.astro";
+import { getArticles } from "../lib/articles";
+import {
+  buildContentGraph,
+  countKinds,
+  filterKindOf,
+  isHub,
+  listGroups,
+  neighbours,
+  type FilterKind,
+  type MapKind,
+} from "../lib/content-map";
+import { hubText, layoutGraph, shapePath } from "../lib/graph-layout";
+import { breadcrumbSchema, itemListSchema } from "../lib/seo";
+import { getSnippets } from "../lib/snippets";
+import { toolCategories, tools } from "../lib/tool-catalogue";
+
+const t = useTranslations(localeOf(Astro));
+
+const graph = buildContentGraph({
+  articles: (await getArticles()).map((article) => ({
+    slug: article.id,
+    title: article.data.title,
+    tags: article.data.tags,
+  })),
+  snippets: (await getSnippets()).map((snippet) => ({
+    slug: snippet.id,
+    title: snippet.data.title,
+    tags: snippet.data.tags,
+  })),
+  tools: tools.map((tool) => ({
+    slug: tool.slug,
+    title: t(tool.title),
+    category: tool.category,
+    keywords: tool.keywords,
+  })),
+  categories: toolCategories.map((category) => ({ id: category.id, label: t(category.label) })),
+});
+const layout = layoutGraph(graph);
+const adjacent = neighbours(graph);
+const counts = countKinds(graph);
+const groups = listGroups(graph);
+const topicGroups = groups.filter((group) => group.hub.kind === "topic");
+const categoryGroups = groups.filter((group) => group.hub.kind === "category");
+// Topics are already sorted by degree, busiest first.
+const busiest = topicGroups.slice(0, 6).map((group) => group.hub);
+
+const kindNames: Record<MapKind, string> = {
+  topic: t("map.kind.topic"),
+  article: t("map.kind.article"),
+  snippet: t("map.kind.snippet"),
+  tool: t("map.kind.tool"),
+  category: t("map.kind.category"),
+};
+const legend: { kind: MapKind; label: string; count: number }[] = [
+  { kind: "topic", label: t("map.legend.topic"), count: counts.topic },
+  { kind: "article", label: t("map.legend.article"), count: counts.article },
+  { kind: "snippet", label: t("map.legend.snippet"), count: counts.snippet },
+  { kind: "tool", label: t("map.legend.tool"), count: counts.tool },
+  { kind: "category", label: t("map.legend.category"), count: counts.category },
+];
+const filters: { kind: FilterKind; label: string; count: number }[] = [
+  { kind: "topic", label: t("map.legend.topic"), count: counts.topic },
+  { kind: "article", label: t("map.legend.article"), count: counts.article },
+  { kind: "snippet", label: t("map.legend.snippet"), count: counts.snippet },
+  { kind: "tool", label: t("map.legend.tool"), count: counts.tool + counts.category },
+];
+const summary = t("map.summary", {
+  topics: counts.topic,
+  articles: counts.article,
+  snippets: counts.snippet,
+  tools: counts.tool,
+});
+/** The legend and filter swatches use the same shapes as the map, at one size. */
+const swatch = (kind: MapKind) => shapePath(kind, kind === "topic" || kind === "category" ? 6.5 : 5.5);
+
+const title = t("map.heading");
+const description = t("map.description");
+const schema = [
+  itemListSchema({
+    name: title,
+    description,
+    path: "/map/",
+    items: topicGroups.map((group) => ({ name: group.hub.label, path: group.hub.href })),
+  }),
+  breadcrumbSchema([{ name: t("nav.map"), path: "/map/" }]),
+];
+---
+
+<Base title={t("map.title")} description={description} image="/og/map.png" schema={schema}>
+  <PageHero label={t("nav.map")} title={title} lede={t("map.lede")}>
+    <a href="#map-list" class="button button--small">
+      {t("map.viewList")}
+    </a>
+  </PageHero>
+
+  <div class="container-page map-page">
+    <section class="map card" aria-labelledby="map-title" data-map>
+      <h2 id="map-title" class="visually-hidden">
+        {t("map.figure")}
+      </h2>
+
+      <div class="map__toolbar" data-map-controls>
+        <fieldset class="map__filters">
+          <legend class="map__control-label">{t("map.show")}</legend>
+          <div class="map__chips">
+            {filters.map((filter) => (
+              <label class="map__chip">
+                <input type="checkbox" value={filter.kind} checked data-map-filter aria-controls="map-svg" />
+                <svg class="map__swatch" data-kind={filter.kind} viewBox="-8 -8 16 16" aria-hidden="true">
+                  <path d={swatch(filter.kind)} />
+                </svg>
+                <span>{filter.label}</span>
+                <span class="map__chip-count">{filter.count}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+        <div class="map__focus">
+          <label class="map__control-label" for="map-focus">
+            {t("map.focus")}
+          </label>
+          <select id="map-focus" class="map__select" data-map-focus aria-controls="map-svg">
+            <option value="">{t("map.focusNone")}</option>
+            {topicGroups.map((group) => (
+              <option value={group.hub.id}>{hubText(group.hub)}</option>
+            ))}
+          </select>
+        </div>
+        <p class="map__status" role="status" data-map-status data-template={t("map.status")}></p>
+      </div>
+
+      <p class="map__note">
+        {t("map.smallScreen")}
+        <a href="#map-list">{t("map.viewList")}</a>
+      </p>
+
+      <div class="map__stage">
+        {/*
+          The map is a group of links rather than role="img": an image's children are presentational,
+          so its links would be focusable yet nameless to screen readers (and axe flags that). As a
+          group, each node is a named link ("react, topic, 9 connections") that can be reached in
+          browse mode or with Tab, while the edges, shapes and visible labels are hidden from the
+          accessibility tree. The list below the map carries the same information as structure.
+        */}
+        <svg
+          id="map-svg"
+          class="map__svg"
+          viewBox={`0 0 ${layout.width} ${layout.height}`}
+          role="group"
+          aria-label={summary}
+          data-map-svg
+        >
+          <g class="map__edges" aria-hidden="true">
+            {layout.edges.map((edge) => {
+              const source = graph.nodes.find((node) => node.id === edge.source)!;
+              const target = graph.nodes.find((node) => node.id === edge.target)!;
+              return (
+                <path
+                  class="map__edge"
+                  d={edge.path}
+                  data-edge
+                  data-source={edge.source}
+                  data-target={edge.target}
+                  data-kinds={`${filterKindOf(source.kind)} ${filterKindOf(target.kind)}`}
+                />
+              );
+            })}
+          </g>
+          <g class="map__nodes">
+            {layout.nodes.map((node) => {
+              const hub = isHub(node.kind);
+              const meta = t("map.connections", { count: node.degree });
+              const text = hub ? hubText(node) : node.label;
+              return (
+                <a
+                  href={node.href}
+                  class:list={["map__node", hub && "map__node--hub"]}
+                  aria-label={t("map.nodeLabel", { label: node.label, kind: kindNames[node.kind], connections: meta })}
+                  data-node
+                  data-id={node.id}
+                  data-kind={node.kind}
+                  data-filter={filterKindOf(node.kind)}
+                  data-hub={String(hub)}
+                  data-label={node.label}
+                  data-callout-text={text}
+                  data-kind-name={kindNames[node.kind]}
+                  data-meta={meta}
+                  data-x={node.x}
+                  data-y={node.y}
+                  data-lx={node.caption.x}
+                  data-ly={node.caption.y}
+                  data-anchor={node.caption.anchor}
+                >
+                  <g transform={`translate(${node.x} ${node.y})`}>
+                    <g class="map__glyph">
+                      <circle class="map__hit" r={Math.max(node.r + 6, 12)} />
+                      <circle class="map__ring" r={node.r + 6} />
+                      <path class="map__shape" d={shapePath(node.kind, node.r)} />
+                      {node.kind === "topic" && <circle class="map__core" r={Math.max(2, node.r * 0.32)} />}
+                    </g>
+                    <text
+                      class:list={["map__label", hub ? "map__label--hub" : "map__label--item"]}
+                      x={Math.round((node.caption.x - node.x) * 10) / 10}
+                      y={Math.round((node.caption.y - node.y) * 10) / 10}
+                      text-anchor={node.caption.anchor}
+                      font-size={node.caption.size}
+                      aria-hidden="true"
+                    >
+                      {text}
+                    </text>
+                  </g>
+                </a>
+              );
+            })}
+          </g>
+          <text class="map__callout" aria-hidden="true" data-map-callout></text>
+        </svg>
+
+        <div class="map__inspector" data-map-inspector>
+          <div class="map__inspector-panel" data-inspector-overview>
+            <p class="label map__inspector-kind">{t("map.overview")}</p>
+            <p class="map__inspector-title">{summary}</p>
+            <p class="map__inspector-hint">{t("map.inspectorEmpty")}</p>
+            <p class="label map__inspector-subhead">{t("map.busiest")}</p>
+            <ol class="map__inspector-top" role="list">
+              {busiest.map((hub) => (
+                <li>
+                  <a href={hub.href}>{hubText(hub)}</a>
+                  <span class="map__chip-count">{hub.degree}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+          <div class="map__inspector-panel" data-inspector-detail hidden>
+            <p class="label map__inspector-kind" data-inspector-kind></p>
+            <p class="map__inspector-title" data-inspector-title></p>
+            <p class="meta map__inspector-meta" data-inspector-meta></p>
+            <ul class="map__inspector-list" role="list" data-inspector-list></ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="map__footer">
+        <ul class="map__legend" role="list" aria-label={t("map.legend")}>
+          {legend.map((item) => (
+            <li class="map__legend-item">
+              <svg class="map__swatch" data-kind={item.kind} viewBox="-8 -8 16 16" aria-hidden="true">
+                <path d={swatch(item.kind)} />
+              </svg>
+              {item.label}
+              <span class="map__chip-count">{item.count}</span>
+            </li>
+          ))}
+        </ul>
+        <p id="map-hint" class="map__hint">
+          {t("map.hint")}
+        </p>
+      </div>
+    </section>
+
+    <section id="map-list" class="map-list" aria-labelledby="map-list-title" tabindex="-1">
+      <div class="map-list__head">
+        <h2 id="map-list-title" class="section-title">
+          {t("map.listHeading")}
+        </h2>
+        <p class="map-list__lede">{t("map.listLede")}</p>
+      </div>
+
+      <h3 class="label map-list__group-title">{t("map.legend.topic")}</h3>
+      <ul class="map-list__grid" role="list" data-map-list="topic">
+        {topicGroups.map((group) => (
+          <li class="map-list__card card" data-map-group={group.hub.id}>
+            <h4 class="map-list__hub">
+              <a href={group.hub.href}>{hubText(group.hub)}</a>
+              <span class="map-list__count meta">{t("map.connections", { count: group.hub.degree })}</span>
+            </h4>
+            {(
+              [
+                ["article", t("map.legend.article"), group.articles],
+                ["snippet", t("map.legend.snippet"), group.snippets],
+                ["tool", t("map.legend.tool"), group.tools],
+              ] as const
+            ).map(
+              ([kind, label, items]) =>
+                items.length > 0 && (
+                  <div class="map-list__kind">
+                    <p class="map-list__kind-title" id={`list-${group.hub.id.replace(":", "-")}-${kind}`}>
+                      <svg class="map__swatch" data-kind={kind} viewBox="-8 -8 16 16" aria-hidden="true">
+                        <path d={swatch(kind)} />
+                      </svg>
+                      {label}
+                    </p>
+                    <ul role="list" aria-labelledby={`list-${group.hub.id.replace(":", "-")}-${kind}`}>
+                      {items.map((item) => (
+                        <li>
+                          <a href={item.href} data-map-item={item.id}>
+                            {item.label}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ),
+            )}
+          </li>
+        ))}
+      </ul>
+
+      <h3 class="label map-list__group-title">{t("map.listCategories")}</h3>
+      <ul class="map-list__grid" role="list" data-map-list="category">
+        {categoryGroups.map((group) => (
+          <li class="map-list__card card" data-map-group={group.hub.id}>
+            <h4 class="map-list__hub">
+              <a href={group.hub.href}>{group.hub.label}</a>
+              <span class="map-list__count meta">{t("map.connections", { count: group.hub.degree })}</span>
+            </h4>
+            <ul role="list" class="map-list__tools">
+              {group.tools.map((item) => {
+                const topics = (adjacent.get(item.id) ?? []).filter((id) => id.startsWith("topic:"));
+                return (
+                  <li>
+                    <a href={item.href} data-map-item={item.id}>
+                      {item.label}
+                    </a>
+                    {topics.length > 0 && (
+                      <span class="map-list__also">
+                        {topics.map((id) => `#${id.slice("topic:".length)}`).join(" ")}
+                      </span>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </li>
+        ))}
+      </ul>
+    </section>
+  </div>
+</Base>
+
+<script>
+  import { lazyOpener } from "../scripts/lazy";
+
+  // Every node is a link and the list holds the same graph, so the map works without this. The
+  // highlighting, filters and keyboard movement load once the map is on screen or first touched.
+  const enhance = lazyOpener(() =>
+    import("../scripts/content-map").then(({ initContentMap }) => {
+      initContentMap();
+      return () => undefined;
+    }),
+  );
+  const map = document.querySelector("[data-map]");
+  if (map) {
+    for (const type of ["pointerenter", "focusin"]) map.addEventListener(type, enhance.warm, { once: true });
+    new IntersectionObserver((entries, observer) => {
+      if (entries.some((entry) => entry.isIntersecting)) {
+        observer.disconnect();
+        enhance.warm();
+      }
+    }).observe(map);
+  }
+</script>
+
+<style>
+  .map-page {
+    display: grid;
+    gap: var(--spacing-section);
+    padding-block-end: var(--spacing-section);
+  }
+
+  .map {
+    --map-surface: var(--paper-raised);
+    --map-topic: var(--accent);
+    --map-article: var(--ink);
+    --map-snippet: var(--syntax-string);
+    --map-tool: var(--syntax-type);
+    --map-edge: var(--rule-strong);
+
+    position: relative;
+    display: grid;
+    gap: 0;
+    overflow: hidden;
+    padding: 0;
+    background:
+      radial-gradient(40rem 22rem at 18% 12%, var(--glow-1), transparent 70%),
+      radial-gradient(36rem 22rem at 88% 92%, var(--glow-2), transparent 70%), var(--map-surface);
+  }
+
+  /* A faint dot grid behind the graph, like a canvas. */
+  .map::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(circle at 1px 1px, var(--rule-strong) 1px, transparent 0);
+    background-size: 24px 24px;
+    mask-image: radial-gradient(ellipse 70% 65% at 50% 50%, black 30%, transparent 85%);
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  .map > * {
+    position: relative;
+  }
+
+  .map__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: 1rem 1.5rem;
+    padding: 1rem 1.25rem;
+    border-block-end: 1px solid var(--rule);
+    background: var(--map-surface);
+  }
+
+  /* The controls do nothing without JavaScript, so they only appear when it can run. */
+  @media (scripting: none) {
+    .map__toolbar,
+    .map__hint {
+      display: none;
+    }
+  }
+
+  .map__filters {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .map__control-label {
+    display: block;
+    margin-block-end: 0.5rem;
+    padding: 0;
+    font: 500 var(--text-step--2) / 1 var(--mono);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .map__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .map__chip {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-height: 2.25rem;
+    padding: 0.3rem 0.8rem 0.3rem 0.6rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: 999px;
+    background: var(--paper);
+    font-size: var(--text-step--1);
+    font-weight: 500;
+    cursor: pointer;
+    user-select: none;
+    transition:
+      border-color var(--duration-fast) ease,
+      opacity var(--duration-fast) ease;
+  }
+
+  .map__chip:hover {
+    border-color: var(--ink-faint);
+  }
+
+  .map__chip input {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .map__chip:has(input:focus-visible) {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .map__chip:has(input:not(:checked)) {
+    border-style: dashed;
+    color: var(--ink-muted);
+  }
+
+  .map__chip:has(input:not(:checked)) .map__swatch {
+    opacity: 0.35;
+  }
+
+  .map__chip-count {
+    font: 500 var(--text-step--2) / 1 var(--mono);
+    color: var(--ink-faint);
+  }
+
+  .map__focus {
+    min-width: min(100%, 13rem);
+  }
+
+  .map__select {
+    width: 100%;
+    min-height: 2.25rem;
+    padding: 0.3rem 0.75rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper);
+    color: var(--ink);
+    font: inherit;
+    font-size: var(--text-step--1);
+  }
+
+  .map__select:disabled {
+    opacity: 0.55;
+  }
+
+  .map__status {
+    margin-inline-start: auto;
+    font: 500 var(--text-step--2) / 1.4 var(--mono);
+    color: var(--ink-faint);
+  }
+
+  .map__stage {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 17rem;
+  }
+
+  .map__svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+
+  .map__swatch {
+    flex: none;
+    width: 0.9rem;
+    height: 0.9rem;
+    overflow: visible;
+  }
+
+  /* Kinds differ by shape first; colour is a second cue. */
+  [data-kind="topic"] {
+    --kind: var(--map-topic);
+  }
+
+  [data-kind="article"] {
+    --kind: var(--map-article);
+  }
+
+  [data-kind="snippet"] {
+    --kind: var(--map-snippet);
+  }
+
+  [data-kind="tool"],
+  [data-kind="category"] {
+    --kind: var(--map-tool);
+  }
+
+  .map__swatch path {
+    fill: var(--kind);
+    stroke: var(--kind);
+    stroke-width: 1.5;
+  }
+
+  .map__swatch[data-kind="topic"] path,
+  .map__swatch[data-kind="category"] path {
+    fill: color-mix(in oklab, var(--kind) 22%, transparent);
+  }
+
+  .map__edge {
+    fill: none;
+    stroke: var(--map-edge);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .map__node {
+    cursor: pointer;
+    outline: none;
+  }
+
+  .map__hit {
+    fill: transparent;
+  }
+
+  .map__shape {
+    fill: var(--kind);
+    stroke: var(--map-surface);
+    stroke-width: 1.5;
+  }
+
+  .map__node--hub .map__shape {
+    fill: color-mix(in oklab, var(--kind) 18%, var(--map-surface));
+    stroke: var(--kind);
+    stroke-width: 1.75;
+  }
+
+  .map__core {
+    fill: var(--kind);
+  }
+
+  .map__ring {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 2.5;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* The focus indicator: a 2.5px accent ring round the node (3:1 against the surface). */
+  .map__node:focus-visible .map__ring {
+    opacity: 1;
+  }
+
+  .map__label {
+    fill: var(--ink);
+    font-family: var(--sans);
+    pointer-events: none;
+    paint-order: stroke;
+    stroke: var(--map-surface);
+    stroke-width: 4px;
+    stroke-linejoin: round;
+  }
+
+  .map__label--hub {
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .map__node[data-kind="category"] .map__label--hub {
+    fill: var(--ink-muted);
+    font-family: var(--mono);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  /* Item titles appear one at a time. Without the script, on hover and focus. */
+  .map__label--item {
+    font-weight: 500;
+    visibility: hidden;
+  }
+
+  .map:not([data-ready]) .map__node:is(:hover, :focus-visible) .map__label--item {
+    visibility: visible;
+  }
+
+  /* With the script, the active node's title is drawn last, above every other node. */
+  .map__callout {
+    fill: var(--ink);
+    font: 500 15px var(--sans);
+    paint-order: stroke;
+    stroke: var(--map-surface);
+    stroke-width: 5px;
+    stroke-linejoin: round;
+    pointer-events: none;
+  }
+
+  .map__callout[data-hub] {
+    display: none;
+  }
+
+  /* Highlighting: the active node, its neighbours and the edges between them stay lit. */
+  .map[data-highlighting] .map__node:not(.is-active, .is-near) {
+    opacity: 0.16;
+  }
+
+  .map[data-highlighting] .map__edge:not(.is-lit) {
+    opacity: 0.12;
+  }
+
+  .map__edge.is-lit {
+    stroke: var(--accent);
+    stroke-width: 1.6;
+  }
+
+  .map__node.is-active .map__ring {
+    opacity: 1;
+  }
+
+  .map[data-pinned] .map__node--hub.is-active .map__ring {
+    stroke-dasharray: 3 4;
+  }
+
+  /* Filters. */
+  .map[data-hide-topic] [data-filter="topic"],
+  .map[data-hide-article] [data-filter="article"],
+  .map[data-hide-snippet] [data-filter="snippet"],
+  .map[data-hide-tool] [data-filter="tool"],
+  .map[data-hide-topic] .map__edge[data-kinds~="topic"],
+  .map[data-hide-article] .map__edge[data-kinds~="article"],
+  .map[data-hide-snippet] .map__edge[data-kinds~="snippet"],
+  .map[data-hide-tool] .map__edge[data-kinds~="tool"] {
+    display: none;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .map__node,
+    .map__edge {
+      transition:
+        opacity var(--duration-base) ease,
+        stroke var(--duration-base) ease;
+    }
+
+    .map__ring {
+      transition: opacity var(--duration-fast) ease;
+    }
+
+    /* Entrance: edges draw in, then the hubs and items settle. */
+    .map__edges {
+      animation: map-fade var(--duration-slow) var(--ease-out-expo) backwards;
+    }
+
+    .map__node--hub .map__glyph {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: map-pop var(--duration-slow) var(--ease-out-expo) 120ms backwards;
+    }
+
+    .map__node--hub .map__label {
+      animation: map-fade var(--duration-slow) var(--ease-out-expo) 200ms backwards;
+    }
+
+    .map__node:not(.map__node--hub) {
+      animation: map-fade var(--duration-slow) var(--ease-out-expo) 260ms backwards;
+    }
+
+    .map[data-pinned] .map__node--hub.is-active .map__ring {
+      animation: map-spin 6s linear infinite;
+    }
+  }
+
+  @keyframes map-fade {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @keyframes map-pop {
+    from {
+      opacity: 0;
+      scale: 0.6;
+    }
+  }
+
+  @keyframes map-spin {
+    to {
+      stroke-dashoffset: -70;
+    }
+  }
+
+  .map__inspector {
+    padding: 1.25rem;
+    border-inline-start: 1px solid var(--rule);
+    background: var(--map-surface);
+  }
+
+  .map__inspector-panel {
+    display: grid;
+    align-content: start;
+    gap: 0.5rem;
+  }
+
+  .map__inspector-panel[hidden] {
+    display: none;
+  }
+
+  .map__inspector-kind {
+    color: var(--accent);
+  }
+
+  .map__inspector-title {
+    font-weight: 600;
+    font-size: var(--text-step-0);
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+
+  .map__inspector-hint {
+    font-size: var(--text-step--1);
+    color: var(--ink-muted);
+  }
+
+  @media (scripting: none) {
+    .map__inspector-hint {
+      display: none;
+    }
+  }
+
+  .map__inspector-subhead {
+    margin-block-start: 1rem;
+  }
+
+  .map__inspector-top {
+    display: grid;
+    gap: 0.1rem;
+    font-size: var(--text-step--1);
+  }
+
+  .map__inspector-top li {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .map__inspector-top a {
+    display: inline-block;
+    padding-block: 0.2rem;
+    font-weight: 500;
+    color: var(--ink-muted);
+    text-decoration: none;
+  }
+
+  .map__inspector-top a:hover {
+    color: var(--accent);
+  }
+
+  .map__inspector-list {
+    display: grid;
+    gap: 0.35rem;
+    margin-block-start: 0.5rem;
+    font-size: var(--text-step--1);
+    color: var(--ink-muted);
+  }
+
+  .map__inspector-list li {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+
+  .map__inspector-list li::before {
+    content: "";
+    flex: none;
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 2px;
+    background: var(--kind);
+    translate: 0 -0.05rem;
+  }
+
+  .map__inspector-list li[data-kind="topic"]::before {
+    border-radius: 50%;
+  }
+
+  .map__inspector-list li[data-kind="snippet"]::before {
+    rotate: 45deg;
+    border-radius: 1px;
+  }
+
+  .map__footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem 2rem;
+    padding: 0.9rem 1.25rem;
+    border-block-start: 1px solid var(--rule);
+    background: var(--map-surface);
+  }
+
+  .map__legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.25rem;
+    font-size: var(--text-step--1);
+    color: var(--ink-muted);
+  }
+
+  .map__legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+
+  .map__hint {
+    font-size: var(--text-step--2);
+    color: var(--ink-faint);
+  }
+
+  .map__note {
+    display: none;
+    padding: 0.9rem 1.25rem;
+    border-block-end: 1px solid var(--rule);
+    background: var(--map-surface);
+    font-size: var(--text-step--1);
+    color: var(--ink-muted);
+  }
+
+  .map__note a {
+    margin-inline-start: 0.25rem;
+    font-weight: 500;
+    color: var(--accent);
+  }
+
+  @media (width < 56rem) {
+    .map__stage {
+      grid-template-columns: 1fr;
+    }
+
+    .map__inspector {
+      border-inline-start: 0;
+      border-block-start: 1px solid var(--rule);
+      min-height: 7.5rem;
+    }
+
+    .map__inspector-top {
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 10rem), 1fr));
+      column-gap: 2rem;
+    }
+  }
+
+  /* On a phone the map is an overview: item titles are too small to read, so the list leads. */
+  @media (width < 40rem) {
+    .map__note {
+      display: block;
+    }
+
+    /* Hub labels would render at a few pixels; the shapes alone read as an overview. */
+    .map__hint,
+    .map__label,
+    .map__callout,
+    .map__inspector-hint {
+      display: none;
+    }
+
+    .map__status {
+      margin-inline-start: 0;
+    }
+  }
+
+  .map-list {
+    display: grid;
+    gap: 1.25rem;
+    outline: none;
+  }
+
+  .map-list__head {
+    display: grid;
+    gap: 0.75rem;
+    margin-block-end: 1rem;
+  }
+
+  .map-list__lede {
+    max-width: 60ch;
+    color: var(--ink-muted);
+  }
+
+  .map-list__group-title {
+    margin-block-start: 1rem;
+  }
+
+  .map-list__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr));
+    gap: 0.75rem;
+  }
+
+  .map-list__card {
+    display: grid;
+    align-content: start;
+    gap: 1rem;
+    padding: 1.25rem;
+    border-radius: var(--radius-md);
+  }
+
+  .map-list__hub {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.25rem 1rem;
+    font-size: var(--text-step-1);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  .map-list__hub a {
+    text-decoration: none;
+    overflow-wrap: anywhere;
+  }
+
+  .map-list__hub a:hover {
+    color: var(--accent);
+  }
+
+  .map-list__count {
+    font-size: var(--text-step--2);
+    font-weight: 400;
+    letter-spacing: 0;
+    color: var(--ink-faint);
+  }
+
+  .map-list__kind {
+    display: grid;
+    gap: 0.4rem;
+  }
+
+  .map-list__kind-title {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font: 500 var(--text-step--2) / 1 var(--mono);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .map-list__card ul {
+    display: grid;
+    gap: 0.15rem;
+  }
+
+  .map-list__card li {
+    font-size: var(--text-step--1);
+    line-height: 1.4;
+  }
+
+  .map-list__card li a {
+    display: inline-block;
+    padding-block: 0.2rem;
+    color: var(--ink-muted);
+    text-decoration: none;
+  }
+
+  .map-list__card li a:hover {
+    color: var(--ink);
+    text-decoration: underline;
+  }
+
+  .map-list__tools li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0 0.75rem;
+  }
+
+  .map-list__also {
+    font: 500 var(--text-step--2) / 1.4 var(--mono);
+    color: var(--accent);
+  }
+</style>

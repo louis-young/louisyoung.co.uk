@@ -56,6 +56,7 @@ export const pages = [
   "/tools/base/",
   "/tools/markdown-table/",
   "/stats/",
+  "/map/",
   "/changelog/",
   "/colophon/",
   "/accessibility/",

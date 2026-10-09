@@ -48,6 +48,12 @@ const groups: { id: string; label: string; options: Option[] }[] = [
       ...tools.map((tool) => ({ title: t(tool.title), href: toolPath(tool.slug), keywords: tool.keywords })),
       { title: t("nav.stats"), href: "/stats/", hint: "/stats" },
       {
+        title: t("map.title"),
+        href: "/map/",
+        hint: "/map",
+        keywords: "graph knowledge topics connections tags network",
+      },
+      {
         title: t("changelog.title"),
         href: "/changelog/",
         hint: "/changelog",
