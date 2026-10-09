@@ -1,0 +1,218 @@
+---
+import { formatDate, isoDate, useTranslations } from "../../i18n";
+import { localeOf } from "../../i18n/astro";
+import { articlePath, getArticles } from "../../lib/articles";
+import { getHistory, type ChangeKind } from "../../lib/changelog";
+import { newestFirst } from "../../lib/latest";
+import { estimateReadingTime } from "../../lib/reading-time";
+import { getSnippets, languageName, snippetPath } from "../../lib/snippets";
+import { newestTool, toolPath } from "../../lib/tool-catalogue";
+import SectionHeading from "./SectionHeading.astro";
+
+/** The newest article, snippet, tool and change, newest first. All of it is worked out at build time. */
+const locale = localeOf(Astro);
+const t = useTranslations(locale);
+const [article] = await getArticles();
+const [snippet] = await getSnippets();
+const tool = newestTool();
+const [change] = newestFirst(getHistory().changes);
+const changeLabels: Record<ChangeKind, string> = {
+  feature: t("changelog.feature"),
+  fix: t("changelog.fix"),
+  performance: t("changelog.performance"),
+  accessibility: t("changelog.accessibility"),
+};
+
+const items = newestFirst([
+  article && {
+    kind: "article",
+    label: t("home.latestArticle"),
+    glyph: "¶",
+    title: article.data.title,
+    href: articlePath(article),
+    date: article.data.date,
+    detail: t("article.readingTime", { minutes: estimateReadingTime(article.body ?? "") }),
+  },
+  snippet && {
+    kind: "snippet",
+    label: t("home.latestSnippet"),
+    glyph: "</>",
+    title: snippet.data.title,
+    href: snippetPath(snippet),
+    date: snippet.data.date,
+    detail: languageName(snippet.data.language),
+  },
+  {
+    kind: "tool",
+    label: t("home.latestTool"),
+    glyph: tool.icon,
+    title: t(tool.title),
+    href: toolPath(tool.slug),
+    date: new Date(tool.added),
+    detail: undefined,
+  },
+  change && {
+    kind: "change",
+    label: t("home.latestChange"),
+    glyph: "Δ",
+    title: change.subject,
+    href: "/changelog/",
+    date: change.date,
+    detail: changeLabels[change.kind],
+  },
+]);
+---
+
+<section class="container-page latest" aria-labelledby="latest-title">
+  <SectionHeading
+    id="latest-title"
+    number={t("home.latestEyebrow")}
+    title={t("home.latestTitle")}
+    link={{ href: "/changelog/", label: t("home.latestAll") }}
+  />
+  <ol class="latest__list" role="list">
+    {items.map((item) => (
+      <li class="latest__item card card--interactive rise" data-kind={item.kind}>
+        <span class="latest__glyph" aria-hidden="true">
+          {item.glyph}
+        </span>
+        <p class="label latest__kind">
+          <span>{item.label}</span>
+          {item.detail && (
+            <>
+              <span aria-hidden="true">·</span>
+              <span>{item.detail}</span>
+            </>
+          )}
+        </p>
+        <h3 class="latest__title">
+          <a href={item.href} class="stretched-link">
+            {item.title}
+          </a>
+        </h3>
+        <p class="meta latest__meta">
+          <time datetime={isoDate(item.date)}>{formatDate(item.date, locale)}</time>
+        </p>
+      </li>
+    ))}
+  </ol>
+</section>
+
+<style>
+  .latest {
+    padding-block: clamp(2rem, 1rem + 3vw, 3.5rem);
+  }
+
+  .latest__list {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.75rem;
+  }
+
+  @media (width >= 40rem) {
+    .latest__list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1rem;
+    }
+  }
+
+  @media (width >= 68rem) {
+    .latest__list {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  /* Phones: glyph on the left, text stacked beside it. Wider: glyph and kind on top. */
+  .latest__item {
+    display: grid;
+    grid-template-columns: 2.5rem minmax(0, 1fr);
+    grid-template-areas:
+      "glyph kind"
+      "glyph title"
+      "glyph meta";
+    column-gap: 1rem;
+    row-gap: 0.3rem;
+    align-content: start;
+    padding: 1rem 1.15rem;
+  }
+
+  @media (width >= 40rem) {
+    .latest__item {
+      grid-template-rows: auto 1fr auto;
+      grid-template-areas:
+        "glyph kind"
+        "title title"
+        "meta meta";
+      align-items: center;
+      row-gap: 0.85rem;
+      padding: 1.25rem 1.35rem 1.15rem;
+    }
+  }
+
+  .latest__glyph {
+    grid-area: glyph;
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-sm);
+    background: color-mix(in oklch, var(--accent) 10%, transparent);
+    color: var(--accent);
+    font: 600 var(--text-step--1) / 1 var(--sans);
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+  }
+
+  .latest__kind {
+    grid-area: kind;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.2rem 0.45rem;
+  }
+
+  /* The newest item gets a soft live dot: the site is still moving. Decoration only. */
+  .latest__item:first-child .latest__kind::after {
+    content: "";
+    width: 0.4rem;
+    height: 0.4rem;
+    border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--success) 22%, transparent);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .latest__item:first-child .latest__kind::after {
+      animation: latest-pulse 2.4s ease-in-out infinite;
+    }
+  }
+
+  @keyframes latest-pulse {
+    50% {
+      box-shadow: 0 0 0 5px color-mix(in oklch, var(--success) 8%, transparent);
+    }
+  }
+
+  .latest__title {
+    grid-area: title;
+    align-self: start;
+    font-weight: 600;
+    font-size: var(--text-step-0);
+    line-height: 1.35;
+    letter-spacing: -0.015em;
+    text-wrap: pretty;
+  }
+
+  .latest__title a {
+    text-decoration: none;
+  }
+
+  .latest__item:hover .latest__title a {
+    color: var(--accent);
+  }
+
+  .latest__meta {
+    grid-area: meta;
+  }
+</style>
