@@ -1,5 +1,6 @@
 ---
 import PageHero from "../../components/sections/PageHero.astro";
+import ShareLink from "../../components/ShareLink.astro";
 import { useTranslations } from "../../i18n";
 import { localeOf } from "../../i18n/astro";
 import Base from "../../layouts/Base.astro";
@@ -11,7 +12,9 @@ const versions = ["1.2.2", "1.2.3", "1.4.0", "1.9.9-rc.1", "2.0.0", "v1.10.1", "
 ---
 
 <Base {...toolPageProps("semver", t)}>
-  <PageHero label={t("nav.tools")} title={t("tools.semver.title")} lede={t("tools.semver.summary")} />
+  <PageHero label={t("nav.tools")} title={t("tools.semver.title")} lede={t("tools.semver.summary")}>
+    <ShareLink />
+  </PageHero>
   <div
     class="container-page semver"
     data-semver
@@ -49,6 +52,7 @@ const versions = ["1.2.2", "1.2.3", "1.4.0", "1.9.9-rc.1", "2.0.0", "v1.10.1", "
           spellcheck="false"
           aria-describedby="semver-range-hint semver-status"
           data-range
+          data-share="range"
         />
         <p id="semver-range-hint" class="semver__hint">
           {t("tools.semver.rangeHint")}
@@ -81,6 +85,7 @@ const versions = ["1.2.2", "1.2.3", "1.4.0", "1.9.9-rc.1", "2.0.0", "v1.10.1", "
           spellcheck="false"
           aria-describedby="semver-versions-hint"
           data-versions
+          data-share="versions"
         >{versions}</textarea>
         <p id="semver-versions-hint" class="semver__hint">
           {t("tools.semver.versionsHint")}
@@ -124,8 +129,10 @@ const versions = ["1.2.2", "1.2.3", "1.4.0", "1.9.9-rc.1", "2.0.0", "v1.10.1", "
 
 <script>
   import { initSemver } from "../../scripts/tool-semver";
+  import { initShareLink } from "../../scripts/share-link";
 
   initSemver();
+  initShareLink();
 </script>
 
 <style>

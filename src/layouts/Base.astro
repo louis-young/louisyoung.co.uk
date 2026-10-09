@@ -5,6 +5,7 @@ import Footer from "../components/Footer.astro";
 import Head from "../components/Head.astro";
 import Header from "../components/Header.astro";
 import Palette from "../components/Palette.astro";
+import RelatedTools from "../components/RelatedTools.astro";
 import ShortcutsHelp from "../components/ShortcutsHelp.astro";
 import Terminal from "../components/Terminal.astro";
 import { localeOf } from "../i18n/astro";
@@ -15,9 +16,15 @@ import { getEntry } from "astro:content";
 import { cv } from "../../content/data/cv";
 import { filled } from "../lib/placeholders";
 import { getSnippets, languageName, snippetPath } from "../lib/snippets";
+import type { ToolSlug } from "../lib/tool-catalogue";
 import { getWork, isPagePublished, workPath } from "../lib/work";
 
-type Props = Parameters<typeof Head>[0];
+type Props = Parameters<typeof Head>[0] & {
+  /** Set on tool pages (via `toolPageProps`): adds related tools and records the visit. */
+  tool?: ToolSlug;
+};
+
+const { tool, ...head } = Astro.props;
 
 const locale = localeOf(Astro);
 const t = useTranslations(locale);
@@ -51,7 +58,7 @@ const paletteSnippets = (await getSnippets()).map((snippet) => ({
 <!doctype html>
 <html lang={locale} dir="ltr">
   <head>
-    <Head {...Astro.props} />
+    <Head {...head} />
     <slot name="head" />
   </head>
   <body id="top">
@@ -62,6 +69,7 @@ const paletteSnippets = (await getSnippets()).map((snippet) => ({
     <Header sections={sections} />
     <main id="main" tabindex="-1">
       <slot />
+      {tool && <RelatedTools slug={tool} />}
     </main>
     <Footer showUses={showUses} />
     <Palette

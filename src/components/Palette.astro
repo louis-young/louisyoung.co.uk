@@ -1,5 +1,6 @@
 ---
 import { translatorFor } from "../i18n/astro";
+import { toolPath, tools } from "../lib/tool-catalogue";
 import { site } from "../site.config";
 
 interface Item {
@@ -44,67 +45,7 @@ const groups: { id: string; label: string; options: Option[] }[] = [
       { title: t("nav.uses"), href: "/uses/", hint: "/uses" },
       { title: t("tags.title"), href: "/tags/", hint: "/tags" },
       { title: t("nav.tools"), href: "/tools/", hint: "/tools" },
-      { title: t("tools.contrast.title"), href: "/tools/contrast/", keywords: "wcag colour color a11y" },
-      { title: t("tools.clamp.title"), href: "/tools/clamp/", keywords: "fluid type css" },
-      { title: t("tools.reading.title"), href: "/tools/reading-time/", keywords: "words" },
-      { title: t("tools.json.title"), href: "/tools/json/", keywords: "validate minify prettify format" },
-      { title: t("tools.regex.title"), href: "/tools/regex/", keywords: "regular expression pattern match" },
-      { title: t("tools.encode.title"), href: "/tools/encode/", keywords: "base64 url html entities jwt decode" },
-      { title: t("tools.colour.title"), href: "/tools/colour/", keywords: "color hex rgb hsl oklch palette scale" },
-      { title: t("tools.units.title"), href: "/tools/units/", keywords: "px rem em pt vw vh convert" },
-      { title: t("tools.easing.title"), href: "/tools/easing/", keywords: "cubic-bezier animation transition curve" },
-      { title: t("tools.cron.title"), href: "/tools/cron/", keywords: "crontab schedule job explain" },
-      { title: t("tools.timestamp.title"), href: "/tools/timestamp/", keywords: "unix epoch iso date time zone" },
-      { title: t("tools.diff.title"), href: "/tools/diff/", keywords: "compare difference text lines" },
-      { title: t("tools.hash.title"), href: "/tools/hash/", keywords: "sha sha256 checksum uuid guid random" },
-      {
-        title: t("tools.http.title"),
-        href: "/tools/http-status/",
-        keywords: "http status code error 404 500 redirect",
-      },
-      { title: t("tools.semver.title"), href: "/tools/semver/", keywords: "semantic version range npm caret tilde" },
-      { title: t("tools.chmod.title"), href: "/tools/chmod/", keywords: "unix file permissions octal 755 rwx" },
-      { title: t("tools.css.title"), href: "/tools/css-generator/", keywords: "box-shadow linear radial gradient css" },
-      {
-        title: t("tools.jsonts.title"),
-        href: "/tools/json-to-ts/",
-        keywords: "typescript interface type generate json schema ts",
-      },
-      {
-        title: t("tools.case.title"),
-        href: "/tools/case/",
-        keywords: "camel pascal snake kebab title sentence slug uppercase lowercase text",
-      },
-      {
-        title: t("tools.aspect.title"),
-        href: "/tools/aspect-ratio/",
-        keywords: "aspect ratio 16:9 4:3 resize width height video image",
-      },
-      {
-        title: t("tools.sql.title"),
-        href: "/tools/sql/",
-        keywords: "sql query format beautify minify prettify database",
-      },
-      {
-        title: t("tools.specificity.title"),
-        href: "/tools/specificity/",
-        keywords: "css selector specificity cascade weight is where not has id class",
-      },
-      {
-        title: t("tools.url.title"),
-        href: "/tools/url/",
-        keywords: "url uri parse query string search params encode decode percent",
-      },
-      {
-        title: t("tools.base.title"),
-        href: "/tools/base/",
-        keywords: "binary octal decimal hex hexadecimal radix bits twos complement endian",
-      },
-      {
-        title: t("tools.markdownTable.title"),
-        href: "/tools/markdown-table/",
-        keywords: "markdown table gfm csv tsv generator columns rows",
-      },
+      ...tools.map((tool) => ({ title: t(tool.title), href: toolPath(tool.slug), keywords: tool.keywords })),
       { title: t("nav.stats"), href: "/stats/", hint: "/stats" },
       {
         title: t("changelog.title"),

@@ -1,5 +1,6 @@
 ---
 import PageHero from "../../components/sections/PageHero.astro";
+import ShareLink from "../../components/ShareLink.astro";
 import { useTranslations } from "../../i18n";
 import { localeOf } from "../../i18n/astro";
 import Base from "../../layouts/Base.astro";
@@ -34,7 +35,9 @@ const after = [
 ---
 
 <Base {...toolPageProps("diff", t)}>
-  <PageHero label={t("nav.tools")} title={t("tools.diff.title")} lede={t("tools.diff.summary")} />
+  <PageHero label={t("nav.tools")} title={t("tools.diff.title")} lede={t("tools.diff.summary")}>
+    <ShareLink />
+  </PageHero>
   <div
     class="container-page diff"
     data-diff
@@ -64,6 +67,7 @@ const after = [
           spellcheck="false"
           autocomplete="off"
           data-before
+          data-share="before"
         >{before.join("\n")}</textarea>
       </div>
       <div class="diff__field">
@@ -77,6 +81,7 @@ const after = [
           spellcheck="false"
           autocomplete="off"
           data-after
+          data-share="after"
         >{after.join("\n")}</textarea>
       </div>
     </div>
@@ -93,7 +98,7 @@ const after = [
           <div class="diff__segmented" role="radiogroup" aria-labelledby="diff-view">
             {views.map((view, i) => (
               <label class="diff__segment">
-                <input type="radio" name="view" value={view.value} checked={i === 0} />
+                <input type="radio" name="view" value={view.value} checked={i === 0} data-share="view" />
                 <span>{view.label}</span>
               </label>
             ))}
@@ -108,8 +113,10 @@ const after = [
 
 <script>
   import { initDiff } from "../../scripts/tool-diff";
+  import { initShareLink } from "../../scripts/share-link";
 
   initDiff();
+  initShareLink();
 </script>
 
 <style>

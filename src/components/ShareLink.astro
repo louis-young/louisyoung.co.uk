@@ -1,0 +1,51 @@
+---
+import { translatorFor } from "../i18n/astro";
+import Icon from "./Icon.astro";
+
+const t = translatorFor(Astro);
+---
+
+{/*
+ * "Copy share link" for a tool page's hero. The page marks the inputs to share with
+ * data-share="<key>" and calls initShareLink() from src/scripts/share-link.ts after starting
+ * the tool. The button needs JavaScript, so it only appears when scripting is on.
+ */}
+<div class="share-link">
+  <button
+    type="button"
+    class="button button--small"
+    data-share-link
+    data-copied={t("tools.share.copied")}
+    data-manual={t("tools.share.manual")}
+    data-too-long={t("tools.share.tooLong")}
+    data-restored={t("tools.share.restored")}
+  >
+    <Icon name="link" size={14} />
+    {t("tools.share.button")}
+  </button>
+  <p class="share-link__status" role="status" data-share-status></p>
+</div>
+
+<style>
+  .share-link {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.9rem;
+  }
+
+  @media (scripting: none) {
+    .share-link {
+      display: none;
+    }
+  }
+
+  .share-link__status {
+    color: var(--ink-muted);
+    font-size: var(--text-step--1);
+  }
+
+  .share-link__status[data-error] {
+    color: var(--danger);
+  }
+</style>

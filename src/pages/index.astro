@@ -7,42 +7,53 @@ import { profile } from "../../content/data/profile";
 import ArticleRow from "../components/ArticleRow.astro";
 import Availability from "../components/sections/Availability.astro";
 import CvRoles from "../components/sections/CvRoles.astro";
-import FeaturedArticle from "../components/sections/FeaturedArticle.astro";
 import HeroEditor from "../components/sections/HeroEditor.astro";
+import LatestFeed from "../components/sections/LatestFeed.astro";
 import Principles from "../components/sections/Principles.astro";
 import Repositories from "../components/sections/Repositories.astro";
 import SectionHeading from "../components/sections/SectionHeading.astro";
-import Shortcuts from "../components/sections/Shortcuts.astro";
 import Toolbox from "../components/sections/Toolbox.astro";
+import ToolsTeaser from "../components/sections/ToolsTeaser.astro";
 import WorkTable from "../components/sections/WorkTable.astro";
 import { formatDate, useTranslations } from "../i18n";
 import { localeOf } from "../i18n/astro";
 import Base from "../layouts/Base.astro";
 import { getArticles, getTags } from "../lib/articles";
+import { yearsOfExperience } from "../lib/cv";
 import { getRepositories } from "../lib/github";
 import { bookingHref } from "../lib/hire";
 import { filled } from "../lib/placeholders";
 import { websiteSchema } from "../lib/seo";
+import { getSnippets } from "../lib/snippets";
+import { tools } from "../lib/tool-catalogue";
 import { getWork, isPagePublished } from "../lib/work";
 
 const locale = localeOf(Astro);
 const t = useTranslations(locale);
 const work = await getWork();
 const allArticles = await getArticles();
-const [featured, ...rest] = allArticles;
-const articles = rest.slice(0, 6);
+const articles = allArticles.slice(0, 6);
+const snippets = await getSnippets();
 const topics = getTags(allArticles);
 const repositories = await getRepositories(profile.github);
 const nowEntry = await getEntry("pages", "now");
 const now = nowEntry && isPagePublished(nowEntry) ? nowEntry : undefined;
 const hasRoles = cv.roles.some((role) => filled(role.company) && filled(role.role));
 const stars = repositories.reduce((total, repository) => total + repository.stars, 0);
+const years = yearsOfExperience(cv.roles, new Date());
+/** Every number is counted at build time: content, the tool catalogue, the CV and GitHub. */
 const counts = [
   { value: allArticles.length, label: t("home.statArticles", { count: allArticles.length }) },
-  { value: topics.length, label: t("home.statTopics", { count: topics.length }) },
-  ...(allArticles.length > 0
-    ? [{ value: allArticles.at(-1)!.data.date.getFullYear(), label: t("home.statSince"), raw: true }]
+  { value: tools.length, label: t("home.statTools", { count: tools.length }) },
+  ...(snippets.length > 0
+    ? [{ value: snippets.length, label: t("home.statSnippets", { count: snippets.length }) }]
     : []),
+  // Years of experience once the CV has a real start date; until then, how long the writing goes back.
+  ...(years !== undefined
+    ? [{ value: years, label: t("home.statYears", { count: years }) }]
+    : allArticles.length > 0
+      ? [{ value: allArticles.at(-1)!.data.date.getFullYear(), label: t("home.statSince"), raw: true }]
+      : []),
   ...(repositories.length > 0
     ? [
         { value: repositories.length, label: t("home.statRepos", { count: repositories.length }) },
@@ -106,9 +117,17 @@ const stats = counts.map((stat) => ({
     </dl>
   </section>
 
-  {featured && (
-    <section class="container-page section section--tight rise" aria-label={t("home.featured")}>
-      <FeaturedArticle article={featured} />
+  <LatestFeed />
+
+  {work.length > 0 && (
+    <section class="container-page section" aria-labelledby="work-title">
+      <SectionHeading
+        id="work-title"
+        number={t("nav.work")}
+        title={t("home.selectedWork")}
+        link={{ href: "/work/", label: t("home.allWork") }}
+      />
+      <WorkTable work={work} />
     </section>
   )}
 
@@ -117,7 +136,7 @@ const stats = counts.map((stat) => ({
       <SectionHeading
         id="writing-title"
         number={t("nav.writing")}
-        title={t("home.moreWriting")}
+        title={t("home.recentWriting")}
         link={{ href: "/writing/", label: t("home.allWriting") }}
       />
       <p class="bento__lede">{t("home.writingIntro")}</p>
@@ -168,8 +187,6 @@ const stats = counts.map((stat) => ({
       <Toolbox />
     </article>
 
-    <Shortcuts class="bento__keys rise" />
-
     {now && (
       <article class="card bento__now rise" aria-labelledby="now-title">
         <p class="label bento__eyebrow">{t("nav.now")}</p>
@@ -186,22 +203,12 @@ const stats = counts.map((stat) => ({
     )}
   </section>
 
+  <ToolsTeaser />
+
   <section class="container-page section" aria-labelledby="principles-title">
     <SectionHeading id="principles-title" number={t("home.approach")} title={t("home.principles")} />
     <Principles />
   </section>
-
-  {work.length > 0 && (
-    <section class="container-page section" aria-labelledby="work-title">
-      <SectionHeading
-        id="work-title"
-        number={t("nav.work")}
-        title={t("home.selectedWork")}
-        link={{ href: "/work/", label: t("home.allWork") }}
-      />
-      <WorkTable work={work} />
-    </section>
-  )}
 
   {hasRoles && (
     <section class="container-page section" aria-labelledby="cv-title">
@@ -363,10 +370,6 @@ const stats = counts.map((stat) => ({
     padding-block: clamp(2rem, 1rem + 3vw, 3.5rem);
   }
 
-  .section--tight {
-    padding-block-end: 0;
-  }
-
   .bento {
     display: grid;
     grid-template-columns: repeat(12, minmax(0, 1fr));
@@ -414,8 +417,7 @@ const stats = counts.map((stat) => ({
     grid-column: span 5;
   }
 
-  .bento__now,
-  .bento > :global(.bento__keys) {
+  .bento__now {
     grid-column: 1 / -1;
   }
 

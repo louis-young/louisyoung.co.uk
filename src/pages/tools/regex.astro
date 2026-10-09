@@ -1,5 +1,6 @@
 ---
 import PageHero from "../../components/sections/PageHero.astro";
+import ShareLink from "../../components/ShareLink.astro";
 import { useTranslations } from "../../i18n";
 import { localeOf } from "../../i18n/astro";
 import Base from "../../layouts/Base.astro";
@@ -18,7 +19,9 @@ const pattern = String.raw`(?<year>\d{4})-(?<month>\d{2})-(\d{2})`;
 ---
 
 <Base {...toolPageProps("regex", t)}>
-  <PageHero label={t("nav.tools")} title={t("tools.regex.title")} lede={t("tools.regex.summary")} />
+  <PageHero label={t("nav.tools")} title={t("tools.regex.title")} lede={t("tools.regex.summary")}>
+    <ShareLink />
+  </PageHero>
   <div
     class="container-page regex"
     data-regex
@@ -50,6 +53,7 @@ const pattern = String.raw`(?<year>\d{4})-(?<month>\d{2})-(\d{2})`;
             spellcheck="false"
             aria-describedby="regex-pattern-hint regex-status"
             data-pattern
+            data-share="pattern"
           />
           <span aria-hidden="true">/</span>
         </div>
@@ -64,7 +68,7 @@ const pattern = String.raw`(?<year>\d{4})-(?<month>\d{2})-(\d{2})`;
         <div class="regex__flag-list">
           {flags.map((item) => (
             <label class="regex__flag">
-              <input type="checkbox" checked={item.checked} data-flag={item.flag} />
+              <input type="checkbox" checked={item.checked} data-flag={item.flag} data-share={`flag-${item.flag}`} />
               <code>{item.flag}</code>
               <span>{item.label}</span>
             </label>
@@ -81,6 +85,7 @@ const pattern = String.raw`(?<year>\d{4})-(?<month>\d{2})-(\d{2})`;
           rows="8"
           spellcheck="false"
           data-text
+          data-share="text"
         >{t("tools.regex.sample")}</textarea>
       </div>
     </div>
@@ -105,8 +110,10 @@ const pattern = String.raw`(?<year>\d{4})-(?<month>\d{2})-(\d{2})`;
 
 <script>
   import { initRegex } from "../../scripts/tool-regex";
+  import { initShareLink } from "../../scripts/share-link";
 
   initRegex();
+  initShareLink();
 </script>
 
 <style>

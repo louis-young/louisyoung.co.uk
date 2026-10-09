@@ -29,3 +29,19 @@ export const publishableCv = (cv: CV): CV => ({
     .filter((group) => group.items.length > 0),
   education: cv.education.filter((item) => !isPlaceholder(`${item.years} ${item.qualification} ${item.institution}`)),
 });
+
+/**
+ * Whole years since the earliest real role started ("YYYY" or "YYYY-MM"), counted in calendar
+ * years to `now`. Undefined until at least one role has a filled-in company, title and start.
+ */
+export const yearsOfExperience = (roles: readonly Role[], now: Date) => {
+  const starts = roles
+    .filter((role) => ![role.company, role.role, role.start].some(isPlaceholder))
+    .flatMap((role) => {
+      const year = /^(?<year>\d{4})(?:-\d{2})?$/u.exec(role.start.trim())?.groups?.["year"];
+      return year ? [Number(year)] : [];
+    });
+  if (starts.length === 0) return undefined;
+  const years = now.getUTCFullYear() - Math.min(...starts);
+  return years > 0 ? years : undefined;
+};

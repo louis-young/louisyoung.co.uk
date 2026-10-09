@@ -1,5 +1,6 @@
 ---
 import PageHero from "../../components/sections/PageHero.astro";
+import ShareLink from "../../components/ShareLink.astro";
 import { useTranslations } from "../../i18n";
 import { localeOf } from "../../i18n/astro";
 import Base from "../../layouts/Base.astro";
@@ -21,7 +22,9 @@ const zones = [
 ---
 
 <Base {...toolPageProps("cron", t)}>
-  <PageHero label={t("nav.tools")} title={t("tools.cron.title")} lede={t("tools.cron.summary")} />
+  <PageHero label={t("nav.tools")} title={t("tools.cron.title")} lede={t("tools.cron.summary")}>
+    <ShareLink />
+  </PageHero>
   <div
     class="container-page cron"
     data-cron
@@ -63,6 +66,7 @@ const zones = [
           spellcheck="false"
           aria-describedby="cron-hint cron-status"
           data-input
+          data-share="expression"
         />
         <p id="cron-hint" class="cron__hint">
           {t("tools.cron.hint")}
@@ -89,7 +93,7 @@ const zones = [
         <div class="cron__segmented" role="radiogroup" aria-labelledby="cron-zone">
           {zones.map((zone, i) => (
             <label class="cron__segment">
-              <input type="radio" name="zone" value={zone.value} checked={i === 0} />
+              <input type="radio" name="zone" value={zone.value} checked={i === 0} data-share="zone" />
               <span>{zone.label}</span>
             </label>
           ))}
@@ -158,8 +162,10 @@ const zones = [
 
 <script>
   import { initCron } from "../../scripts/tool-cron";
+  import { initShareLink } from "../../scripts/share-link";
 
   initCron();
+  initShareLink();
 </script>
 
 <style>

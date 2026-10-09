@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { bookingHref, enquiryMailto } from "../../src/lib/hire";
-import { formatPeriod, publishableCv } from "../../src/lib/cv";
+import { formatPeriod, publishableCv, yearsOfExperience } from "../../src/lib/cv";
 import { formatLocalTime, msToNextMinute } from "../../src/lib/clock";
 
 const labels = {
@@ -100,5 +100,32 @@ describe("publishableCv", () => {
     expect(result.roles).toEqual([{ ...role, location: "", highlights: ["Shipped it"], stack: ["React"] }]);
     expect(result.skills).toEqual([{ group: "Languages", items: ["TypeScript"] }]);
     expect(result.education).toEqual([{ years: "2012 — 2015", qualification: "BSc", institution: "Somewhere" }]);
+  });
+});
+
+describe("yearsOfExperience", () => {
+  const role = (start: string, company = "Acme") => ({
+    company,
+    role: "Engineer",
+    start,
+    location: "Remote",
+    summary: "",
+    highlights: [],
+    stack: [],
+  });
+  const now = new Date("2026-10-09T12:00:00Z");
+
+  it("counts calendar years since the earliest real role", () => {
+    expect(yearsOfExperience([role("2021"), role("2016-09"), role("2019")], now)).toBe(10);
+  });
+
+  it("ignores placeholder roles and unparseable starts", () => {
+    expect(yearsOfExperience([role("2018"), role("[FROM]"), role("2010", "[Company]"), role("soon")], now)).toBe(8);
+  });
+
+  it("is undefined until a role is filled in, or when it started this year", () => {
+    expect(yearsOfExperience([role("[FROM]")], now)).toBeUndefined();
+    expect(yearsOfExperience([], now)).toBeUndefined();
+    expect(yearsOfExperience([role("2026")], now)).toBeUndefined();
   });
 });
