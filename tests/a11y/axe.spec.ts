@@ -74,6 +74,23 @@ test.describe("interactive states", () => {
     });
   }
 
+  for (const theme of themes) {
+    test(`the content map is accessible while highlighting and filtered (${theme})`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: theme, reducedMotion: "reduce" });
+      await page.goto("/map/");
+      await expect(page.locator("[data-map]")).toHaveAttribute("data-ready", "");
+      await page.locator('[data-id="topic:react"]').focus();
+      await expect(page.locator("[data-inspector-title]")).toHaveText("react");
+      const tags = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa", "best-practice"];
+      let results = await new AxeBuilder({ page }).include("[data-map]").withTags(tags).analyze();
+      expect(results.violations).toEqual([]);
+      await page.getByRole("checkbox", { name: /Articles/u }).uncheck();
+      await page.getByLabel("Focus a topic").selectOption("topic:css");
+      results = await new AxeBuilder({ page }).include("[data-map]").withTags(tags).analyze();
+      expect(results.violations).toEqual([]);
+    });
+  }
+
   test("focus is always visible", async ({ page }) => {
     await page.goto("/why-functional-state-updates-are-important/");
     for (let index = 0; index < 15; index += 1) {
