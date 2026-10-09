@@ -8,12 +8,14 @@ const t = translatorFor(Astro);
 {/*
  * "Copy share link" for a tool page's hero. The page marks the inputs to share with
  * data-share="<key>" and calls initShareLink() from src/scripts/share-link.ts after starting
- * the tool. The button needs JavaScript, so it only appears when scripting is on.
+ * the tool. The button needs JavaScript, so it only appears when scripting is on, and it stays
+ * disabled until the script has wired it up, so an early click is never silently lost.
  */}
 <div class="share-link">
   <button
     type="button"
     class="button button--small"
+    disabled
     data-share-link
     data-copied={t("tools.share.copied")}
     data-manual={t("tools.share.manual")}

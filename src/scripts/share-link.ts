@@ -92,4 +92,5 @@ export const initShareLink = (root: Document = document) => {
   button.addEventListener("click", () => {
     void share();
   });
+  button.disabled = false;
 };
