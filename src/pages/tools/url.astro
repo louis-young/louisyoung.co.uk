@@ -1,0 +1,456 @@
+---
+import PageHero from "../../components/sections/PageHero.astro";
+import { useTranslations } from "../../i18n";
+import { localeOf } from "../../i18n/astro";
+import Base from "../../layouts/Base.astro";
+import { toolPageProps } from "../../lib/tool-catalogue";
+
+const t = useTranslations(localeOf(Astro));
+const sample =
+  "https://ann:hunter2@shop.example.com:8443/search/caf%C3%A9 menu?q=flat+white&size=large&tag=hot#reviews";
+const parts = [
+  { part: "protocol", label: t("tools.url.protocol"), wide: false },
+  { part: "port", label: t("tools.url.port"), wide: false },
+  { part: "username", label: t("tools.url.username"), wide: false },
+  { part: "password", label: t("tools.url.password"), wide: false },
+  { part: "hostname", label: t("tools.url.hostname"), wide: true },
+  { part: "pathname", label: t("tools.url.pathname"), wide: true },
+  { part: "hash", label: t("tools.url.hash"), wide: true },
+] as const;
+---
+
+<Base {...toolPageProps("url", t)}>
+  <PageHero label={t("nav.tools")} title={t("tools.url.title")} lede={t("tools.url.summary")} />
+  <div
+    class="container-page url"
+    data-url
+    data-copied={t("tools.copied")}
+    data-empty={t("tools.url.empty")}
+    data-invalid-url={t("tools.url.invalid")}
+    data-valid-none={t("tools.url.validNone")}
+    data-valid-one={t("tools.url.validOne")}
+    data-valid-other={t("tools.url.validOther")}
+    data-rejected={t("tools.url.rejected")}
+    data-issue-missing-protocol={t("tools.url.issueMissingProtocol")}
+    data-issue-spaces={t("tools.url.issueSpaces")}
+    data-issue-hash-in-query={t("tools.url.issueHashInQuery")}
+    data-issue-bad-escape={t("tools.url.issueBadEscape")}
+    data-param-name={t("tools.url.paramName")}
+    data-param-value={t("tools.url.paramValue")}
+    data-param-remove={t("tools.url.paramRemove")}
+    data-added={t("tools.url.added")}
+    data-removed={t("tools.url.removed")}
+  >
+    <div class="url__input card">
+      <label class="url__label" for="url-input">
+        {t("tools.url.input")}
+      </label>
+      <textarea
+        id="url-input"
+        class="url__area"
+        rows="4"
+        spellcheck="false"
+        autocomplete="off"
+        autocapitalize="off"
+        aria-describedby="url-status"
+        data-input
+      >{sample}</textarea>
+      <div class="url__actions">
+        <button type="button" class="button button--small" aria-describedby="url-encode-hint" data-encode>
+          {t("tools.url.encode")}
+        </button>
+        <button type="button" class="button button--small" aria-describedby="url-decode-hint" data-decode>
+          {t("tools.url.decode")}
+        </button>
+      </div>
+      <ul class="url__hints" role="list">
+        <li id="url-encode-hint">{t("tools.url.encodeHint")}</li>
+        <li id="url-decode-hint">{t("tools.url.decodeHint")}</li>
+      </ul>
+      <p id="url-status" class="url__status" role="status" data-status></p>
+      <div aria-live="polite">
+        <ul class="url__issues" role="list" data-issues hidden></ul>
+      </div>
+      <dl class="url__summary">
+        <div>
+          <dt>{t("tools.url.origin")}</dt>
+          <dd>
+            <code data-origin></code>
+          </dd>
+        </div>
+        <div>
+          <dt>{t("tools.url.host")}</dt>
+          <dd>
+            <code data-host></code>
+          </dd>
+        </div>
+        <div>
+          <dt>{t("tools.url.readable")}</dt>
+          <dd>
+            <code data-readable></code>
+          </dd>
+        </div>
+        <div>
+          <dt>{t("tools.url.normalised")}</dt>
+          <dd class="url__copyable">
+            <code data-href></code>
+            <button type="button" class="button button--small" data-copy>
+              <span data-copy-label>{t("tools.copy")}</span>
+              <span class="visually-hidden">{t("tools.url.normalised")}</span>
+            </button>
+          </dd>
+        </div>
+      </dl>
+    </div>
+
+    <div class="url__result card">
+      <fieldset class="url__parts" data-parts>
+        <legend class="label">{t("tools.url.parts")}</legend>
+        {parts.map(({ part, label, wide }) => (
+          <div class:list={["url__field", { "url__field--wide": wide }]}>
+            <label class="url__label" for={`url-${part}`}>
+              {label}
+            </label>
+            <input
+              id={`url-${part}`}
+              type="text"
+              class="url__value"
+              inputmode={part === "port" ? "numeric" : undefined}
+              autocomplete="off"
+              autocapitalize="off"
+              spellcheck="false"
+              aria-describedby={`url-${part}-error`}
+              data-part={part}
+            />
+            <p id={`url-${part}-error`} class="url__error" data-error hidden></p>
+          </div>
+        ))}
+      </fieldset>
+
+      <fieldset class="url__params" data-params>
+        <legend class="label">{t("tools.url.params")}</legend>
+        <p id="url-params-hint" class="url__hint">
+          {t("tools.url.paramsHint")}
+        </p>
+        <table class="url__table">
+          <thead>
+            <tr>
+              <th scope="col">{t("tools.url.name")}</th>
+              <th scope="col">{t("tools.url.value")}</th>
+              <th scope="col">
+                <span class="visually-hidden">{t("tools.url.actions")}</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody data-rows></tbody>
+        </table>
+        <div class="url__add">
+          <button type="button" class="button button--small" data-add>
+            {t("tools.url.add")}
+          </button>
+        </div>
+        <p class="visually-hidden" role="status" data-announce></p>
+      </fieldset>
+    </div>
+
+    <template data-row-template>
+      <tr>
+        <td>
+          <input
+            type="text"
+            class="url__value url__value--cell"
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck="false"
+            data-name
+          />
+        </td>
+        <td>
+          <input
+            type="text"
+            class="url__value url__value--cell"
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck="false"
+            data-param
+          />
+        </td>
+        <td>
+          <button type="button" class="url__remove" data-remove>
+            <span aria-hidden="true">×</span>
+            <span class="visually-hidden" data-remove-label></span>
+          </button>
+        </td>
+      </tr>
+    </template>
+  </div>
+</Base>
+
+<script>
+  import { initUrl } from "../../scripts/tool-url";
+
+  initUrl();
+</script>
+
+<style>
+  .url {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 1rem;
+    align-items: start;
+    padding-block-end: var(--spacing-section);
+  }
+
+  .url > .card {
+    display: grid;
+    gap: 0.9rem;
+    min-width: 0;
+    padding: clamp(1.25rem, 1rem + 1vw, 2rem);
+  }
+
+  .url__label {
+    font-weight: 500;
+    font-size: var(--text-step--1);
+  }
+
+  .url__area {
+    width: 100%;
+    min-width: 0;
+    min-height: 7.5rem;
+    padding: 0.8rem 1rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+    color: var(--ink);
+    font: 400 var(--text-step--1) / 1.6 var(--mono);
+    overflow-wrap: anywhere;
+    word-break: break-all;
+    resize: vertical;
+  }
+
+  .url__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .url__hints {
+    display: grid;
+    gap: 0.2rem;
+    color: var(--ink-muted);
+    font-size: var(--text-step--1);
+  }
+
+  .url__hint {
+    color: var(--ink-muted);
+    font-size: var(--text-step--1);
+  }
+
+  .url__status {
+    padding: 0.6rem 0.9rem;
+    border-radius: var(--radius-sm);
+    background: var(--accent-soft);
+    color: var(--ink);
+    font-size: var(--text-step--1);
+  }
+
+  .url__status[data-invalid] {
+    background: var(--warning-soft);
+  }
+
+  .url__issues {
+    display: grid;
+    gap: 0.4rem;
+    padding: 0.6rem 0.9rem 0.6rem 2rem;
+    border-radius: var(--radius-sm);
+    background: var(--warning-soft);
+    color: var(--ink);
+    font-size: var(--text-step--1);
+    list-style: disc;
+  }
+
+  .url__issues[hidden],
+  .url__error[hidden] {
+    display: none;
+  }
+
+  .url__summary {
+    display: grid;
+    gap: 0.6rem;
+    padding-block-start: 0.9rem;
+    border-block-start: 1px solid var(--rule);
+  }
+
+  .url__summary div {
+    display: grid;
+    grid-template-columns: 7rem minmax(0, 1fr);
+    align-items: baseline;
+    gap: 0.75rem;
+  }
+
+  .url__summary dt {
+    color: var(--ink-muted);
+    font-size: var(--text-step--1);
+  }
+
+  .url__summary dd {
+    min-width: 0;
+  }
+
+  .url__summary code {
+    font: 500 var(--text-step--1) / 1.5 var(--mono);
+    overflow-wrap: anywhere;
+    word-break: break-all;
+  }
+
+  .url__copyable {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .url__copyable code {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .url__parts,
+  .url__params {
+    display: grid;
+    gap: 0.75rem 1rem;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .url__parts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .url__params {
+    padding-block-start: 1.25rem;
+    border-block-start: 1px solid var(--rule);
+  }
+
+  .url__parts:disabled,
+  .url__params:disabled {
+    opacity: 0.6;
+  }
+
+  /* Floating the legend lays it out inside the fieldset rather than across its border. */
+  .url__parts > legend,
+  .url__params > legend {
+    float: left;
+    grid-column: 1 / -1;
+    width: 100%;
+    padding: 0;
+  }
+
+  .url__field {
+    display: grid;
+    gap: 0.35rem;
+    min-width: 0;
+  }
+
+  .url__field--wide {
+    grid-column: 1 / -1;
+  }
+
+  .url__value {
+    width: 100%;
+    min-width: 0;
+    min-height: 2.5rem;
+    padding: 0.45rem 0.7rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+    color: var(--ink);
+    font: 500 var(--text-step--1) / 1.4 var(--mono);
+  }
+
+  .url__value[aria-invalid="true"] {
+    border-color: var(--warning);
+  }
+
+  .url__area:focus-visible,
+  .url__value:focus-visible,
+  .url__remove:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .url__error {
+    padding: 0.35rem 0.6rem;
+    border-radius: var(--radius-sm);
+    background: var(--warning-soft);
+    color: var(--ink);
+    font-size: var(--text-step--1);
+  }
+
+  .url__table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+
+  .url__table th {
+    padding-block-end: 0.4rem;
+    color: var(--ink-muted);
+    font-weight: 500;
+    font-size: var(--text-step--2);
+    text-align: start;
+  }
+
+  .url__table th:first-child {
+    width: 38%;
+  }
+
+  .url__table th:last-child {
+    width: 2.75rem;
+  }
+
+  .url__table :global(td) {
+    padding: 0.2rem 0.5rem 0.2rem 0;
+    vertical-align: middle;
+  }
+
+  .url__table :global(td:last-child) {
+    padding-inline-end: 0;
+  }
+
+  .url__remove {
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    color: var(--ink-muted);
+    font-size: var(--text-step-1);
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .url__remove:hover {
+    border-color: var(--rule-strong);
+    color: var(--ink);
+  }
+
+  .url__add {
+    display: flex;
+  }
+
+  @media (width < 56rem) {
+    .url {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  @media (width < 30rem) {
+    .url__summary div {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.15rem;
+    }
+  }
+</style>

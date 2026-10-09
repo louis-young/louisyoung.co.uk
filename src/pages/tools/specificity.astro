@@ -1,0 +1,457 @@
+---
+import PageHero from "../../components/sections/PageHero.astro";
+import { useTranslations } from "../../i18n";
+import { localeOf } from "../../i18n/astro";
+import Base from "../../layouts/Base.astro";
+import { toolPageProps } from "../../lib/tool-catalogue";
+
+const t = useTranslations(localeOf(Astro));
+const sample = [
+  "#nav .item:hover",
+  "nav > ul li.active a",
+  ".card :is(h2, #title)::before",
+  ":where(#app) .button",
+  "li:nth-child(2n+1 of .visible)",
+  'a[href^="https"]:not(.internal, .footer a)',
+].join("\n");
+/** The key: an example of each kind of stretch, what it is and what it adds. */
+const legend = [
+  { kind: "id", example: "#nav", label: t("tools.specificity.ids"), weight: "1, 0, 0" },
+  { kind: "class", example: ".item", label: t("tools.specificity.classes"), weight: "0, 1, 0" },
+  { kind: "type", example: "li", label: t("tools.specificity.types"), weight: "0, 0, 1" },
+  { kind: "zero", example: "*", label: t("tools.specificity.zero"), weight: "0, 0, 0" },
+  { kind: "ignored", example: ".a", label: t("tools.specificity.ignored"), weight: "0, 0, 0" },
+];
+---
+
+<Base {...toolPageProps("specificity", t)}>
+  <PageHero label={t("nav.tools")} title={t("tools.specificity.title")} lede={t("tools.specificity.summary")} />
+  <div
+    class="container-page spec"
+    data-specificity
+    data-empty={t("tools.specificity.empty")}
+    data-count-one={t("tools.specificity.countOne")}
+    data-count-other={t("tools.specificity.countOther")}
+    data-tie={t("tools.specificity.tie")}
+    data-invalid-one={t("tools.specificity.invalidOne")}
+    data-invalid-other={t("tools.specificity.invalidOther")}
+    data-error={t("tools.specificity.error")}
+    data-error-unclosed={t("tools.specificity.errorUnclosed")}
+    data-error-unexpected={t("tools.specificity.errorUnexpected")}
+    data-error-empty={t("tools.specificity.errorEmpty")}
+    data-error-combinator={t("tools.specificity.errorCombinator")}
+    data-error-end={t("tools.specificity.errorEnd")}
+    data-line-label={t("tools.specificity.line")}
+    data-via={t("tools.specificity.via")}
+    data-none={t("tools.specificity.none")}
+  >
+    <div class="spec__input card">
+      <label class="spec__label" for="spec-input">
+        {t("tools.specificity.input")}
+      </label>
+      <textarea
+        id="spec-input"
+        class="spec__area"
+        rows="8"
+        spellcheck="false"
+        autocomplete="off"
+        autocapitalize="off"
+        aria-describedby="spec-hint spec-status"
+        data-input
+      >{sample}</textarea>
+      <p id="spec-hint" class="spec__hint">
+        {t("tools.specificity.hint")}
+      </p>
+      <p id="spec-status" class="spec__status" role="status" data-status></p>
+      <ul class="spec__errors" role="list" data-errors hidden></ul>
+      <section class="spec__key" aria-labelledby="spec-key">
+        <h2 id="spec-key" class="label">
+          {t("tools.specificity.key")}
+        </h2>
+        <ul class="spec__legend" role="list">
+          {legend.map(({ kind, example, label, weight }) => (
+            <li class="spec__legend-item">
+              <code class="spec__swatch" data-kind={kind}>
+                {example}
+              </code>
+              <span>{label}</span>
+              <span class="spec__weight">{weight}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+    </div>
+
+    <section class="spec__results card" aria-labelledby="spec-ranked">
+      <h2 id="spec-ranked" class="label">
+        {t("tools.specificity.ranked")}
+      </h2>
+      <ol class="spec__list" role="list" data-list></ol>
+    </section>
+
+    <template data-item-template>
+      <li class="spec__item">
+        <div class="spec__top">
+          <span class="spec__rank" data-rank></span>
+          <code class="spec__selector" data-selector></code>
+          <span class="spec__winner" data-winner hidden>
+            {t("tools.specificity.winner")}
+          </span>
+        </div>
+        <div class="spec__detail">
+          <dl class="spec__score">
+            <div data-weight="id">
+              <dt>{t("tools.specificity.a")}</dt>
+              <dd data-score></dd>
+            </div>
+            <div data-weight="class">
+              <dt>{t("tools.specificity.b")}</dt>
+              <dd data-score></dd>
+            </div>
+            <div data-weight="type">
+              <dt>{t("tools.specificity.c")}</dt>
+              <dd data-score></dd>
+            </div>
+          </dl>
+          <dl class="spec__breakdown">
+            <div data-weight="id">
+              <dt>{t("tools.specificity.ids")}</dt>
+              <dd data-items></dd>
+            </div>
+            <div data-weight="class">
+              <dt>{t("tools.specificity.classes")}</dt>
+              <dd data-items></dd>
+            </div>
+            <div data-weight="type">
+              <dt>{t("tools.specificity.types")}</dt>
+              <dd data-items></dd>
+            </div>
+          </dl>
+        </div>
+        <p class="spec__line" data-line></p>
+      </li>
+    </template>
+  </div>
+</Base>
+
+<script>
+  import { initSpecificity } from "../../scripts/tool-specificity";
+
+  initSpecificity();
+</script>
+
+<style>
+  .spec {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr);
+    gap: 1rem;
+    align-items: start;
+    padding-block-end: var(--spacing-section);
+  }
+
+  .spec > .card {
+    display: grid;
+    gap: 0.75rem;
+    min-width: 0;
+    padding: clamp(1.25rem, 1rem + 1vw, 2rem);
+  }
+
+  .spec__label {
+    font-weight: 500;
+    font-size: var(--text-step--1);
+  }
+
+  .spec__area {
+    width: 100%;
+    min-width: 0;
+    min-height: 14rem;
+    padding: 0.8rem 1rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+    color: var(--ink);
+    font: 400 var(--text-step--1) / 1.7 var(--mono);
+    white-space: pre;
+    overflow-x: auto;
+    resize: vertical;
+  }
+
+  .spec__area:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .spec__hint {
+    color: var(--ink-muted);
+    font-size: var(--text-step--1);
+  }
+
+  .spec__status {
+    padding: 0.6rem 0.9rem;
+    border-radius: var(--radius-sm);
+    background: var(--accent-soft);
+    color: var(--ink);
+    font-size: var(--text-step--1);
+    overflow-wrap: anywhere;
+  }
+
+  .spec__errors {
+    display: grid;
+    gap: 0.35rem;
+    padding: 0.6rem 0.9rem;
+    border-radius: var(--radius-sm);
+    background: var(--warning-soft);
+    color: var(--ink);
+    font-size: var(--text-step--1);
+    overflow-wrap: anywhere;
+  }
+
+  .spec__errors[hidden] {
+    display: none;
+  }
+
+  .spec__key {
+    display: grid;
+    gap: 0.6rem;
+    margin-block-start: 0.5rem;
+    padding-block-start: 1.25rem;
+    border-block-start: 1px solid var(--rule);
+  }
+
+  .spec__legend {
+    display: grid;
+    gap: 0.4rem;
+    font-size: var(--text-step--1);
+  }
+
+  .spec__legend-item {
+    display: grid;
+    grid-template-columns: 4.5rem minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .spec__weight {
+    color: var(--ink-muted);
+    font: 500 var(--text-step--2) / 1 var(--mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .spec__swatch {
+    padding: 0.2rem 0.45rem;
+    border-radius: 0.3rem;
+    background: var(--paper-sunken);
+    font: 600 var(--text-step--2) / 1.4 var(--mono);
+    text-align: center;
+  }
+
+  /* What each stretch of a selector counts towards. Shared with the highlighted selectors below. */
+  .spec :global([data-kind="id"]) {
+    color: var(--danger);
+    font-weight: 700;
+  }
+
+  .spec :global([data-kind="class"]) {
+    color: var(--syntax-type);
+    font-weight: 600;
+  }
+
+  .spec :global([data-kind="type"]) {
+    color: var(--syntax-string);
+    font-weight: 600;
+  }
+
+  .spec :global([data-kind="zero"]) {
+    color: var(--ink-faint);
+  }
+
+  .spec :global([data-kind="ignored"]) {
+    color: var(--ink-faint);
+    text-decoration: line-through;
+    text-decoration-thickness: 1px;
+  }
+
+  .spec__list {
+    display: grid;
+    gap: 0.75rem;
+    min-height: 12rem;
+    counter-reset: none;
+  }
+
+  .spec__item {
+    display: grid;
+    gap: 0.75rem;
+    min-width: 0;
+    padding: 0.9rem 1rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-md);
+    background: var(--paper-raised);
+  }
+
+  .spec__item[data-winning] {
+    border-color: var(--success);
+    box-shadow: inset 3px 0 0 var(--success);
+  }
+
+  .spec__top {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .spec__rank {
+    display: grid;
+    place-items: center;
+    min-width: 1.75rem;
+    height: 1.75rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: 999px;
+    color: var(--ink-muted);
+    font: 600 var(--text-step--2) / 1 var(--mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .spec__selector {
+    min-width: 0;
+    padding: 0.45rem 0.7rem;
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+    color: var(--ink);
+    font: 500 var(--text-step--1) / 1.5 var(--mono);
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+  }
+
+  .spec__winner {
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    background: var(--success-soft);
+    color: var(--ink);
+    font: 600 var(--text-step--2) / 1.2 var(--mono);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  .spec__winner[hidden] {
+    display: none;
+  }
+
+  .spec__detail {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+    gap: 1rem;
+  }
+
+  .spec__score {
+    display: grid;
+    grid-template-columns: repeat(3, 3rem);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+  }
+
+  .spec__score div {
+    display: grid;
+    justify-items: center;
+    gap: 0.15rem;
+    padding: 0.4rem 0.25rem;
+  }
+
+  .spec__score div + div {
+    border-inline-start: 1px solid var(--rule);
+  }
+
+  .spec__score dt {
+    color: var(--ink-faint);
+    font: 500 var(--text-step--2) / 1 var(--mono);
+  }
+
+  .spec__score dd {
+    font: 700 var(--text-step-1) / 1.1 var(--mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .spec__score [data-weight="id"] dd {
+    color: var(--danger);
+  }
+
+  .spec__score [data-weight="class"] dd {
+    color: var(--syntax-type);
+  }
+
+  .spec__score [data-weight="type"] dd {
+    color: var(--syntax-string);
+  }
+
+  .spec__breakdown {
+    display: grid;
+    gap: 0.3rem;
+    min-width: 0;
+    font-size: var(--text-step--1);
+  }
+
+  .spec__breakdown div {
+    display: grid;
+    grid-template-columns: minmax(0, 9.5rem) minmax(0, 1fr);
+    gap: 0.75rem;
+  }
+
+  .spec__breakdown dt {
+    color: var(--ink-muted);
+  }
+
+  .spec__breakdown dd {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .spec__breakdown :global(code) {
+    font: 500 var(--text-step--1) / 1.5 var(--mono);
+  }
+
+  .spec__breakdown :global(.spec__via) {
+    color: var(--ink-muted);
+  }
+
+  .spec__line {
+    color: var(--ink-faint);
+    font: 500 var(--text-step--2) / 1 var(--mono);
+  }
+
+  @media (width < 56rem) {
+    .spec {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  @media (width < 34rem) {
+    .spec__legend-item {
+      grid-template-columns: 4rem minmax(0, 1fr);
+      row-gap: 0.1rem;
+    }
+
+    .spec__legend-item .spec__weight {
+      grid-column: 2;
+    }
+
+    .spec__detail,
+    .spec__breakdown div {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .spec__breakdown div {
+      gap: 0.1rem;
+    }
+
+    .spec__top {
+      grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .spec__winner {
+      grid-column: 2;
+      justify-self: start;
+    }
+  }
+</style>

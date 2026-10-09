@@ -32,6 +32,15 @@ export const tools = [
   { slug: "case", title: "tools.case.title", summary: "tools.case.summary", icon: "aA" },
   { slug: "aspect-ratio", title: "tools.aspect.title", summary: "tools.aspect.summary", icon: "16:9" },
   { slug: "sql", title: "tools.sql.title", summary: "tools.sql.summary", icon: "SQL" },
+  {
+    slug: "specificity",
+    title: "tools.specificity.title",
+    summary: "tools.specificity.summary",
+    icon: "0,1,0",
+  },
+  { slug: "url", title: "tools.url.title", summary: "tools.url.summary", icon: "://" },
+  { slug: "base", title: "tools.base.title", summary: "tools.base.summary", icon: "b16" },
+  { slug: "markdown-table", title: "tools.markdownTable.title", summary: "tools.markdownTable.summary", icon: "|-|" },
 ] as const satisfies readonly Tool[];
 
 type ToolSlug = (typeof tools)[number]["slug"];
