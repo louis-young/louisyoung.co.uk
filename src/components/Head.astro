@@ -72,8 +72,13 @@ const imageUrl = absoluteUrl(image);
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="author" content={site.author.name} />
 
+{/*
+ * Both faces are preloaded: Geist Mono sets labels, chips and code above the fold on most pages,
+ * and when it arrived late its size-adjusted fallback (tuned for Courier New, which Linux maps to
+ * Liberation Mono) rendered narrower, so swapping it in shifted rows of chips sideways.
+ */}
 <Font cssVariable="--font-geist" preload />
-<Font cssVariable="--font-geist-mono" />
+<Font cssVariable="--font-geist-mono" preload />
 
 <script is:inline>
   (() => {
