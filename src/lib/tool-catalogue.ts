@@ -170,28 +170,28 @@ export const tools = [
     title: "tools.specificity.title",
     summary: "tools.specificity.summary",
     icon: "0,1,0",
-    added: "2026-10-09T02:41:45+00:00",
+    added: "2026-10-09T04:18:41+01:00",
   },
   {
     slug: "url",
     title: "tools.url.title",
     summary: "tools.url.summary",
     icon: "://",
-    added: "2026-10-09T02:41:45+00:00",
+    added: "2026-10-09T04:18:41+01:00",
   },
   {
     slug: "base",
     title: "tools.base.title",
     summary: "tools.base.summary",
     icon: "b16",
-    added: "2026-10-09T02:41:45+00:00",
+    added: "2026-10-09T04:18:41+01:00",
   },
   {
     slug: "markdown-table",
     title: "tools.markdownTable.title",
     summary: "tools.markdownTable.summary",
     icon: "|-|",
-    added: "2026-10-09T02:41:45+00:00",
+    added: "2026-10-09T04:18:41+01:00",
   },
 ] as const satisfies readonly Tool[];
 

@@ -1,5 +1,4 @@
-import { execFileSync } from "node:child_process";
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { readdirSync } from "node:fs";
 
 import { describe, expect, it } from "vitest";
 
@@ -21,26 +20,11 @@ describe("tool catalogue", () => {
     }
   });
 
-  it("dates every tool by the commit that added its page, where git can see it", () => {
-    const run = (args: string[]) => {
-      try {
-        return execFileSync("git", args, { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
-      } catch {
-        return undefined;
-      }
-    };
-    // In a shallow clone (CI checks out one commit) every file looks "added" by the oldest commit
-    // fetched, so a date found on a shallow boundary proves nothing and is skipped.
-    const shallowFile = run(["rev-parse", "--git-path", "shallow"]);
-    const boundaries = new Set(
-      shallowFile && existsSync(shallowFile) ? readFileSync(shallowFile, "utf8").split("\n").filter(Boolean) : [],
-    );
+  // `added` is set by hand when a tool ships, not checked against git: squash merges rewrite the
+  // commit that added a page, so its date in a pull request differs from its date on master.
+  it("gives every tool a full ISO 8601 date with an offset", () => {
     for (const tool of tools) {
-      const log = run(["log", "--diff-filter=A", "--format=%H %aI", "--", `src/pages/tools/${tool.slug}.astro`]);
-      // A page that hasn't been committed yet has no history to compare against.
-      const [hash, date] = log?.split("\n").filter(Boolean).at(-1)?.split(" ") ?? [];
-      if (!hash || boundaries.has(hash)) continue;
-      expect(tool.added, tool.slug).toBe(date);
+      expect(tool.added, tool.slug).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:Z|[+-]\d{2}:\d{2})$/u);
     }
   });
 
