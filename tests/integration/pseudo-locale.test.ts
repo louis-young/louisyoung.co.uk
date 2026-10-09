@@ -38,6 +38,7 @@ const allowed = new Set([
   "G",
   // Key legends, as printed on the keys.
   "Ctrl",
+  "Alt",
   "Tab",
   "Home",
   "End",

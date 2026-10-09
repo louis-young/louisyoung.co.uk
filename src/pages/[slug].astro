@@ -11,6 +11,7 @@ import Callout from "../components/mdx/Callout.astro";
 import Demo from "../components/mdx/Demo.astro";
 import Sandbox from "../components/mdx/Sandbox.astro";
 import ReadingProgress from "../components/ReadingProgress.astro";
+import ReadingTools from "../components/ReadingTools.astro";
 import Toc from "../components/Toc.astro";
 import { useTranslations } from "../i18n";
 import { localeOf } from "../i18n/astro";
@@ -110,18 +111,12 @@ const editUrl = `${site.repository}/edit/${site.defaultBranch}/content/articles/
       <div class="article__toc" data-pagefind-ignore>
         <Toc items={toc} />
       </div>
-      <div class="article__body prose" data-code-label={t("article.codeLabel")} data-reading-body>
+      <div class="article__body prose" data-code-label={t("article.codeLabel")} data-reading-body data-quote-scope>
         <Content components={{ Callout, Demo, Sandbox }} />
       </div>
     </div>
 
-    <p
-      class="visually-hidden"
-      role="status"
-      data-anchor-status
-      data-message={t("article.sectionCopied")}
-      data-copied-label={t("article.copiedShort")}
-    ></p>
+    <ReadingTools title={data.title} />
 
     <footer class="article__footer container-text" data-pagefind-ignore>
       <div class="article__actions">
@@ -192,10 +187,9 @@ const editUrl = `${site.repository}/edit/${site.defaultBranch}/content/articles/
 
 <script>
   import { labelCodeRegions } from "../scripts/code-labels";
-  import { initHeadingLinks, initTimeLeft } from "../scripts/reading";
+  import { initTimeLeft } from "../scripts/reading";
 
   initTimeLeft();
-  initHeadingLinks();
   labelCodeRegions();
 </script>
 

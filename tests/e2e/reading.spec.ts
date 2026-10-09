@@ -12,19 +12,6 @@ test.describe("reading aids", () => {
     await expect.poll(async () => Number.parseInt(await pill.innerText(), 10)).toBeLessThan(start);
   });
 
-  test("heading links copy the section URL and announce it", async ({ page, context, browserName }) => {
-    test.skip(browserName !== "chromium", "Clipboard permissions are Chromium-only in Playwright.");
-    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
-    await page.goto("/how-to-fetch-data-from-backend-react/");
-    await page.locator("#tutorial a.heading-anchor").click();
-    await expect(page).toHaveURL(/#tutorial$/u);
-    await expect(page.locator("#tutorial")).toHaveAttribute("data-copied", "Copied");
-    await expect(page.getByRole("status").filter({ hasText: "Link to this section copied" })).toBeAttached();
-    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
-      "https://louisyoung.co.uk/how-to-fetch-data-from-backend-react/#tutorial",
-    );
-  });
-
   test("ends with an author card", async ({ page }) => {
     await page.goto("/utilising-context-api-react/");
     await expect(page.locator(".author")).toContainText("Louis Young");

@@ -9,6 +9,7 @@ import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import rehypeSlug from "rehype-slug";
 
 import { site } from "./src/site.config";
+import { headingLinkOptions } from "./src/lib/heading-links";
 import { rehypeExternalLinks } from "./src/lib/rehype-external-links";
 import { isListed, readContentIndex, withLastmod } from "./src/lib/sitemap";
 
@@ -72,18 +73,7 @@ export default defineConfig({
   markdown: {
     syntaxHighlight: false,
     processor: unified({
-      rehypePlugins: [
-        rehypeSlug,
-        [
-          rehypeAutolinkHeadings,
-          {
-            behavior: "wrap",
-            properties: { className: ["heading-anchor"] },
-            test: ["h2", "h3", "h4"],
-          },
-        ],
-        rehypeExternalLinks,
-      ],
+      rehypePlugins: [rehypeSlug, [rehypeAutolinkHeadings, headingLinkOptions()], rehypeExternalLinks],
     }),
   },
   integrations: [

@@ -5,7 +5,10 @@ import Icon from "../components/Icon.astro";
 import Callout from "../components/mdx/Callout.astro";
 import Demo from "../components/mdx/Demo.astro";
 import Sandbox from "../components/mdx/Sandbox.astro";
+import { translatorFor } from "../i18n/astro";
 import Base from "../layouts/Base.astro";
+
+const t = translatorFor(Astro);
 
 /**
  * The living style guide. It renders the real tokens and components, so it can't drift
@@ -121,7 +124,7 @@ const handleClick = () => {
         Authors get these in every article without importing them. Inline <code>code</code>, <strong>strong</strong>,
         <em>emphasis</em> and{" "}
         <a href="https://developer.mozilla.org/" data-external>
-          external links
+          external links<span class="visually-hidden"> {t("article.externalLink")}</span>
         </a>
         .
       </p>

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { initHeadingLinks, initTimeLeft } from "../../src/scripts/reading";
+import { initHeadingLinks, initTimeLeft, loadOnSelection } from "../../src/scripts/reading";
 
 let controller = new AbortController();
 
@@ -75,8 +75,8 @@ describe("heading links", () => {
     document.head.innerHTML = `<link rel="canonical" href="https://example.com/article/" />`;
     document.body.innerHTML = `
       <div class="prose">
-        <h2 id="one"><a class="heading-anchor" href="#one">One</a></h2>
-        <h2 id="two"><a class="heading-anchor" href="#two">Two</a></h2>
+        <h2 id="one">One<a class="heading-anchor" href="#one" aria-label="Link to section: One"></a></h2>
+        <h2 id="two">Two<a class="heading-anchor" href="#two" aria-label="Link to section: Two"></a></h2>
         <p><a href="#one">Not a heading</a></p>
       </div>
       <p role="status" data-anchor-status data-message="Link copied" data-copied-label="Copied"></p>`;
@@ -129,5 +129,48 @@ describe("heading links", () => {
     click("#two a");
     await Promise.resolve();
     expect(document.querySelector("#two")!.hasAttribute("data-copied")).toBe(false);
+  });
+});
+
+describe("load on selection", () => {
+  const select = (node: Node) => {
+    const range = document.createRange();
+    range.selectNodeContents(node);
+    document.getSelection()!.removeAllRanges();
+    document.getSelection()!.addRange(range);
+    document.dispatchEvent(new Event("selectionchange"));
+  };
+
+  it("loads once, on the first non-empty selection inside the scope", () => {
+    document.body.innerHTML = `<p id="outside">Outside</p><div class="prose"><p id="inside">Inside</p></div>`;
+    const load = vi.fn();
+    loadOnSelection(document.querySelector(".prose")!, load, controller.signal);
+    select(document.querySelector("#outside")!);
+    document.getSelection()!.collapse(document.querySelector("#inside"), 0);
+    document.dispatchEvent(new Event("selectionchange"));
+    expect(load).not.toHaveBeenCalled();
+    select(document.querySelector("#inside")!);
+    select(document.querySelector("#inside")!);
+    expect(load).toHaveBeenCalledTimes(1);
+    expect(load).toHaveBeenCalledWith(false);
+  });
+
+  it("says whether the selection was made with the keyboard", () => {
+    document.body.innerHTML = `<div class="prose"><p id="inside">Inside</p></div>`;
+    const load = vi.fn();
+    loadOnSelection(document.querySelector(".prose")!, load, controller.signal);
+    document.dispatchEvent(new Event("pointerdown"));
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", shiftKey: true }));
+    select(document.querySelector("#inside")!);
+    expect(load).toHaveBeenCalledWith(true);
+  });
+
+  it("stops listening when its signal aborts", () => {
+    document.body.innerHTML = `<div class="prose"><p id="inside">Inside</p></div>`;
+    const load = vi.fn();
+    loadOnSelection(document.querySelector(".prose")!, load, controller.signal);
+    controller.abort();
+    select(document.querySelector("#inside")!);
+    expect(load).not.toHaveBeenCalled();
   });
 });

@@ -43,6 +43,37 @@ test.describe("interactive states", () => {
     expect(results.violations).toEqual([]);
   });
 
+  for (const theme of themes) {
+    test(`the quote toolbar and heading links are accessible when shown (${theme})`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: theme, reducedMotion: "reduce" });
+      await page.goto("/how-to-fetch-data-from-backend-react/");
+      await page.keyboard.press("Shift");
+      await page.evaluate(() => {
+        const paragraph = document.querySelector(".prose > p")!;
+        const range = document.createRange();
+        range.selectNodeContents(paragraph.firstChild!);
+        document.getSelection()!.addRange(range);
+      });
+      const toolbar = page.getByRole("toolbar", { name: "Share this quote" });
+      await expect(toolbar).toBeVisible();
+      await page.keyboard.press("Alt+KeyQ");
+      await expect(toolbar.getByRole("button").first()).toBeFocused();
+      let results = await new AxeBuilder({ page })
+        .include("[data-quote-toolbar]")
+        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa", "best-practice"])
+        .analyze();
+      expect(results.violations).toEqual([]);
+
+      await page.keyboard.press("Escape");
+      await page.getByRole("link", { name: "Link to section: Tutorial" }).focus();
+      results = await new AxeBuilder({ page })
+        .include("#tutorial")
+        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa", "best-practice"])
+        .analyze();
+      expect(results.violations).toEqual([]);
+    });
+  }
+
   test("focus is always visible", async ({ page }) => {
     await page.goto("/why-functional-state-updates-are-important/");
     for (let index = 0; index < 15; index += 1) {

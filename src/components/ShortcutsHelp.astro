@@ -9,7 +9,7 @@ interface Row {
   label: string;
 }
 
-/** Every shortcut the site handles: src/scripts/shortcuts.ts, palette.ts and terminal.ts. */
+/** Every shortcut the site handles: src/scripts/shortcuts.ts, quote-share.ts, palette.ts and terminal.ts. */
 const groups: { id: string; label: string; rows: Row[] }[] = [
   {
     id: "global",
@@ -32,6 +32,11 @@ const groups: { id: string; label: string; rows: Row[] }[] = [
       { combos: [["`"]], label: t("palette.terminal") },
       { combos: [["Esc"]], label: t("shortcuts.closeDialog") },
     ],
+  },
+  {
+    id: "reading",
+    label: t("shortcuts.reading"),
+    rows: [{ combos: [["Alt", "Q"]], label: t("shortcuts.shareQuote") }],
   },
   {
     id: "palette",
