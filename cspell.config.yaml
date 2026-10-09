@@ -14,6 +14,7 @@ ignoreRegExpList:
   - '/\[-dlcbps\]/g'
 words:
   - aeiou
+  - alnum
   - astro
   - astrojs
   - autem
@@ -26,12 +27,14 @@ words:
   - claudecode
   - codesandbox
   - committerdate
+  - confusables
   - cookieless
   - delectus
   - destructure
   - destructured
   - destructuring
   - dialogs
+  - diceware
   - dist
   - elem
   - expressive
@@ -57,6 +60,8 @@ words:
   - louisryoungg
   - louisyoung
   - newsreader
+  - nocase
+  - nonspacing
   - nosniff
   - nownownow
   - nums
@@ -70,7 +75,9 @@ words:
   - popups
   - prefetch
   - prerender
+  - punct
   - pushf
+  - qmark
   - reflow
   - rehype
   - rerere
@@ -83,6 +90,7 @@ words:
   - src/i18n/pseudo.ts
   - subsetting
   - sätteri
+  - titlecase
   - ultrawide
   - unauthorised
   - unhighlighted
@@ -92,4 +100,5 @@ words:
   - vitest
   - wght
   - wordmark
+  - xdigit
   - zizmor

@@ -1,0 +1,483 @@
+---
+import PageHero from "../../components/sections/PageHero.astro";
+import ShareLink from "../../components/ShareLink.astro";
+import { useTranslations } from "../../i18n";
+import { localeOf } from "../../i18n/astro";
+import Base from "../../layouts/Base.astro";
+import { toolPageProps } from "../../lib/tool-catalogue";
+import { normalisationForms } from "../../lib/unicode-tool";
+
+const t = useTranslations(localeOf(Astro));
+// The tricky characters are code points, so they stay visible in the source: a combining acute
+// accent, a zero-width joiner in an emoji sequence, a Cyrillic a (U+0430) in “paypal”, a
+// zero-width space, an fi ligature and a no-break space.
+const sample = ["Cafe", 0x301, " 👩🏽", 0x200d, "💻 p", 0x430, "y", "pal", 0x200b, ".com ", 0xfb01, "le", 0xa0, "🇬🇧"]
+  .map((part) => (typeof part === "number" ? String.fromCodePoint(part) : part))
+  .join("");
+const categories = {
+  Lu: t("tools.unicode.gc.Lu"),
+  Ll: t("tools.unicode.gc.Ll"),
+  Lt: t("tools.unicode.gc.Lt"),
+  Lm: t("tools.unicode.gc.Lm"),
+  Lo: t("tools.unicode.gc.Lo"),
+  Mn: t("tools.unicode.gc.Mn"),
+  Mc: t("tools.unicode.gc.Mc"),
+  Me: t("tools.unicode.gc.Me"),
+  Nd: t("tools.unicode.gc.Nd"),
+  Nl: t("tools.unicode.gc.Nl"),
+  No: t("tools.unicode.gc.No"),
+  Pc: t("tools.unicode.gc.Pc"),
+  Pd: t("tools.unicode.gc.Pd"),
+  Ps: t("tools.unicode.gc.Ps"),
+  Pe: t("tools.unicode.gc.Pe"),
+  Pi: t("tools.unicode.gc.Pi"),
+  Pf: t("tools.unicode.gc.Pf"),
+  Po: t("tools.unicode.gc.Po"),
+  Sm: t("tools.unicode.gc.Sm"),
+  Sc: t("tools.unicode.gc.Sc"),
+  Sk: t("tools.unicode.gc.Sk"),
+  So: t("tools.unicode.gc.So"),
+  Zs: t("tools.unicode.gc.Zs"),
+  Zl: t("tools.unicode.gc.Zl"),
+  Zp: t("tools.unicode.gc.Zp"),
+  Cc: t("tools.unicode.gc.Cc"),
+  Cf: t("tools.unicode.gc.Cf"),
+  Cs: t("tools.unicode.gc.Cs"),
+  Co: t("tools.unicode.gc.Co"),
+  Cn: t("tools.unicode.gc.Cn"),
+};
+const stats = [
+  { key: "utf16", label: t("tools.unicode.utf16") },
+  { key: "codePoints", label: t("tools.unicode.codePoints") },
+  { key: "graphemes", label: t("tools.unicode.graphemes") },
+  { key: "utf8", label: t("tools.unicode.utf8") },
+];
+---
+
+<Base {...toolPageProps("unicode", t)}>
+  <PageHero label={t("nav.tools")} title={t("tools.unicode.title")} lede={t("tools.unicode.summary")}>
+    <ShareLink />
+  </PageHero>
+  <div
+    class="container-page uni"
+    data-unicode
+    data-categories={JSON.stringify(categories)}
+    data-clean={t("tools.unicode.clean")}
+    data-invisible={t("tools.unicode.invisible")}
+    data-bidi={t("tools.unicode.bidi")}
+    data-space={t("tools.unicode.space")}
+    data-confusable={t("tools.unicode.confusable")}
+    data-control={t("tools.unicode.control")}
+    data-mixed={t("tools.unicode.mixed")}
+    data-status-text={t("tools.unicode.status")}
+    data-status-clean={t("tools.unicode.statusClean")}
+    data-status-issues={t("tools.unicode.statusIssues")}
+    data-same={t("tools.unicode.same")}
+    data-differs={t("tools.unicode.differs")}
+    data-truncated={t("tools.unicode.truncated")}
+    data-empty-table={t("tools.unicode.emptyTable")}
+    data-flag-invisible={t("tools.unicode.flagInvisible")}
+    data-flag-bidi={t("tools.unicode.flagBidi")}
+    data-flag-space={t("tools.unicode.flagSpace")}
+    data-flag-confusable={t("tools.unicode.flagConfusable")}
+    data-flag-control={t("tools.unicode.flagControl")}
+  >
+    <div class="uni__top">
+      <div class="uni__input card">
+        <label class="uni__label" for="uni-input">
+          {t("tools.unicode.input")}
+        </label>
+        <textarea
+          id="uni-input"
+          class="uni__area"
+          rows="5"
+          spellcheck="false"
+          autocomplete="off"
+          autocapitalize="off"
+          aria-describedby="uni-status"
+          data-input
+          data-share="text"
+        >{sample}</textarea>
+        <p id="uni-status" class="uni__status" role="status" data-status></p>
+        <section class="uni__section" aria-labelledby="uni-counts">
+          <h2 id="uni-counts" class="label">
+            {t("tools.unicode.counts")}
+          </h2>
+          <dl class="uni__stats">
+            {stats.map((stat) => (
+              <div>
+                <dt>{stat.label}</dt>
+                <dd data-count={stat.key} />
+              </div>
+            ))}
+          </dl>
+        </section>
+      </div>
+
+      <div class="uni__side">
+        <section class="uni__card card" aria-labelledby="uni-checks">
+          <h2 id="uni-checks" class="label">
+            {t("tools.unicode.checks")}
+          </h2>
+          <ul class="uni__checks" role="list" data-checks></ul>
+        </section>
+
+        <section class="uni__card card" aria-labelledby="uni-forms">
+          <h2 id="uni-forms" class="label">
+            {t("tools.unicode.normalisation")}
+          </h2>
+          <table class="uni__forms">
+            <thead>
+              <tr>
+                <th scope="col">{t("tools.unicode.form")}</th>
+                <th scope="col">{t("tools.unicode.result")}</th>
+                <th scope="col">{t("tools.unicode.codePoints")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {normalisationForms.map((form) => (
+                <tr data-form={form}>
+                  <th scope="row">{form}</th>
+                  <td>
+                    <span class="uni__verdict" data-verdict />
+                    <code class="uni__normalised" data-text />
+                  </td>
+                  <td data-length />
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      </div>
+    </div>
+
+    <div class="uni__card card">
+      <h2 id="uni-characters" class="label">
+        {t("tools.unicode.characters")}
+      </h2>
+      <p class="uni__note" data-note hidden></p>
+      <section class="uni__scroll" aria-labelledby="uni-characters" data-scroll>
+        <table class="uni__table" data-table>
+          <thead>
+            <tr>
+              <th scope="col">{t("tools.unicode.character")}</th>
+              <th scope="col">{t("tools.unicode.codePoint")}</th>
+              <th scope="col">{t("tools.unicode.category")}</th>
+              <th scope="col">{t("tools.unicode.utf8Column")}</th>
+              <th scope="col">{t("tools.unicode.utf16Column")}</th>
+              <th scope="col">{t("tools.unicode.notes")}</th>
+            </tr>
+          </thead>
+        </table>
+      </section>
+    </div>
+  </div>
+</Base>
+
+<script>
+  import { initUnicode } from "../../scripts/tool-unicode";
+  import { initShareLink } from "../../scripts/share-link";
+
+  initUnicode();
+  initShareLink();
+</script>
+
+<style>
+  .uni {
+    display: grid;
+    gap: 1rem;
+    padding-block-end: var(--spacing-section);
+  }
+
+  .uni .card {
+    display: grid;
+    gap: 0.75rem;
+    min-width: 0;
+    padding: clamp(1.25rem, 1rem + 1vw, 2rem);
+  }
+
+  .uni__top {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    gap: 1rem;
+    align-items: start;
+  }
+
+  .uni__side {
+    display: grid;
+    gap: 1rem;
+    min-width: 0;
+  }
+
+  .uni__label {
+    font-weight: 500;
+    font-size: var(--text-step--1);
+  }
+
+  .uni__area {
+    width: 100%;
+    min-width: 0;
+    min-height: 8rem;
+    padding: 0.8rem 1rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+    color: var(--ink);
+    font: 400 var(--text-step-0) / 1.6 var(--sans);
+    resize: vertical;
+  }
+
+  .uni__area:focus-visible,
+  .uni__scroll:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .uni__status {
+    padding: 0.6rem 0.9rem;
+    border-radius: var(--radius-sm);
+    background: var(--accent-soft);
+    color: var(--ink);
+    font-size: var(--text-step--1);
+  }
+
+  .uni__status[data-invalid] {
+    background: var(--warning-soft);
+  }
+
+  .uni__section {
+    display: grid;
+    gap: 0.6rem;
+    margin-block-start: 0.5rem;
+    padding-block-start: 1.1rem;
+    border-block-start: 1px solid var(--rule);
+  }
+
+  .uni__stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+  }
+
+  .uni__stats div {
+    display: grid;
+    align-content: space-between;
+    gap: 0.3rem;
+    min-width: 0;
+    padding: 0.6rem 0.75rem;
+  }
+
+  .uni__stats div + div {
+    border-inline-start: 1px solid var(--rule);
+  }
+
+  .uni__stats dt {
+    color: var(--ink-muted);
+    font-size: var(--text-step--2);
+    line-height: 1.3;
+  }
+
+  .uni__stats dd {
+    font: 700 var(--text-step-2) / 1.1 var(--mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .uni__checks {
+    display: grid;
+    gap: 0.4rem;
+    font-size: var(--text-step--1);
+  }
+
+  .uni__checks :global(li) {
+    padding: 0.5rem 0.8rem;
+    border-radius: var(--radius-sm);
+    background: var(--warning-soft);
+    color: var(--ink);
+    overflow-wrap: anywhere;
+  }
+
+  .uni__checks :global(li[data-clean]) {
+    background: var(--success-soft);
+  }
+
+  .uni__forms {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--text-step--1);
+    table-layout: fixed;
+  }
+
+  .uni__forms th,
+  .uni__forms td {
+    padding: 0.5rem 0.6rem 0.5rem 0;
+    border-block-start: 1px solid var(--rule);
+    text-align: start;
+    vertical-align: top;
+  }
+
+  .uni__forms thead th {
+    padding-block-start: 0;
+    border-block-start: 0;
+    color: var(--ink-muted);
+    font-weight: 500;
+    font-size: var(--text-step--2);
+  }
+
+  .uni__forms thead th:first-child {
+    width: 3.75rem;
+  }
+
+  .uni__forms thead th:last-child {
+    width: 5.5rem;
+  }
+
+  .uni__forms tbody th {
+    font: 600 var(--text-step--1) / 1.5 var(--mono);
+  }
+
+  .uni__forms td:last-child {
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .uni__verdict {
+    display: block;
+    color: var(--ink-muted);
+    font-size: var(--text-step--2);
+  }
+
+  .uni__verdict[data-changed] {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  .uni__normalised {
+    display: block;
+    font: 400 var(--text-step--1) / 1.5 var(--sans);
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+  }
+
+  .uni__note {
+    color: var(--ink-muted);
+    font-size: var(--text-step--1);
+  }
+
+  .uni__note[hidden] {
+    display: none;
+  }
+
+  .uni__scroll {
+    overflow-x: auto;
+    border-radius: var(--radius-sm);
+  }
+
+  .uni__table {
+    width: 100%;
+    min-width: 44rem;
+    border-collapse: collapse;
+    font-size: var(--text-step--1);
+  }
+
+  .uni__table thead th {
+    padding: 0 0.75rem 0.5rem 0;
+    color: var(--ink-muted);
+    font-weight: 500;
+    font-size: var(--text-step--2);
+    text-align: start;
+    white-space: nowrap;
+  }
+
+  .uni__table tbody :global(th),
+  .uni__table tbody :global(td) {
+    padding: 0.4rem 0.75rem 0.4rem 0;
+    text-align: start;
+    vertical-align: top;
+  }
+
+  .uni__table tbody :global(tr:first-child > *) {
+    border-block-start: 1px solid var(--rule);
+  }
+
+  .uni__table tbody :global(th) {
+    width: 5.5rem;
+    font-weight: 400;
+  }
+
+  .uni__table tbody :global(td) {
+    font: 400 var(--text-step--1) / 1.5 var(--mono);
+    white-space: nowrap;
+  }
+
+  .uni__table tbody :global(td:last-child) {
+    font-family: var(--sans);
+    white-space: normal;
+  }
+
+  .uni__table :global(.uni__glyph) {
+    font-size: var(--text-step-2);
+    line-height: 1.2;
+  }
+
+  .uni__table :global(.uni__placeholder) {
+    display: inline-block;
+    padding: 0.1rem 0.35rem;
+    border: 1px dashed var(--rule-strong);
+    border-radius: 0.3rem;
+    color: var(--ink-muted);
+    font: 600 var(--text-step--2) / 1.4 var(--mono);
+  }
+
+  .uni__table :global(.uni__gc) {
+    color: var(--ink-muted);
+    font-family: var(--sans);
+  }
+
+  .uni__table :global(.uni__flag) {
+    display: inline-block;
+    margin-inline-end: 0.3rem;
+    padding: 0.1rem 0.45rem;
+    border-radius: 999px;
+    background: var(--warning-soft);
+    color: var(--ink);
+    font-size: var(--text-step--2);
+  }
+
+  .uni__table :global(tbody[data-flagged] th) {
+    box-shadow: inset 3px 0 0 var(--warning);
+  }
+
+  .uni__table tbody :global(th) {
+    padding-inline-start: 0.6rem;
+  }
+
+  @media (width < 60rem) {
+    .uni__top {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  @media (width < 34rem) {
+    .uni__forms thead th:first-child {
+      width: 3.25rem;
+    }
+
+    .uni__forms thead th:last-child {
+      width: 4.5rem;
+    }
+
+    .uni__stats {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .uni__stats div:nth-child(3) {
+      border-inline-start: 0;
+    }
+
+    .uni__stats div:nth-child(n + 3) {
+      border-block-start: 1px solid var(--rule);
+    }
+  }
+</style>

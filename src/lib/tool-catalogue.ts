@@ -176,6 +176,15 @@ export const tools = [
     keywords: "words",
   },
   {
+    slug: "unicode",
+    title: "tools.unicode.title",
+    summary: "tools.unicode.summary",
+    icon: "U+",
+    category: "text",
+    added: "2026-10-09T05:26:30+01:00",
+    keywords: "unicode utf-8 utf-16 code point grapheme emoji normalise nfc nfd zero-width homoglyph bidi",
+  },
+  {
     slug: "encode",
     title: "tools.encode.title",
     summary: "tools.encode.summary",
@@ -210,6 +219,24 @@ export const tools = [
     category: "encoding",
     added: "2026-10-09T04:18:41+01:00",
     keywords: "binary octal decimal hex hexadecimal radix bits twos complement endian",
+  },
+  {
+    slug: "qr",
+    title: "tools.qr.title",
+    summary: "tools.qr.summary",
+    icon: "QR",
+    category: "encoding",
+    added: "2026-10-09T05:26:30+01:00",
+    keywords: "qr code barcode generator svg png url scan",
+  },
+  {
+    slug: "password",
+    title: "tools.password.title",
+    summary: "tools.password.summary",
+    icon: "***",
+    category: "encoding",
+    added: "2026-10-09T05:26:30+01:00",
+    keywords: "password passphrase generator random secure entropy diceware eff words",
   },
   {
     slug: "http-status",
@@ -255,6 +282,15 @@ export const tools = [
     category: "web",
     added: "2026-10-09T01:27:46+01:00",
     keywords: "unix file permissions octal 755 rwx",
+  },
+  {
+    slug: "glob",
+    title: "tools.glob.title",
+    summary: "tools.glob.summary",
+    icon: "**/",
+    category: "web",
+    added: "2026-10-09T05:26:30+01:00",
+    keywords: "glob pattern minimatch picomatch gitignore wildcard path match files",
   },
 ] as const satisfies readonly Tool[];
 

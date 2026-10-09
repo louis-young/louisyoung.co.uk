@@ -399,6 +399,91 @@ test.describe("tools", () => {
       );
     }
   });
+
+  test("the QR code generator encodes text, warns about contrast and downloads files", async ({ page }) => {
+    await page.goto("/tools/qr/");
+    await page.getByLabel("Text or URL").fill("HELLO WORLD");
+    await expect(page.getByRole("img", { name: "QR code for “HELLO WORLD”" })).toBeVisible();
+    await expect(page.locator("#qr-status")).toHaveText("Version 1, 21 × 21 modules, level M. 11 of 14 bytes used.");
+    await expect(page.locator('[data-stat="modules"]')).toHaveText("21 × 21");
+    await page.getByRole("radio", { name: "H · 30%" }).check();
+    await expect(page.locator("#qr-status")).toHaveText("Version 2, 25 × 25 modules, level H. 11 of 14 bytes used.");
+    await page.getByLabel("Foreground").fill("#bbbbbb");
+    await expect(page.getByText(/Contrast is only 1\.\d+:1/u)).toBeVisible();
+    await expect(page.locator("[data-preview] path")).toHaveAttribute("fill", "#bbbbbb");
+    const svg = page.waitForEvent("download");
+    await page.getByRole("button", { name: "Download SVG" }).click();
+    expect((await svg).suggestedFilename()).toBe("qr-code.svg");
+    const png = page.waitForEvent("download");
+    await page.getByRole("button", { name: "Download PNG" }).click();
+    expect((await png).suggestedFilename()).toBe("qr-code.png");
+    await page.getByLabel("Text or URL").fill("x".repeat(1300));
+    await expect(page.locator("#qr-status")).toHaveText(
+      "That’s 1300 bytes, but level H holds 1273 at most. Shorten the text or pick a lower level.",
+    );
+    await expect(page.getByRole("button", { name: "Download SVG" })).toBeDisabled();
+  });
+
+  test("the password generator makes passwords and passphrases, and keeps them out of the URL", async ({ page }) => {
+    await page.goto("/tools/password/");
+    const values = page.locator("[data-list] code");
+    await expect(values).toHaveCount(5);
+    await expect(page.getByRole("button", { name: "Copy share link" })).toHaveCount(0);
+    await page.getByLabel("Length").fill("32");
+    await expect(values.first()).toHaveText(/^.{32}$/u);
+    await page.getByLabel("Symbols (!@#$…)").uncheck();
+    await expect(page.locator("#pw-status")).toHaveText("Generated 5 passwords with 190 bits of entropy each.");
+    await expect(page.locator("[data-rating]")).toHaveText(/^Very strong/u);
+    await page.getByRole("radio", { name: "Passphrases" }).check();
+    await page.getByLabel("Separator").selectOption({ label: "Full stop (.)" });
+    await expect(values.first()).toHaveText(/^[a-z-]+(?:\.[a-z-]+){4}$/u);
+    await expect(page.locator("#pw-status")).toHaveText("Generated 5 passphrases with 51 bits of entropy each.");
+    await page.getByLabel("How many").fill("2");
+    await page.getByLabel("How many").press("Enter");
+    await page.getByRole("button", { name: "Generate" }).click();
+    await expect(values).toHaveCount(2);
+    const passphrase = (await values.first().textContent()) ?? "";
+    expect(new URL(page.url()).hash).toBe("");
+    const stored = await page.evaluate(() =>
+      JSON.stringify([Object.entries(localStorage), Object.entries(sessionStorage)]),
+    );
+    expect(stored).not.toContain(passphrase);
+  });
+
+  test("the glob tester matches paths and explains the pattern", async ({ page }) => {
+    await page.goto("/tools/glob/");
+    await page.getByLabel("Glob pattern").fill("**/*.test.{ts,tsx}");
+    await page.getByLabel("Paths, one per line").fill("src/a.test.ts\nsrc/b.ts\n.hidden/c.test.tsx");
+    await expect(page.locator("#glob-status")).toHaveText("1 of 3 paths match.");
+    await expect(page.locator("[data-list] li[data-matched] code")).toHaveText(["src/a.test.ts"]);
+    await page.getByLabel("Match dotfiles (dot)").check();
+    await expect(page.locator("#glob-status")).toHaveText("2 of 3 paths match.");
+    await expect(page.locator("[data-regex]")).toContainText("/^(?:");
+    await expect(page.getByText("Braces expand to 2 patterns, joined with |.")).toBeVisible();
+    await expect(page.locator("[data-segments] li").first()).toContainText("Any number of folders, including none");
+    await page.getByLabel("Glob pattern").fill("!*.md");
+    await expect(page.getByText("The pattern is negated, so a path matches when this doesn’t.")).toBeVisible();
+  });
+
+  test("the Unicode inspector breaks text into graphemes and flags hidden characters", async ({ page }) => {
+    await page.goto("/tools/unicode/");
+    await page.getByLabel("Text to inspect").fill("p\u0430ypal\u200b");
+    await expect(page.locator("#uni-status")).toHaveText("7 graphemes, 7 code points. 2 characters flagged.");
+    await expect(page.getByText("Words that mix scripts: p\u0430ypal")).toBeVisible();
+    await expect(page.locator('[data-count="utf8"]')).toHaveText("10");
+    const table = page.getByRole("region", { name: "Characters", exact: true });
+    await expect(table.getByText("Looks like Latin “a”")).toBeVisible();
+    await expect(table.getByText("Invisible (ZWSP)")).toBeVisible();
+    // The table's region only takes focus when it has to scroll sideways, as on a phone.
+    if (await table.evaluate((element) => element.scrollWidth > element.clientWidth)) {
+      await table.focus();
+      await expect(table).toBeFocused();
+    } else await expect(table).not.toHaveAttribute("tabindex");
+    await page.getByLabel("Text to inspect").fill("e\u0301");
+    await expect(page.locator('[data-form="NFC"] [data-verdict]')).toHaveText("Differs");
+    await expect(page.locator('[data-form="NFD"] [data-verdict]')).toHaveText("Same as the input");
+    await expect(page.locator('[data-count="graphemes"]')).toHaveText("1");
+  });
 });
 
 test.describe("tools index", () => {
@@ -406,9 +491,9 @@ test.describe("tools index", () => {
     await page.goto("/tools/");
     const status = page.locator("[data-tools-status]");
     const colour = page.getByRole("heading", { level: 2, name: /^Colour & design/u });
-    await expect(status).toHaveText("All 25 tools");
+    await expect(status).toHaveText("All 29 tools");
     await expect(colour).toBeVisible();
-    await expect(page.locator("[data-tool]")).toHaveCount(25);
+    await expect(page.locator("[data-tool]")).toHaveCount(29);
 
     // `/` focuses this page's search rather than opening the palette.
     await page.keyboard.press("/");
@@ -430,9 +515,9 @@ test.describe("tools index", () => {
     await expect(status).toHaveText("No tools match.");
     await expect(page.getByText("Nothing matches that.")).toBeVisible();
     await page.getByRole("button", { name: "Clear filters" }).click();
-    await expect(status).toHaveText("All 25 tools");
+    await expect(status).toHaveText("All 29 tools");
     await expect(search).toBeFocused();
-    await expect(page.locator("[data-tool]:visible")).toHaveCount(25);
+    await expect(page.locator("[data-tool]:visible")).toHaveCount(29);
   });
 
   test("shows recently used tools, newest first", async ({ page }) => {
@@ -449,7 +534,7 @@ test.describe("tools index", () => {
     const context = await browser.newContext({ javaScriptEnabled: false });
     const page = await context.newPage();
     await page.goto("/tools/");
-    await expect(page.locator("[data-tool]:visible")).toHaveCount(25);
+    await expect(page.locator("[data-tool]:visible")).toHaveCount(29);
     await expect(page.getByLabel("Search tools")).toBeHidden();
     await context.close();
   });
@@ -469,7 +554,7 @@ test.describe("related tools", () => {
     await expect(page).toHaveURL(/\/tools\/diff\/$/u);
     await page
       .getByRole("complementary", { name: "Related tools" })
-      .getByRole("link", { name: "All 25 tools" })
+      .getByRole("link", { name: "All 29 tools" })
       .click();
     await expect(page).toHaveURL(/\/tools\/$/u);
   });
