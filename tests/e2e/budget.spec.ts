@@ -81,26 +81,41 @@ test.describe("Layout stability", () => {
     test(`${path} shifts by less than 0.01 while it loads`, async ({ page }) => {
       await page.goto(path, { waitUntil: "networkidle" });
       // Layout shifts are only exposed to a buffered observer, which delivers them in a later task.
-      const shift = await page.evaluate(
+      const { shift, sources } = await page.evaluate(
         () =>
-          new Promise<number>((resolve) => {
+          new Promise<{ shift: number; sources: string[] }>((resolve) => {
             let sum = 0;
+            const moved: string[] = [];
+            const describe = (node: Node | null) =>
+              node instanceof Element
+                ? `${node.localName}${node.className && typeof node.className === "string" ? `.${node.className.trim().split(/\s+/u).join(".")}` : ""}`
+                : (node?.nodeName ?? "?");
+            const rect = ({ x, y, width, height }: DOMRectReadOnly) =>
+              `${Math.round(x)},${Math.round(y)} ${Math.round(width)}×${Math.round(height)}`;
             const observer = new PerformanceObserver((list) => {
               for (const entry of list.getEntries() as (PerformanceEntry & {
                 value: number;
                 hadRecentInput: boolean;
+                sources: { node: Node | null; previousRect: DOMRectReadOnly; currentRect: DOMRectReadOnly }[];
               })[]) {
-                if (!entry.hadRecentInput) sum += entry.value;
+                if (entry.hadRecentInput) continue;
+                sum += entry.value;
+                for (const source of entry.sources) {
+                  moved.push(
+                    `${describe(source.node)} ${rect(source.previousRect)} → ${rect(source.currentRect)} at ${Math.round(entry.startTime)}ms`,
+                  );
+                }
               }
             });
             observer.observe({ type: "layout-shift", buffered: true });
             setTimeout(() => {
               observer.disconnect();
-              resolve(sum);
+              resolve({ shift: sum, sources: moved });
             }, 100);
           }),
       );
-      expect(shift, `${path} shifts by ${shift.toFixed(3)}`).toBeLessThan(0.01);
+      // Name what moved, so a failure in CI says why without needing the trace.
+      expect(shift, `${path} shifts by ${shift.toFixed(3)}:\n${sources.join("\n")}`).toBeLessThan(0.01);
     });
   }
 });
