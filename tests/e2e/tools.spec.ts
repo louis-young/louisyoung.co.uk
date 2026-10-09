@@ -400,3 +400,124 @@ test.describe("tools", () => {
     }
   });
 });
+
+test.describe("tools index", () => {
+  test("groups tools by category and filters them by search and category", async ({ page }) => {
+    await page.goto("/tools/");
+    const status = page.locator("[data-tools-status]");
+    const colour = page.getByRole("heading", { level: 2, name: /^Colour & design/u });
+    await expect(status).toHaveText("All 25 tools");
+    await expect(colour).toBeVisible();
+    await expect(page.locator("[data-tool]")).toHaveCount(25);
+
+    // `/` focuses this page's search rather than opening the palette.
+    await page.keyboard.press("/");
+    const search = page.getByLabel("Search tools");
+    await expect(search).toBeFocused();
+    await expect(page.locator("#palette")).not.toHaveAttribute("open");
+
+    // Keywords that live only in the catalogue match too.
+    await page.keyboard.type("crontab");
+    await expect(status).toHaveText("1 tool matches.");
+    await expect(page.locator("[data-tool]:visible")).toHaveCount(1);
+    await expect(page.getByRole("link", { name: "Cron expression explainer" })).toBeVisible();
+    await expect(colour).toBeHidden();
+
+    await search.fill("");
+    await page.locator(".tools__chip").filter({ hasText: "CSS & layout" }).click();
+    await expect(status).toHaveText("4 tools match.");
+    await search.fill("json");
+    await expect(status).toHaveText("No tools match.");
+    await expect(page.getByText("Nothing matches that.")).toBeVisible();
+    await page.getByRole("button", { name: "Clear filters" }).click();
+    await expect(status).toHaveText("All 25 tools");
+    await expect(search).toBeFocused();
+    await expect(page.locator("[data-tool]:visible")).toHaveCount(25);
+  });
+
+  test("shows recently used tools, newest first", async ({ page }) => {
+    await page.goto("/tools/");
+    await expect(page.getByRole("heading", { name: "Recently used" })).toBeHidden();
+    await page.goto("/tools/regex/");
+    await page.goto("/tools/json/");
+    await page.goto("/tools/");
+    const recent = page.getByRole("region", { name: "Recently used" });
+    await expect(recent.getByRole("link")).toHaveText(["{ }JSON formatter", ".*Regex tester"]);
+  });
+
+  test("lists every tool without JavaScript", async ({ browser }) => {
+    const context = await browser.newContext({ javaScriptEnabled: false });
+    const page = await context.newPage();
+    await page.goto("/tools/");
+    await expect(page.locator("[data-tool]:visible")).toHaveCount(25);
+    await expect(page.getByLabel("Search tools")).toBeHidden();
+    await context.close();
+  });
+});
+
+test.describe("related tools", () => {
+  test("each tool page links to three tools from its category and back to the index", async ({ page }) => {
+    await page.goto("/tools/regex/");
+    const related = page.getByRole("complementary", { name: "Related tools" });
+    await expect(related.getByText("Text & data")).toBeVisible();
+    await expect(related.getByRole("heading", { level: 3 })).toHaveText([
+      "Text diff",
+      "JSON to TypeScript",
+      "SQL formatter",
+    ]);
+    await related.getByRole("link", { name: "Text diff" }).click();
+    await expect(page).toHaveURL(/\/tools\/diff\/$/u);
+    await page
+      .getByRole("complementary", { name: "Related tools" })
+      .getByRole("link", { name: "All 25 tools" })
+      .click();
+    await expect(page).toHaveURL(/\/tools\/$/u);
+  });
+});
+
+test.describe("share links", () => {
+  test("copies the inputs into the fragment and restores them from it", async ({ page, context, browserName }) => {
+    test.skip(browserName !== "chromium", "Only Chromium lets tests read the clipboard.");
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await page.goto("/tools/regex/");
+    await page.getByLabel("Pattern").fill(String.raw`\d+`);
+    await page.getByLabel("Test text").fill("<b>1</b> and 22");
+    await page.getByLabel("global").uncheck();
+    await page.getByRole("button", { name: "Copy share link" }).click();
+    await expect(page.getByText("Link copied.")).toBeVisible();
+    const link = await page.evaluate(() => navigator.clipboard.readText());
+    expect(link).toMatch(/\/tools\/regex\/#s=[\w-]+$/u);
+    expect(link).not.toContain("?");
+    expect(page.url()).toBe(link);
+
+    const shared = await context.newPage();
+    await shared.goto(link);
+    await expect(shared.getByLabel("Pattern")).toHaveValue(String.raw`\d+`);
+    await expect(shared.getByLabel("Test text")).toHaveValue("<b>1</b> and 22");
+    await expect(shared.getByLabel("global")).not.toBeChecked();
+    await expect(shared.locator("#regex-status")).toHaveText("1 match");
+    await expect(shared.locator("[data-highlight] b")).toHaveCount(0);
+    await expect(shared.getByText("Inputs restored from a shared link.")).toBeVisible();
+  });
+
+  test("restores checkboxes on the SQL formatter from a link", async ({ page }) => {
+    await page.goto("/tools/sql/");
+    await page.getByLabel("SQL to format").fill("select 1");
+    await page.getByLabel("Minify", { exact: true }).check();
+    await page.getByRole("button", { name: "Copy share link" }).click();
+    await expect(page).toHaveURL(/#s=/u);
+    const { hash } = new URL(page.url());
+    await page.goto("/tools/");
+    await page.goto(`/tools/sql/${hash}`);
+    await expect(page.getByLabel("SQL to format")).toHaveValue("select 1");
+    await expect(page.getByLabel("Minify", { exact: true })).toBeChecked();
+  });
+
+  test("explains when the inputs are too long for a link", async ({ page }) => {
+    await page.goto("/tools/diff/");
+    await page.getByLabel("Original").fill("x".repeat(5000));
+    await page.getByRole("button", { name: "Copy share link" }).click();
+    await expect(page.getByText("Too much to fit in a link.")).toBeVisible();
+    expect(new URL(page.url()).hash).toBe("");
+  });
+});

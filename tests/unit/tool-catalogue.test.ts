@@ -3,7 +3,18 @@ import { readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 import { useTranslations } from "../../src/i18n";
-import { featuredTools, newestTool, toolImage, toolPageProps, toolPath, tools } from "../../src/lib/tool-catalogue";
+import { enGB } from "../../src/i18n/en-GB";
+import {
+  featuredTools,
+  newestTool,
+  relatedTools,
+  toolCategories,
+  toolImage,
+  toolPageProps,
+  toolPath,
+  tools,
+  toolsByCategory,
+} from "../../src/lib/tool-catalogue";
 
 describe("tool catalogue", () => {
   it("lists every tool page exactly once", () => {
@@ -51,7 +62,7 @@ describe("tool catalogue", () => {
 
   it("gives each tool page its own title, description, image and structured data", () => {
     const props = toolPageProps("json", useTranslations());
-    expect(props).toMatchObject({ title: "JSON formatter", image: "/og/tools-json.png" });
+    expect(props).toMatchObject({ tool: "json", title: "JSON formatter", image: "/og/tools-json.png" });
     expect(props.description.length).toBeGreaterThan(40);
     expect(props.schema[0]).toMatchObject({ "@type": "WebApplication", url: "https://louisyoung.co.uk/tools/json/" });
     expect(props.schema[1].itemListElement.map((item) => item.name)).toEqual([
@@ -59,5 +70,36 @@ describe("tool catalogue", () => {
       "Tools",
       "JSON formatter",
     ]);
+  });
+
+  it("puts every tool in a known category with a translated label", () => {
+    const ids = toolCategories.map((category) => category.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const category of toolCategories) expect(enGB[category.label]).toBeTruthy();
+    for (const tool of tools) expect(ids, tool.slug).toContain(tool.category);
+  });
+
+  it("gives every category enough tools for three related links", () => {
+    for (const group of toolsByCategory()) expect(group.tools.length, group.id).toBeGreaterThanOrEqual(4);
+    expect(toolsByCategory().flatMap((group) => group.tools)).toHaveLength(tools.length);
+  });
+
+  it("gives every tool search keywords", () => {
+    for (const tool of tools) expect(tool.keywords.trim(), tool.slug).not.toBe("");
+  });
+
+  it("relates each tool to three others from its own category, wrapping round", () => {
+    for (const tool of tools) {
+      const related = relatedTools(tool.slug);
+      expect(related, tool.slug).toHaveLength(3);
+      expect(related.map((item) => item.slug)).not.toContain(tool.slug);
+      for (const item of related) expect(item.category).toBe(tool.category);
+    }
+    const colour = toolsByCategory()
+      .find((group) => group.id === "colour")!
+      .tools.map((tool) => tool.slug);
+    expect(relatedTools(colour.at(-1)!).map((tool) => tool.slug)).toEqual(colour.slice(0, 3));
+    expect(relatedTools("json", 1)).toHaveLength(1);
+    expect(relatedTools("nope")).toEqual([]);
   });
 });

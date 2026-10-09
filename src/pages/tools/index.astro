@@ -1,24 +1,23 @@
 ---
+import Icon from "../../components/Icon.astro";
 import PageHero from "../../components/sections/PageHero.astro";
+import ToolCard from "../../components/ToolCard.astro";
 import { useTranslations } from "../../i18n";
 import { localeOf } from "../../i18n/astro";
 import Base from "../../layouts/Base.astro";
 import { breadcrumbSchema, itemListSchema } from "../../lib/seo";
-import { toolPath, tools } from "../../lib/tool-catalogue";
+import { searchText } from "../../lib/snippet-filter";
+import { toolPath, tools, toolsByCategory } from "../../lib/tool-catalogue";
 
 const t = useTranslations(localeOf(Astro));
-const list = tools.map((tool) => ({
-  href: toolPath(tool.slug),
-  title: t(tool.title),
-  summary: t(tool.summary),
-  icon: tool.icon,
-}));
+const groups = toolsByCategory().map((group) => ({ ...group, label: t(group.label) }));
+const total = t("tools.countAll", { count: tools.length });
 const schema = [
   itemListSchema({
     name: t("tools.heading"),
     description: t("tools.description"),
     path: "/tools/",
-    items: list.map((tool) => ({ name: tool.title, path: tool.href })),
+    items: groups.flatMap((group) => group.tools.map((tool) => ({ name: t(tool.title), path: toolPath(tool.slug) }))),
   }),
   breadcrumbSchema([{ name: t("nav.tools"), path: "/tools/" }]),
 ];
@@ -26,78 +25,413 @@ const schema = [
 
 <Base title={t("tools.title")} description={t("tools.description")} image="/og/tools.png" schema={schema}>
   <PageHero label={t("nav.tools")} title={t("tools.heading")} lede={t("tools.lede")} />
-  <section class="container-page tools" aria-label={t("tools.title")}>
-    <ul class="tools__grid" role="list">
-      {list.map((tool) => (
-        <li class="tool card card--interactive">
-          <span class="tool__icon" aria-hidden="true">
-            {tool.icon}
-          </span>
-          <h2 class="tool__title">
-            <a href={tool.href} class="stretched-link">
-              {tool.title}
-            </a>
+  <div
+    class="container-page tools"
+    data-tools
+    data-count-all={total}
+    data-count-none={t("tools.countNone")}
+    data-count-one={t("tools.countOne")}
+    data-count-other={t("tools.countOther")}
+  >
+    {/* Search and chips only filter, so without JavaScript they're hidden and every group shows. */}
+    <div class="tools__controls card" data-tools-controls>
+      <div class="tools__field">
+        <label class="tools__label" for="tools-search">
+          {t("tools.search")}
+        </label>
+        <span class="tools__search">
+          <Icon name="search" size={16} class="tools__search-icon" />
+          <input
+            id="tools-search"
+            type="search"
+            class="tools__input"
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck="false"
+            aria-describedby="tools-search-hint"
+            aria-controls="tools-groups"
+            aria-keyshortcuts="/"
+            data-tools-query
+            data-search-shortcut
+          />
+          <kbd class="tools__kbd" aria-hidden="true">
+            /
+          </kbd>
+        </span>
+        <p id="tools-search-hint" class="tools__hint">
+          {t("tools.searchHint")}
+        </p>
+      </div>
+      <fieldset class="tools__field">
+        <legend class="tools__label">{t("tools.categories")}</legend>
+        <div class="tools__chips">
+          <label class="tools__chip">
+            <input type="radio" name="category" value="" checked aria-controls="tools-groups" />
+            <span>
+              {t("tools.all")}
+              <span class="tools__count">{tools.length}</span>
+            </span>
+          </label>
+          {groups.map((group) => (
+            <label class="tools__chip">
+              <input type="radio" name="category" value={group.id} aria-controls="tools-groups" />
+              <span>
+                {group.label}
+                <span class="tools__count">{group.tools.length}</span>
+              </span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+      <p class="tools__status" role="status" data-tools-status>
+        {total}
+      </p>
+    </div>
+
+    {/* Filled from localStorage by src/scripts/recent-tools.ts; stays hidden when there's nothing to show. */}
+    <section class="recent" aria-labelledby="recent-title" data-recent hidden>
+      <h2 id="recent-title" class="label recent__title">
+        {t("tools.recent")}
+      </h2>
+      <ul class="recent__list" role="list" data-recent-list></ul>
+    </section>
+
+    <div id="tools-groups" class="tools__groups">
+      {groups.map((group) => (
+        <section class="tools__group" aria-labelledby={`tools-group-${group.id}`} data-tool-group={group.id}>
+          <h2 id={`tools-group-${group.id}`} class="tools__group-title">
+            {group.label}
+            <span class="tools__group-count">{group.tools.length}</span>
           </h2>
-          <p class="tool__summary">{tool.summary}</p>
-          <span class="tool__cta" aria-hidden="true">
-            {t("tools.open")} →
-          </span>
-        </li>
+          <ul class="tools__grid" role="list">
+            {group.tools.map((tool) => (
+              <li
+                class="tools__item"
+                data-tool={tool.slug}
+                data-category={tool.category}
+                data-text={searchText([t(tool.title), t(tool.summary), tool.keywords, group.label])}
+              >
+                <ToolCard tool={tool} />
+              </li>
+            ))}
+          </ul>
+        </section>
       ))}
-    </ul>
-  </section>
+    </div>
+
+    <div class="tools__empty card" data-tools-empty hidden>
+      <p>{t("tools.empty")}</p>
+      <button type="button" class="button button--small" data-tools-clear>
+        {t("tools.clear")}
+      </button>
+    </div>
+  </div>
 </Base>
+
+<script>
+  import { bindOpeners, lazyOpener } from "../../scripts/lazy";
+  import { initRecentTools } from "../../scripts/recent-tools";
+
+  initRecentTools();
+  // Every tool is in the HTML already. The filter's code loads when someone reaches for a control
+  // (including pressing / to focus the search).
+  const filter = lazyOpener(() =>
+    import("../../scripts/tools-index").then(({ initToolsIndex }) => {
+      initToolsIndex();
+      return () => undefined;
+    }),
+  );
+  bindOpeners("[data-tools-controls] input", filter);
+</script>
 
 <style>
   .tools {
+    display: grid;
+    gap: 2rem;
     padding-block-end: var(--spacing-section);
   }
 
-  .tools__grid {
+  .tools__controls {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: 1.25rem 2rem;
+    padding: clamp(1.25rem, 1rem + 1vw, 1.75rem);
+  }
+
+  @media (scripting: none) {
+    .tools__controls {
+      display: none;
+    }
+  }
+
+  .tools__field {
+    display: grid;
+    align-content: start;
+    gap: 0.6rem;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .tools__label {
+    padding: 0;
+    font-weight: 500;
+    font-size: var(--text-step--1);
+  }
+
+  .tools__search {
+    position: relative;
+    display: block;
+  }
+
+  .tools__search :global(.tools__search-icon) {
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline-start: 0.95rem;
+    translate: 0 -50%;
+    color: var(--ink-faint);
+    pointer-events: none;
+  }
+
+  .tools__input {
+    width: 100%;
+    min-width: 0;
+    min-height: 3rem;
+    padding: 0.5rem 2.75rem 0.5rem 2.6rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+    color: var(--ink);
+    font: 500 var(--text-step-0) / 1.4 var(--sans);
+  }
+
+  .tools__kbd {
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline-end: 0.75rem;
+    translate: 0 -50%;
+    pointer-events: none;
+  }
+
+  .tools__input:focus + .tools__kbd {
+    visibility: hidden;
+  }
+
+  .tools__hint {
+    color: var(--ink-muted);
+    font-size: var(--text-step--1);
+  }
+
+  .tools__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .tools__chip {
+    position: relative;
+    display: grid;
+  }
+
+  .tools__chip input {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .tools__chip > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-height: 2.25rem;
+    padding: 0.2rem 0.85rem;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    background: var(--paper-sunken);
+    color: var(--ink-muted);
+    font: 500 var(--text-step--2) / 1 var(--mono);
+    pointer-events: none;
+    transition:
+      color var(--duration-fast) ease,
+      border-color var(--duration-fast) ease,
+      background-color var(--duration-fast) ease;
+  }
+
+  .tools__chip:hover > span {
+    border-color: var(--rule-strong);
+    color: var(--ink);
+  }
+
+  .tools__chip input:checked + span {
+    border-color: color-mix(in oklch, var(--accent) 45%, transparent);
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  .tools__count {
+    display: inline-grid;
+    place-items: center;
+    min-width: 1.35rem;
+    height: 1.35rem;
+    margin-inline-end: -0.5rem;
+    padding-inline: 0.3rem;
+    border-radius: 999px;
+    background: var(--paper-raised);
+    color: var(--ink-faint);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .tools__chip input:checked + span .tools__count {
+    color: var(--accent);
+  }
+
+  .tools__input:focus-visible,
+  .tools__chip input:focus-visible + span {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  @media (forced-colors: active) {
+    .tools__chip input:checked + span {
+      border-color: Highlight;
+      outline: 2px solid Highlight;
+    }
+  }
+
+  .tools__status {
+    grid-column: 1 / -1;
+    padding-block-start: 1rem;
+    border-block-start: 1px solid var(--rule);
+    color: var(--ink-muted);
+    font: 500 var(--text-step--1) / 1.4 var(--mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .recent {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .recent[hidden],
+  .recent[data-suppressed] {
+    display: none;
+  }
+
+  .recent__title {
+    color: var(--ink-muted);
+  }
+
+  .recent__list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr));
+    gap: 0.6rem;
+  }
+
+  .recent__list :global(.recent__link) {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    min-height: 3rem;
+    padding: 0.45rem 0.9rem 0.45rem 0.45rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-sm);
+    background: var(--paper-raised);
+    color: var(--ink);
+    font-weight: 500;
+    font-size: var(--text-step--1);
+    text-decoration: none;
+    transition: border-color var(--duration-fast) ease;
+  }
+
+  .recent__list :global(.recent__link:hover) {
+    border-color: var(--rule-strong);
+  }
+
+  .recent__list :global(.recent__link:focus-visible) {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .recent__list :global(.recent__icon) {
+    display: grid;
+    flex-shrink: 0;
+    place-items: center;
+    min-width: 2rem;
+    height: 2rem;
+    padding-inline: 0.3rem;
+    border-radius: calc(var(--radius-sm) - 2px);
+    background: var(--accent-soft);
+    color: var(--accent);
+    font: 600 var(--text-step--2) / 1 var(--mono);
+    white-space: nowrap;
+  }
+
+  .tools__groups {
+    display: grid;
+    gap: clamp(2.5rem, 2rem + 2vw, 3.5rem);
+  }
+
+  /* With every group filtered out, don't leave an empty row (and its gaps) above the empty state. */
+  .tools__groups:not(:has(.tools__group:not([hidden]))) {
+    display: none;
+  }
+
+  .tools__group {
+    display: grid;
     gap: 1rem;
   }
 
-  .tool {
-    display: grid;
-    align-content: start;
-    gap: 0.75rem;
-    padding: 1.75rem;
+  .tools__group[hidden],
+  .tools__item[hidden] {
+    display: none;
   }
 
-  .tool__icon {
-    display: grid;
-    place-items: center;
-    width: 2.75rem;
-    height: 2.75rem;
-    margin-block-end: 0.5rem;
-    border: 1px solid var(--rule);
-    border-radius: var(--radius-sm);
-    background: color-mix(in oklch, var(--accent) 10%, transparent);
-    color: var(--accent);
-    font: 600 var(--text-step-0) / 1 var(--sans);
-  }
-
-  .tool__title {
+  .tools__group-title {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
     font-weight: 600;
     font-size: var(--text-step-1);
     letter-spacing: -0.02em;
   }
 
-  .tool__title a {
-    text-decoration: none;
+  .tools__group-count {
+    display: inline-grid;
+    place-items: center;
+    min-width: 1.6rem;
+    height: 1.6rem;
+    padding-inline: 0.4rem;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    color: var(--ink-faint);
+    font: 500 var(--text-step--2) / 1 var(--mono);
+    font-variant-numeric: tabular-nums;
   }
 
-  .tool__summary {
+  .tools__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
+    gap: 1rem;
+  }
+
+  .tools__empty {
+    display: grid;
+    justify-items: start;
+    gap: 1rem;
+    padding: clamp(1.5rem, 1rem + 2vw, 2.5rem);
     color: var(--ink-muted);
-    font-size: var(--text-step--1);
   }
 
-  .tool__cta {
-    margin-block-start: 0.5rem;
-    color: var(--accent);
-    font-size: var(--text-step--1);
-    font-weight: 500;
+  .tools__empty[hidden] {
+    display: none;
+  }
+
+  @media (width < 56rem) {
+    .tools__controls {
+      grid-template-columns: minmax(0, 1fr);
+    }
   }
 </style>

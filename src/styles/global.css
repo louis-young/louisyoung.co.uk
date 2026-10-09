@@ -717,6 +717,8 @@
   .pager,
   .pager__hint,
   .related,
+  .related-tools,
+  .share-link,
   #palette {
     display: none !important;
   }

@@ -37,6 +37,17 @@ export const stepList = (delta: 1 | -1) => {
   target?.scrollIntoView({ block: "nearest" });
 };
 
+/**
+ * The search box `/` focuses instead of opening the palette: one a page opts in with
+ * `data-search-shortcut` (the tools index's filter), or the full-text search on /search/. Pages
+ * never add their own `/` listener, so the two can’t both fire. A box inside a hidden element
+ * doesn’t count.
+ */
+const pageSearch = () =>
+  [...document.querySelectorAll<HTMLInputElement>("[data-search-shortcut], .pagefind-ui__search-input")].find(
+    (input) => !input.closest("[hidden]"),
+  );
+
 /** Follows the page's rel="prev" or rel="next" link (an article's pager), if it has one. */
 const follow = (rel: "prev" | "next") => document.querySelector<HTMLAnchorElement>(`a[rel~="${rel}"]`)?.click();
 
@@ -63,7 +74,7 @@ export const initShortcuts = (
       if (!chord && (isTyping(event.target) || document.querySelector("dialog[open]"))) return;
       event.preventDefault();
       if (shortcut === "search") {
-        const input = document.querySelector<HTMLInputElement>(".pagefind-ui__search-input");
+        const input = pageSearch();
         if (input) input.focus();
         else openPalette();
       }

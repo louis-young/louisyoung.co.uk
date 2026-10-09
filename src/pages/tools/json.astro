@@ -1,5 +1,6 @@
 ---
 import PageHero from "../../components/sections/PageHero.astro";
+import ShareLink from "../../components/ShareLink.astro";
 import { useTranslations } from "../../i18n";
 import { localeOf } from "../../i18n/astro";
 import Base from "../../layouts/Base.astro";
@@ -17,7 +18,9 @@ const sample =
 ---
 
 <Base {...toolPageProps("json", t)}>
-  <PageHero label={t("nav.tools")} title={t("tools.json.title")} lede={t("tools.json.summary")} />
+  <PageHero label={t("nav.tools")} title={t("tools.json.title")} lede={t("tools.json.summary")}>
+    <ShareLink />
+  </PageHero>
   <div
     class="container-page json"
     data-json
@@ -43,18 +46,19 @@ const sample =
         autocomplete="off"
         aria-describedby="json-status"
         data-input
+        data-share="json"
       >{sample}</textarea>
       <div class="json__options">
         <label class="json__option">
           <span class="json__label">{t("tools.json.indent")}</span>
-          <select class="json__select" data-indent>
+          <select class="json__select" data-indent data-share="indent">
             {indents.map((indent) => (
               <option value={indent.value}>{indent.label}</option>
             ))}
           </select>
         </label>
         <label class="json__check">
-          <input type="checkbox" data-sort />
+          <input type="checkbox" data-sort data-share="sort" />
           <span>{t("tools.json.sort")}</span>
         </label>
       </div>
@@ -84,8 +88,10 @@ const sample =
 
 <script>
   import { initJson } from "../../scripts/tool-json";
+  import { initShareLink } from "../../scripts/share-link";
 
   initJson();
+  initShareLink();
 </script>
 
 <style>

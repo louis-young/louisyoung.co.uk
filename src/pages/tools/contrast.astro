@@ -1,5 +1,6 @@
 ---
 import PageHero from "../../components/sections/PageHero.astro";
+import ShareLink from "../../components/ShareLink.astro";
 import { useTranslations } from "../../i18n";
 import { localeOf } from "../../i18n/astro";
 import Base from "../../layouts/Base.astro";
@@ -17,7 +18,9 @@ const labels = {
 ---
 
 <Base {...toolPageProps("contrast", t)}>
-  <PageHero label={t("nav.tools")} title={t("tools.contrast.title")} lede={t("tools.contrast.summary")} />
+  <PageHero label={t("nav.tools")} title={t("tools.contrast.title")} lede={t("tools.contrast.summary")}>
+    <ShareLink />
+  </PageHero>
   <div
     class="container-page contrast"
     data-contrast
@@ -44,6 +47,7 @@ const labels = {
               type="text"
               class="contrast__text"
               data-text={role}
+              data-share={role}
               value={role === "foreground" ? "#7c6cf0" : "#0b0c10"}
               autocomplete="off"
               spellcheck="false"
@@ -99,8 +103,10 @@ const labels = {
 
 <script>
   import { initContrast } from "../../scripts/tools";
+  import { initShareLink } from "../../scripts/share-link";
 
   initContrast();
+  initShareLink();
 </script>
 
 <style>

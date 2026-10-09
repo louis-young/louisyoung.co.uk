@@ -1,5 +1,6 @@
 ---
 import PageHero from "../../components/sections/PageHero.astro";
+import ShareLink from "../../components/ShareLink.astro";
 import { useTranslations } from "../../i18n";
 import { localeOf } from "../../i18n/astro";
 import Base from "../../layouts/Base.astro";
@@ -26,7 +27,9 @@ const sample = [
 ---
 
 <Base {...toolPageProps("sql", t)}>
-  <PageHero label={t("nav.tools")} title={t("tools.sql.title")} lede={t("tools.sql.summary")} />
+  <PageHero label={t("nav.tools")} title={t("tools.sql.title")} lede={t("tools.sql.summary")}>
+    <ShareLink />
+  </PageHero>
   <div
     class="container-page sql"
     data-sql
@@ -52,6 +55,7 @@ const sample = [
         autocapitalize="off"
         aria-describedby="sql-status"
         data-input
+        data-share="sql"
       >{sample}</textarea>
       <fieldset class="sql__options">
         <legend class="label">{t("tools.sql.options")}</legend>
@@ -60,7 +64,14 @@ const sample = [
           <div class="sql__segments">
             {cases.map((option, index) => (
               <label class="sql__segment">
-                <input type="radio" name="sql-case" value={option.value} checked={index === 0} data-case />
+                <input
+                  type="radio"
+                  name="sql-case"
+                  value={option.value}
+                  checked={index === 0}
+                  data-case
+                  data-share="case"
+                />
                 <span>{option.label}</span>
               </label>
             ))}
@@ -70,14 +81,14 @@ const sample = [
           <label class="sql__label" for="sql-indent">
             {t("tools.sql.indent")}
           </label>
-          <select id="sql-indent" class="sql__select" data-indent>
+          <select id="sql-indent" class="sql__select" data-indent data-share="indent">
             {indents.map((indent) => (
               <option value={indent.value}>{indent.label}</option>
             ))}
           </select>
         </div>
         <label class="sql__check">
-          <input type="checkbox" aria-describedby="sql-minify-hint" data-minify />
+          <input type="checkbox" aria-describedby="sql-minify-hint" data-minify data-share="minify" />
           <span>{t("tools.sql.minify")}</span>
         </label>
         <p id="sql-minify-hint" class="sql__hint">
@@ -111,8 +122,10 @@ const sample = [
 
 <script>
   import { initSql } from "../../scripts/tool-sql";
+  import { initShareLink } from "../../scripts/share-link";
 
   initSql();
+  initShareLink();
 </script>
 
 <style>

@@ -1,0 +1,79 @@
+---
+import { translatorFor } from "../i18n/astro";
+import { relatedTools, toolCategories, tools, type ToolSlug } from "../lib/tool-catalogue";
+import ToolCard from "./ToolCard.astro";
+
+interface Props {
+  slug: ToolSlug;
+}
+
+const t = translatorFor(Astro);
+const { slug } = Astro.props;
+const tool = tools.find((item) => item.slug === slug)!;
+const category = toolCategories.find((item) => item.id === tool.category)!;
+const related = relatedTools(slug);
+---
+
+{/* Rendered by Base for every tool page, so the catalogue alone decides what links where. */}
+<aside class="container-page related-tools" aria-labelledby="related-tools-title" data-tool-visit={slug}>
+  <div class="related-tools__head">
+    <div class="related-tools__heading">
+      <p class="label related-tools__label">{t(category.label)}</p>
+      <h2 id="related-tools-title" class="related-tools__title">
+        {t("tools.related")}
+      </h2>
+    </div>
+    <a href="/tools/" class="button button--small related-tools__all">
+      {t("tools.browseAll", { count: tools.length })}
+      <span aria-hidden="true">→</span>
+    </a>
+  </div>
+  <ul class="related-tools__grid" role="list">
+    {related.map((item) => (
+      <li>
+        <ToolCard tool={item} />
+      </li>
+    ))}
+  </ul>
+</aside>
+
+<script>
+  import { recordToolVisit } from "../scripts/recent-tools";
+
+  const slug = document.querySelector<HTMLElement>("[data-tool-visit]")?.dataset["toolVisit"];
+  if (slug) recordToolVisit(slug);
+</script>
+
+<style>
+  .related-tools {
+    display: grid;
+    gap: 1.25rem;
+    padding-block: 2.5rem var(--spacing-section);
+    border-block-start: 1px solid var(--rule);
+  }
+
+  .related-tools__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .related-tools__label {
+    margin-block-end: 0.4rem;
+    color: var(--accent);
+  }
+
+  .related-tools__title {
+    font-weight: 600;
+    font-size: var(--text-step-2);
+    letter-spacing: -0.025em;
+  }
+
+  .related-tools__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+    gap: 1rem;
+  }
+</style>

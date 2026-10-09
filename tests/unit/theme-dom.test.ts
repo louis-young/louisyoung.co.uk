@@ -143,6 +143,26 @@ describe("shortcuts (DOM)", () => {
     expect(open).toHaveBeenCalledOnce();
   });
 
+  it("focuses a page’s own opted-in search box with /, but not a hidden one, and never twice", async () => {
+    const open = vi.fn();
+    document.body.insertAdjacentHTML(
+      "beforeend",
+      '<div hidden><input id="hidden" data-search-shortcut /></div><input id="tools" data-search-shortcut />',
+    );
+    (await import("../../src/scripts/shortcuts")).initShortcuts(open, controller.signal);
+    const typed = vi.fn();
+    document.addEventListener("keydown", (event) => {
+      if (!event.defaultPrevented) typed();
+    });
+    press("/");
+    expect(document.activeElement?.id).toBe("tools");
+    expect(open).not.toHaveBeenCalled();
+    expect(typed).not.toHaveBeenCalled();
+    // Once the box has focus, / is a character to type, not a shortcut.
+    press("/", document.activeElement!);
+    expect(typed).toHaveBeenCalledOnce();
+  });
+
   it("steps through list rows with j and k", async () => {
     Element.prototype.scrollIntoView = vi.fn();
     document.body.insertAdjacentHTML(

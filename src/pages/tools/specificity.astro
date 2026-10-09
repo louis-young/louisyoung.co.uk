@@ -1,5 +1,6 @@
 ---
 import PageHero from "../../components/sections/PageHero.astro";
+import ShareLink from "../../components/ShareLink.astro";
 import { useTranslations } from "../../i18n";
 import { localeOf } from "../../i18n/astro";
 import Base from "../../layouts/Base.astro";
@@ -25,7 +26,9 @@ const legend = [
 ---
 
 <Base {...toolPageProps("specificity", t)}>
-  <PageHero label={t("nav.tools")} title={t("tools.specificity.title")} lede={t("tools.specificity.summary")} />
+  <PageHero label={t("nav.tools")} title={t("tools.specificity.title")} lede={t("tools.specificity.summary")}>
+    <ShareLink />
+  </PageHero>
   <div
     class="container-page spec"
     data-specificity
@@ -58,6 +61,7 @@ const legend = [
         autocapitalize="off"
         aria-describedby="spec-hint spec-status"
         data-input
+        data-share="selectors"
       >{sample}</textarea>
       <p id="spec-hint" class="spec__hint">
         {t("tools.specificity.hint")}
@@ -136,8 +140,10 @@ const legend = [
 
 <script>
   import { initSpecificity } from "../../scripts/tool-specificity";
+  import { initShareLink } from "../../scripts/share-link";
 
   initSpecificity();
+  initShareLink();
 </script>
 
 <style>
