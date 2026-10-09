@@ -40,6 +40,7 @@ export const pages = [
   "/stats/",
   "/changelog/",
   "/colophon/",
+  "/accessibility/",
   ...articleSlugs.map((slug) => `/${slug}/`),
 ];
 

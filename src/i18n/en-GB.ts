@@ -558,6 +558,23 @@ export const enGB = {
   "palette.navigate": "Navigate",
   "palette.select": "Open",
   "palette.close": "Close",
+  "shortcuts.title": "Keyboard shortcuts",
+  "shortcuts.close": "Close keyboard shortcuts",
+  "shortcuts.intro": "Single-key shortcuts work on every page, except while you’re typing in a field.",
+  "shortcuts.global": "Anywhere",
+  "shortcuts.or": "or",
+  "shortcuts.help": "Show these shortcuts",
+  "shortcuts.next": "Next item in a list",
+  "shortcuts.previous": "Previous item in a list",
+  "shortcuts.previousArticle": "Previous article",
+  "shortcuts.nextArticle": "Next article",
+  "shortcuts.closeDialog": "Close a dialog",
+  "shortcuts.move": "Move between results",
+  "shortcuts.ends": "Jump to the first or last result",
+  "shortcuts.choose": "Open the highlighted result",
+  "shortcuts.complete": "Complete a command",
+  "shortcuts.history": "Step through earlier commands",
+  "nav.accessibility": "Accessibility",
 } as const;
 
 export type MessageKey = keyof typeof enGB;

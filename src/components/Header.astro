@@ -160,6 +160,14 @@ const links = [
     box-shadow: 0 0 0 1px var(--rule) inset;
   }
 
+  /* Forced colours drop the pill's fill, so mark the current section with an underline instead. */
+  @media (forced-colors: active) {
+    .site-nav__link[aria-current] {
+      text-decoration: underline;
+      text-underline-offset: 0.3em;
+    }
+  }
+
   .site-header__tools {
     display: flex;
     align-items: center;

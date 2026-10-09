@@ -18,7 +18,7 @@ describe("shortcutFor", () => {
     ["g", undefined],
     ["j", "next"],
     ["k", "previous"],
-    ["?", "palette"],
+    ["?", "help"],
     ["[", "previousArticle"],
     ["]", "nextArticle"],
     ["x", undefined],

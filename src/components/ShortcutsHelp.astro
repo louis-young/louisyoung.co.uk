@@ -1,0 +1,205 @@
+---
+import { translatorFor } from "../i18n/astro";
+
+const t = translatorFor(Astro);
+
+/** Each row lists one or more alternative key combinations; each combination is a run of key caps. */
+interface Row {
+  combos: readonly (readonly string[])[];
+  label: string;
+}
+
+/** Every shortcut the site handles: src/scripts/shortcuts.ts, palette.ts and terminal.ts. */
+const groups: { id: string; label: string; rows: Row[] }[] = [
+  {
+    id: "global",
+    label: t("shortcuts.global"),
+    rows: [
+      {
+        combos: [
+          ["⌘", "K"],
+          ["Ctrl", "K"],
+        ],
+        label: t("palette.open"),
+      },
+      { combos: [["/"]], label: t("palette.search") },
+      { combos: [["?"]], label: t("shortcuts.help") },
+      { combos: [["J"]], label: t("shortcuts.next") },
+      { combos: [["K"]], label: t("shortcuts.previous") },
+      { combos: [["["]], label: t("shortcuts.previousArticle") },
+      { combos: [["]"]], label: t("shortcuts.nextArticle") },
+      { combos: [["T"]], label: t("palette.theme") },
+      { combos: [["`"]], label: t("palette.terminal") },
+      { combos: [["Esc"]], label: t("shortcuts.closeDialog") },
+    ],
+  },
+  {
+    id: "palette",
+    label: t("palette.title"),
+    rows: [
+      { combos: [["↑"], ["↓"]], label: t("shortcuts.move") },
+      { combos: [["Home"], ["End"]], label: t("shortcuts.ends") },
+      { combos: [["↵"]], label: t("shortcuts.choose") },
+    ],
+  },
+  {
+    id: "terminal",
+    label: t("terminal.title"),
+    rows: [
+      { combos: [["Tab"]], label: t("shortcuts.complete") },
+      { combos: [["↑"], ["↓"]], label: t("shortcuts.history") },
+      { combos: [["Ctrl", "L"]], label: t("terminal.cmd.clear") },
+    ],
+  },
+];
+---
+
+<dialog id="shortcuts-help" class="shortcuts-help" aria-labelledby="shortcuts-help-title">
+  <div class="shortcuts-help__bar">
+    <h2 id="shortcuts-help-title" class="shortcuts-help__title">
+      {t("shortcuts.title")}
+    </h2>
+    <button type="button" class="icon-button" data-shortcuts-close aria-label={t("shortcuts.close")}>
+      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+        <path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="shortcuts-help__body">
+    <p class="shortcuts-help__intro">{t("shortcuts.intro")}</p>
+    {groups.map((group) => (
+      <section class="shortcuts-help__group" aria-labelledby={`shortcuts-help-${group.id}`}>
+        <h3 id={`shortcuts-help-${group.id}`} class="label">
+          {group.label}
+        </h3>
+        <dl>
+          {group.rows.map((row) => (
+            <div class="shortcuts-help__row">
+              <dt class="shortcuts-help__keys">
+                {row.combos.map((combo, index) => (
+                  <>
+                    {index > 0 && <span class="shortcuts-help__or">{t("shortcuts.or")}</span>}
+                    <span class="shortcuts-help__combo">
+                      {combo.map((cap) => (
+                        <kbd>{cap}</kbd>
+                      ))}
+                    </span>
+                  </>
+                ))}
+              </dt>
+              <dd>{row.label}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+    ))}
+  </div>
+</dialog>
+
+<style>
+  .shortcuts-help {
+    width: min(100% - 2rem, 36rem);
+    max-height: min(85dvh, 40rem);
+    margin: 10vh auto auto;
+    padding: 0;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-lg);
+    /* Opaque rather than a backdrop blur, like the palette. */
+    background: var(--paper-raised);
+    color: var(--ink);
+    box-shadow:
+      0 30px 80px -20px oklch(0% 0 0 / 0.55),
+      0 0 60px -10px var(--glow-1);
+    overflow: hidden;
+  }
+
+  .shortcuts-help[open] {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .shortcuts-help::backdrop {
+    background: oklch(10% 0.01 270 / 0.6);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .shortcuts-help[open] {
+      animation: shortcuts-help-in var(--duration-base) var(--ease-out-expo);
+    }
+  }
+
+  .shortcuts-help__bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.5rem 0.5rem 0.5rem 1.25rem;
+    border-block-end: 1px solid var(--rule);
+  }
+
+  .shortcuts-help__title {
+    font-size: var(--text-step-0);
+    font-weight: 600;
+  }
+
+  .shortcuts-help__body {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 1rem 1.25rem 1.5rem;
+  }
+
+  .shortcuts-help__intro {
+    font-size: var(--text-step--1);
+    color: var(--ink-muted);
+  }
+
+  .shortcuts-help__group {
+    margin-block-start: 1.25rem;
+  }
+
+  .shortcuts-help__row {
+    display: grid;
+    grid-template-columns: minmax(0, 11rem) minmax(0, 1fr);
+    align-items: center;
+    gap: 1rem;
+    min-height: 2.5rem;
+    border-block-end: 1px solid var(--rule);
+    font-size: var(--text-step--1);
+  }
+
+  .shortcuts-help__keys {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .shortcuts-help__combo {
+    display: inline-flex;
+    gap: 0.2rem;
+  }
+
+  .shortcuts-help__or {
+    font-size: var(--text-step--2);
+    color: var(--ink-muted);
+  }
+
+  @media (width < 30rem) {
+    .shortcuts-help {
+      margin-block-start: 1rem;
+    }
+
+    .shortcuts-help__row {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.35rem;
+      padding-block: 0.5rem;
+    }
+  }
+
+  @keyframes shortcuts-help-in {
+    from {
+      opacity: 0;
+      scale: 0.97;
+    }
+  }
+</style>

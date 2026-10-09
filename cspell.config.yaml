@@ -59,6 +59,7 @@ words:
   - popups
   - prefetch
   - prerender
+  - reflow
   - rehype
   - resvg
   - satori

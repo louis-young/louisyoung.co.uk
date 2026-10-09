@@ -1,0 +1,48 @@
+---
+title: Accessibility
+description: How accessible this site aims to be, how that is tested on every change, the known limitations, and how to tell me if something gets in your way.
+updated: 2026-10-08
+summary: "Everyone should be able to read and use this site. Here’s what that means in practice."
+---
+
+import { site } from "../../src/site.config";
+
+## Conformance target
+
+This site aims to meet the **[Web Content Accessibility Guidelines (WCAG) 2.2](https://www.w3.org/TR/WCAG22/) at level AA**. I believe it does, apart from the limitations listed below. The last full manual audit was in October 2026.
+
+## What you can expect
+
+- **Keyboard first.** Everything works without a mouse. A skip link jumps past the header, focus is always visible, and dialogs keep focus inside until you close them and then hand it back to where you were. Press <kbd>?</kbd> on any page for the full list of shortcuts.
+- **Your settings, respected.** Light and dark themes follow your system, a higher-contrast palette applies when you ask for more contrast, motion switches off when you prefer reduced motion, and forced colours (such as Windows high contrast) keep every border and focus ring.
+- **Zoom and reflow.** Text scales to 200% and pages reflow down to 320 pixels wide without losing content or scrolling sideways.
+- **Readable structure.** Each page has one main heading and headings never skip a level. Landmarks, link text and form labels are written to make sense out of context.
+- **Comfortable targets.** Buttons and links are at least 24 by 24 pixels, or have enough space around them.
+
+## How it’s tested
+
+Every pull request runs these checks automatically, and a change can’t ship if one fails:
+
+- **[axe](https://github.com/dequelabs/axe-core)** on every page, in both themes, against the WCAG 2.0, 2.1 and 2.2 A and AA rules plus best practices, including the open command palette.
+- **Heading structure** on every page: exactly one level-one heading and no skipped levels.
+- **Keyboard and focus**: the skip link, a visible focus indicator on every tab stop, focus that stays visible in forced-colours mode, and focus that returns to its opener when the command palette, terminal or shortcuts dialog closes.
+- **Target size**: every control is checked against the 24-pixel minimum, allowing for the spacing exception.
+- **Reduced motion**: entrance animations and view transitions are switched off.
+- **Colour contrast**: a unit test checks every text and background pair in the design tokens, in both themes, against the WCAG thresholds.
+- **Valid HTML**, and a pseudo-locale test that catches text which can’t be translated.
+
+The manual audit added keyboard-only walkthroughs, 200% text zoom, 320-pixel reflow, forced colours and increased contrast. Its findings and fixes are written up in the [accessibility audit](https://github.com/louis-young/louisyoung.co.uk/blob/master/docs/accessibility-audit.md).
+
+## Known limitations
+
+- **Embedded sandboxes.** Some articles offer a live CodeSandbox. It only loads when you choose to, and what’s inside it is outside my control. Every example is also shown as plain code on the page.
+- **Code blocks scroll sideways.** Long lines of code keep their formatting and scroll horizontally rather than wrapping, which WCAG allows for content like code.
+- **The main navigation scrolls on very narrow screens.** Below about 360 pixels wide, the row of section links scrolls horizontally. Every page is also reachable from the footer and the command palette.
+- **The reading progress bar** on articles follows your scrolling even with reduced motion, because it moves only when you do. It is hidden from screen readers.
+- **Visual tools.** Some tools, such as the easing and colour tools, draw curves and swatches. Their results are always given as text too.
+
+## Report a problem
+
+If something on this site is hard to use, or doesn’t work with your assistive technology, please tell me. Email <a href={`mailto:${site.author.email}`}>{site.author.email}</a> with the address of the page, what you were trying to do, and the browser and assistive technology you use, if any. I aim to reply within five working days, and to fix problems as quickly as I can.
+
+You can also [open an issue on GitHub](https://github.com/louis-young/louisyoung.co.uk/issues).

@@ -221,11 +221,12 @@ const describedBy = (field: Field) =>
     resize: vertical;
   }
 
+  /* A solid outline, not a translucent ring: it meets 3:1 and survives forced colours. */
   .field :focus-visible {
-    outline: none;
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
     border-color: var(--accent);
     background: var(--paper);
-    box-shadow: 0 0 0 3px color-mix(in oklch, var(--accent) 30%, transparent);
   }
 
   .field [aria-invalid="true"] {

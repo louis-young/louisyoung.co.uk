@@ -15,6 +15,7 @@ import Palette from "../../src/components/Palette.astro";
 import Availability from "../../src/components/sections/Availability.astro";
 import CvRoles from "../../src/components/sections/CvRoles.astro";
 import Services from "../../src/components/sections/Services.astro";
+import ShortcutsHelp from "../../src/components/ShortcutsHelp.astro";
 import ThemeToggle from "../../src/components/ThemeToggle.astro";
 import Toc from "../../src/components/Toc.astro";
 
@@ -35,6 +36,11 @@ const allowed = new Set([
   "Esc",
   "T",
   "G",
+  // Key legends, as printed on the keys.
+  "Ctrl",
+  "Tab",
+  "Home",
+  "End",
 ]);
 
 /**
@@ -105,6 +111,7 @@ const cases = [
   ["Availability", Availability, {}],
   ["CvRoles", CvRoles, { props: { detailed: true } }],
   ["Services", Services, { props: { detailed: true } }],
+  ["ShortcutsHelp", ShortcutsHelp, {}],
   ["ThemeToggle", ThemeToggle, {}],
   ["Callout", Callout, {}],
   ["Demo", Demo, { props: { title: "⟦Demo⟧" } }],

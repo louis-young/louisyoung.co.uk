@@ -319,6 +319,12 @@
   opacity: 1;
 }
 
+/* Expressive Code reverts its buttons to the browser's focus ring, which is near-black in dark mode. */
+.prose .expressive-code .copy button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 .prose table {
   width: 100%;
   border-collapse: separate;
