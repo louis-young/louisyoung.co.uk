@@ -36,6 +36,11 @@ for (const [name, path] of Object.entries(routes)) {
         await page.clock.setFixedTime(new Date("2026-01-15T10:05:00Z"));
         await page.goto(path);
         await page.evaluate(() => document.fonts.ready);
+        // The home page's latest change is the newest commit, which differs between a pull
+        // request's build and master's (the squash subject), so leave it out of the capture.
+        await page.locator('.latest__item[data-kind="change"]').evaluateAll((items) => {
+          for (const item of items) item.remove();
+        });
         // A lazy image below the fold never loads (so never decodes) in a full-page screenshot;
         // load every image eagerly so the capture is complete and deterministic.
         await page.locator("img").evaluateAll((images) =>
