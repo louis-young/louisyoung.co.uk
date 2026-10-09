@@ -166,10 +166,17 @@
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* Clears the sticky header, so focused and linked-to elements are never hidden under it (WCAG 2.4.11). */
     scroll-padding-top: 5.5rem;
     scrollbar-gutter: stable;
     hanging-punctuation: first last;
     accent-color: var(--accent);
+  }
+  /* Below 56rem the header wraps its navigation onto a second row. */
+  @media (width < 56rem) {
+    html {
+      scroll-padding-top: 8.5rem;
+    }
   }
 
   body {

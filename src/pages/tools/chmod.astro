@@ -1,0 +1,407 @@
+---
+import PageHero from "../../components/sections/PageHero.astro";
+import { useTranslations } from "../../i18n";
+import { localeOf } from "../../i18n/astro";
+import Base from "../../layouts/Base.astro";
+import { chmodCommand, permissionBit, specialBit, toOctal, toSymbolic } from "../../lib/chmod-tool";
+import { toolPageProps } from "../../lib/tool-catalogue";
+
+const t = useTranslations(localeOf(Astro));
+const start = 0o755;
+const file = "deploy.sh";
+const classes = [
+  { who: "owner", label: t("tools.chmod.owner") },
+  { who: "group", label: t("tools.chmod.group") },
+  { who: "other", label: t("tools.chmod.other") },
+] as const;
+const kinds = [
+  { kind: "read", label: t("tools.chmod.read") },
+  { kind: "write", label: t("tools.chmod.write") },
+  { kind: "execute", label: t("tools.chmod.execute") },
+] as const;
+const specials = [
+  { bit: "setuid", label: t("tools.chmod.setuid"), hint: t("tools.chmod.setuidHint") },
+  { bit: "setgid", label: t("tools.chmod.setgid"), hint: t("tools.chmod.setgidHint") },
+  { bit: "sticky", label: t("tools.chmod.sticky"), hint: t("tools.chmod.stickyHint") },
+] as const;
+const digit = (who: string) => toOctal(start).at(who === "owner" ? -3 : who === "group" ? -2 : -1);
+---
+
+<Base {...toolPageProps("chmod", t)}>
+  <PageHero label={t("nav.tools")} title={t("tools.chmod.title")} lede={t("tools.chmod.summary")} />
+  <div
+    class="container-page chmod"
+    data-chmod
+    data-copied={t("tools.copied")}
+    data-owner={t("tools.chmod.owner")}
+    data-group={t("tools.chmod.group")}
+    data-other={t("tools.chmod.other")}
+    data-read={t("tools.chmod.verbRead")}
+    data-write={t("tools.chmod.verbWrite")}
+    data-execute={t("tools.chmod.verbExecute")}
+    data-setuid={t("tools.chmod.setuid")}
+    data-setgid={t("tools.chmod.setgid")}
+    data-sticky={t("tools.chmod.sticky")}
+    data-can={t("tools.chmod.can")}
+    data-nothing={t("tools.chmod.nothing")}
+    data-special-on={t("tools.chmod.specialOn")}
+    data-octal-hint={t("tools.chmod.octalHint")}
+    data-symbolic-hint={t("tools.chmod.symbolicHint")}
+    data-error-octal={t("tools.chmod.errorOctal")}
+    data-error-symbolic={t("tools.chmod.errorSymbolic")}
+  >
+    <section class="chmod__grid card" aria-labelledby="chmod-permissions">
+      <h2 id="chmod-permissions" class="label">
+        {t("tools.chmod.permissions")}
+      </h2>
+      {classes.map(({ who, label }) => (
+        <fieldset class="chmod__row">
+          <legend class="chmod__legend">
+            <span>{label}</span>
+            <span class="chmod__digit" data-digit={who} aria-hidden="true">
+              {digit(who)}
+            </span>
+          </legend>
+          <div class="chmod__options">
+            {kinds.map(({ kind, label: kindLabel }) => (
+              <label class="chmod__check">
+                <input
+                  type="checkbox"
+                  data-bit={permissionBit(who, kind)}
+                  checked={(start & permissionBit(who, kind)) !== 0}
+                />
+                <span>{kindLabel}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      ))}
+      <fieldset class="chmod__row chmod__row--special">
+        <legend class="chmod__legend">
+          <span>{t("tools.chmod.special")}</span>
+          <span class="chmod__digit" data-digit="special" aria-hidden="true">
+            0
+          </span>
+        </legend>
+        <div class="chmod__options chmod__options--special">
+          {specials.map(({ bit, label, hint }) => (
+            <div class="chmod__special">
+              <label class="chmod__check">
+                <input type="checkbox" data-bit={specialBit(bit)} aria-describedby={`chmod-${bit}-hint`} />
+                <span>{label}</span>
+              </label>
+              <p id={`chmod-${bit}-hint`} class="chmod__hint">
+                {hint}
+              </p>
+            </div>
+          ))}
+        </div>
+      </fieldset>
+    </section>
+
+    <div class="chmod__result card">
+      <fieldset class="chmod__modes">
+        <legend class="label">{t("tools.chmod.mode")}</legend>
+        <div class="chmod__field">
+          <label class="chmod__label" for="chmod-octal">
+            {t("tools.chmod.octal")}
+          </label>
+          <input
+            id="chmod-octal"
+            type="text"
+            class="chmod__input"
+            value={toOctal(start)}
+            inputmode="numeric"
+            maxlength="4"
+            autocomplete="off"
+            spellcheck="false"
+            aria-describedby="chmod-octal-hint"
+            data-octal
+          />
+          <p id="chmod-octal-hint" class="chmod__hint" data-octal-message>
+            {t("tools.chmod.octalHint")}
+          </p>
+        </div>
+        <div class="chmod__field">
+          <label class="chmod__label" for="chmod-symbolic">
+            {t("tools.chmod.symbolic")}
+          </label>
+          <input
+            id="chmod-symbolic"
+            type="text"
+            class="chmod__input"
+            value={toSymbolic(start)}
+            maxlength="10"
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck="false"
+            aria-describedby="chmod-symbolic-hint"
+            data-symbolic
+          />
+          <p id="chmod-symbolic-hint" class="chmod__hint" data-symbolic-message>
+            {t("tools.chmod.symbolicHint")}
+          </p>
+        </div>
+      </fieldset>
+      <section class="chmod__section" aria-labelledby="chmod-meaning">
+        <h2 id="chmod-meaning" class="label">
+          {t("tools.chmod.meaning")}
+        </h2>
+        <p class="chmod__status" role="status" data-status></p>
+      </section>
+      <section class="chmod__section" aria-labelledby="chmod-command">
+        <h2 id="chmod-command" class="label">
+          {t("tools.chmod.command")}
+        </h2>
+        <div class="chmod__field">
+          <label class="chmod__label" for="chmod-file">
+            {t("tools.chmod.file")}
+          </label>
+          <input
+            id="chmod-file"
+            type="text"
+            class="chmod__input chmod__input--file"
+            value={file}
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck="false"
+            data-file
+          />
+        </div>
+        <div class="chmod__command">
+          <code data-command>{chmodCommand(start, file)}</code>
+          <button type="button" class="button button--small" data-copy>
+            <span data-copy-label>{t("tools.copy")}</span>
+            <span class="visually-hidden">{t("tools.chmod.command")}</span>
+          </button>
+        </div>
+      </section>
+    </div>
+  </div>
+</Base>
+
+<script>
+  import { initChmod } from "../../scripts/tool-chmod";
+
+  initChmod();
+</script>
+
+<style>
+  .chmod {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 1rem;
+    align-items: start;
+    padding-block-end: var(--spacing-section);
+  }
+
+  .chmod > .card {
+    display: grid;
+    gap: 1.25rem;
+    min-width: 0;
+    padding: clamp(1.25rem, 1rem + 1vw, 2rem);
+  }
+
+  .chmod__row,
+  .chmod__modes {
+    display: grid;
+    gap: 0.6rem;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .chmod__row + .chmod__row {
+    padding-block-start: 1.25rem;
+    border-block-start: 1px solid var(--rule);
+  }
+
+  /* Floating the legend lays it out inside the fieldset, below the divider, not across the border. */
+  .chmod__legend {
+    float: left;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    width: 100%;
+    padding: 0;
+    font-weight: 600;
+    font-size: var(--text-step-0);
+  }
+
+  .chmod__digit {
+    color: var(--accent);
+    font: 600 var(--text-step-1) / 1 var(--mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .chmod__options {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
+  .chmod__check {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-width: 0;
+    min-height: 2.75rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+    font-size: var(--text-step--1);
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  .chmod__check:has(input:checked) {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  .chmod__check input {
+    flex: none;
+    width: 1.1rem;
+    height: 1.1rem;
+    margin: 0;
+    accent-color: var(--accent);
+  }
+
+  .chmod__check input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .chmod__options--special {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .chmod__special {
+    display: grid;
+    grid-template-columns: 7.5rem minmax(0, 1fr);
+    align-items: center;
+    gap: 0.4rem 1rem;
+  }
+
+  .chmod__field,
+  .chmod__section {
+    display: grid;
+    gap: 0.6rem;
+    min-width: 0;
+  }
+
+  .chmod__modes {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .chmod__modes legend {
+    float: left;
+    grid-column: 1 / -1;
+    width: 100%;
+    padding: 0;
+  }
+
+  .chmod__label {
+    font-weight: 500;
+    font-size: var(--text-step--1);
+  }
+
+  .chmod__input {
+    width: 100%;
+    min-width: 0;
+    min-height: 3rem;
+    padding: 0.5rem 0.9rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+    color: var(--ink);
+    font: 600 var(--text-step-1) / 1.3 var(--mono);
+    letter-spacing: 0.04em;
+  }
+
+  .chmod__input--file {
+    font: 500 var(--text-step-0) / 1.4 var(--mono);
+    letter-spacing: 0;
+  }
+
+  .chmod__input[aria-invalid="true"] {
+    border-color: var(--warning);
+  }
+
+  .chmod__input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .chmod__hint {
+    color: var(--ink-muted);
+    font-size: var(--text-step--1);
+  }
+
+  .chmod__hint[data-invalid] {
+    padding: 0.4rem 0.65rem;
+    border-radius: var(--radius-sm);
+    background: var(--warning-soft);
+    color: var(--ink);
+  }
+
+  .chmod__status {
+    padding: 0.9rem 1.1rem;
+    border-radius: var(--radius-sm);
+    background: var(--accent-soft);
+    color: var(--ink);
+    font-size: var(--text-step--1);
+    line-height: 1.6;
+  }
+
+  .chmod__command {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+  }
+
+  .chmod__command code {
+    flex: 1;
+    min-width: 0;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+    font: 500 var(--text-step--1) / 1.5 var(--mono);
+    overflow-wrap: anywhere;
+  }
+
+  @media (forced-colors: active) {
+    .chmod__check:has(input:checked) {
+      outline: 2px solid Highlight;
+    }
+  }
+
+  @media (width < 56rem) {
+    .chmod {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  @media (width < 30rem) {
+    .chmod__options:not(.chmod__options--special) .chmod__check {
+      flex-direction: column;
+      justify-content: center;
+      gap: 0.35rem;
+      padding-inline: 0.25rem;
+    }
+  }
+
+  @media (width < 26rem) {
+    .chmod__modes,
+    .chmod__special {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

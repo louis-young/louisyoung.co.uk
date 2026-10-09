@@ -9,6 +9,9 @@ ignoreRegExpList:
   - '/sha256-[A-Za-z0-9+\/=]+/g'
   - '/codesandbox\.io\/[^\s"]+/g'
   - '/\b[a-z0-9]+-[a-z0-9]{5}\b/g'
+  # Unix file modes as ls -l prints them, e.g. drwxr-xr-x, and the file-type letters before them.
+  - "/[-d]?[r-][w-][xsS-][r-][w-][xsS-][r-][w-][xtT-]/g"
+  - '/\[-dlcbps\]/g'
 words:
   - astro
   - astrojs
