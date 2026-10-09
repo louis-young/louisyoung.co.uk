@@ -16,7 +16,13 @@ const setup = (type = "linear") => {
   document.body.innerHTML = `
     <div data-css-gen data-layer="Layer {number}" data-stop="Stop {number}" data-added="{name} added."
       data-removed="{name} removed." data-copied="Copied">
-      <div data-layers></div>
+      <div data-layers>
+        <fieldset data-layer><legend data-name>Layer 1</legend>
+          ${["x", "y", "blur", "spread", "opacity"].map(slider).join("")}
+          <input type="color" data-prop="colour" /><input type="checkbox" data-prop="inset" />
+          <button type="button" data-remove>Remove <span data-name>Layer 1</span></button>
+        </fieldset>
+      </div>
       <p data-no-layers hidden></p>
       <button type="button" data-add-layer>Add layer</button>
       <input type="radio" name="css-gen-type" value="linear" ${type === "linear" ? "checked" : ""} />
@@ -24,25 +30,17 @@ const setup = (type = "linear") => {
       <div data-angle-field>
         <input type="range" data-angle value="135" /><input type="number" data-angle value="135" />
       </div>
-      <div data-stops></div>
+      <div data-stops>
+        <fieldset data-stop><legend data-name>Stop 1</legend>
+          <input type="color" data-prop="colour" />${slider("position")}
+          <button type="button" data-remove>Remove <span data-name>Stop 1</span></button>
+        </fieldset>
+      </div>
       <button type="button" data-add-stop>Add stop</button>
       <div data-preview></div>
       <code data-output></code>
       <button type="button" data-copy><span data-copy-label>Copy</span></button>
       <p data-announce></p>
-      <template data-layer-template>
-        <fieldset data-layer><legend data-name></legend>
-          ${["x", "y", "blur", "spread", "opacity"].map(slider).join("")}
-          <input type="color" data-prop="colour" /><input type="checkbox" data-prop="inset" />
-          <button type="button" data-remove>Remove <span data-name></span></button>
-        </fieldset>
-      </template>
-      <template data-stop-template>
-        <fieldset data-stop><legend data-name></legend>
-          <input type="color" data-prop="colour" />${slider("position")}
-          <button type="button" data-remove>Remove <span data-name></span></button>
-        </fieldset>
-      </template>
     </div>`;
   initCssGenerator();
   const get = (selector: string) => document.querySelector<HTMLElement>(selector)!;

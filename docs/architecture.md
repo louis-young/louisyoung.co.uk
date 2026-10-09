@@ -58,4 +58,5 @@ Every UI string lives in `src/i18n/en-GB.ts`, and `t()` only accepts keys from i
 | Accessibility     | `tests/a11y`                 | Playwright + axe                                |
 | Visual regression | `tests/visual`               | Playwright in the pinned Playwright container   |
 | Performance       | `lighthouserc.json`          | Lighthouse CI                                   |
+| Budgets           | `tests/e2e/budget.spec.ts`   | Playwright: JS per page type, CLS on every tool |
 | Synthetic         | `tests/synthetic`            | Playwright against production, every 30 minutes |

@@ -3,7 +3,15 @@ import PageHero from "../../components/sections/PageHero.astro";
 import { useTranslations } from "../../i18n";
 import { localeOf } from "../../i18n/astro";
 import Base from "../../layouts/Base.astro";
-import { cssRule, defaultGradient, defaultLayers, gradientCss, limits, shadowCss } from "../../lib/css-generator-tool";
+import {
+  cssRule,
+  defaultGradient,
+  defaultLayers,
+  gradientCss,
+  limits,
+  minStops,
+  shadowCss,
+} from "../../lib/css-generator-tool";
 import { toolPageProps } from "../../lib/tool-catalogue";
 
 const t = useTranslations(localeOf(Astro));
@@ -38,7 +46,58 @@ const types = [
         <h2 id="css-gen-shadow" class="label">
           {t("tools.css.shadow")}
         </h2>
-        <div class="css-gen__stack" data-layers></div>
+        <div class="css-gen__stack" data-layers>
+          {layers.map((layer, index) => (
+            <fieldset class="css-gen__item" data-layer>
+              <legend class="css-gen__legend" data-name>
+                {t("tools.css.layer", { number: index + 1 })}
+              </legend>
+              <div class="css-gen__sliders">
+                {sliders.map(({ prop, label }) => (
+                  <div class="css-gen__slider" data-pair>
+                    <label>
+                      <span class="css-gen__label">{label}</span>
+                      <input
+                        type="range"
+                        min={limits[prop].min}
+                        max={limits[prop].max}
+                        step="1"
+                        value={layer[prop]}
+                        data-prop={prop}
+                      />
+                    </label>
+                    <input
+                      type="number"
+                      class="css-gen__number"
+                      min={limits[prop].min}
+                      max={limits[prop].max}
+                      step="1"
+                      value={layer[prop]}
+                      aria-label={label}
+                      data-prop={prop}
+                    />
+                  </div>
+                ))}
+              </div>
+              <div class="css-gen__row">
+                <label class="css-gen__colour">
+                  <input type="color" value={layer.colour} data-prop="colour" />
+                  <span>{t("tools.css.colour")}</span>
+                </label>
+                <label class="css-gen__check">
+                  <input type="checkbox" checked={layer.inset} data-prop="inset" />
+                  <span>{t("tools.css.inset")}</span>
+                </label>
+                <button type="button" class="button button--small css-gen__remove" data-remove>
+                  {t("tools.css.remove")}
+                  <span class="visually-hidden" data-name>
+                    {t("tools.css.layer", { number: index + 1 })}
+                  </span>
+                </button>
+              </div>
+            </fieldset>
+          ))}
+        </div>
         <p class="css-gen__empty" data-no-layers hidden>
           {t("tools.css.noLayers")}
         </p>
@@ -86,7 +145,53 @@ const types = [
             data-angle
           />
         </div>
-        <div class="css-gen__stack" data-stops></div>
+        <div class="css-gen__stack" data-stops>
+          {gradient.stops.map((stop, index) => (
+            <fieldset class="css-gen__item css-gen__item--stop" data-stop>
+              <legend class="css-gen__legend" data-name>
+                {t("tools.css.stop", { number: index + 1 })}
+              </legend>
+              <label class="css-gen__colour">
+                <input type="color" value={stop.colour} data-prop="colour" />
+                <span>{t("tools.css.colour")}</span>
+              </label>
+              <div class="css-gen__slider" data-pair>
+                <label>
+                  <span class="css-gen__label">{t("tools.css.position")}</span>
+                  <input
+                    type="range"
+                    min={limits.position.min}
+                    max={limits.position.max}
+                    step="1"
+                    value={stop.position}
+                    data-prop="position"
+                  />
+                </label>
+                <input
+                  type="number"
+                  class="css-gen__number"
+                  min={limits.position.min}
+                  max={limits.position.max}
+                  step="1"
+                  value={stop.position}
+                  aria-label={t("tools.css.position")}
+                  data-prop="position"
+                />
+              </div>
+              <button
+                type="button"
+                class="button button--small css-gen__remove"
+                disabled={gradient.stops.length <= minStops}
+                data-remove
+              >
+                {t("tools.css.remove")}
+                <span class="visually-hidden" data-name>
+                  {t("tools.css.stop", { number: index + 1 })}
+                </span>
+              </button>
+            </fieldset>
+          ))}
+        </div>
         <button type="button" class="button button--small css-gen__add" data-add-stop>
           <span aria-hidden="true">+</span>
           {t("tools.css.addStop")}
@@ -121,74 +226,6 @@ const types = [
       </section>
     </div>
     <p class="visually-hidden" role="status" data-announce></p>
-
-    <template data-layer-template>
-      <fieldset class="css-gen__item" data-layer>
-        <legend class="css-gen__legend" data-name></legend>
-        <div class="css-gen__sliders">
-          {sliders.map(({ prop, label }) => (
-            <div class="css-gen__slider" data-pair>
-              <label>
-                <span class="css-gen__label">{label}</span>
-                <input type="range" min={limits[prop].min} max={limits[prop].max} step="1" data-prop={prop} />
-              </label>
-              <input
-                type="number"
-                class="css-gen__number"
-                min={limits[prop].min}
-                max={limits[prop].max}
-                step="1"
-                aria-label={label}
-                data-prop={prop}
-              />
-            </div>
-          ))}
-        </div>
-        <div class="css-gen__row">
-          <label class="css-gen__colour">
-            <input type="color" data-prop="colour" />
-            <span>{t("tools.css.colour")}</span>
-          </label>
-          <label class="css-gen__check">
-            <input type="checkbox" data-prop="inset" />
-            <span>{t("tools.css.inset")}</span>
-          </label>
-          <button type="button" class="button button--small css-gen__remove" data-remove>
-            {t("tools.css.remove")}
-            <span class="visually-hidden" data-name></span>
-          </button>
-        </div>
-      </fieldset>
-    </template>
-
-    <template data-stop-template>
-      <fieldset class="css-gen__item css-gen__item--stop" data-stop>
-        <legend class="css-gen__legend" data-name></legend>
-        <label class="css-gen__colour">
-          <input type="color" data-prop="colour" />
-          <span>{t("tools.css.colour")}</span>
-        </label>
-        <div class="css-gen__slider" data-pair>
-          <label>
-            <span class="css-gen__label">{t("tools.css.position")}</span>
-            <input type="range" min={limits.position.min} max={limits.position.max} step="1" data-prop="position" />
-          </label>
-          <input
-            type="number"
-            class="css-gen__number"
-            min={limits.position.min}
-            max={limits.position.max}
-            step="1"
-            aria-label={t("tools.css.position")}
-            data-prop="position"
-          />
-        </div>
-        <button type="button" class="button button--small css-gen__remove" data-remove>
-          {t("tools.css.remove")}
-          <span class="visually-hidden" data-name></span>
-        </button>
-      </fieldset>
-    </template>
   </div>
 </Base>
 
