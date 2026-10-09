@@ -89,6 +89,9 @@ describe("chmodCommand", () => {
     expect(chmodCommand(0o4755, " ./bin/run ")).toBe("chmod 4755 ./bin/run");
     expect(chmodCommand(0o644, "")).toBe("chmod 644");
     expect(chmodCommand(0o600, "my notes.txt")).toBe("chmod 600 'my notes.txt'");
+    // Quoting alone doesn't stop chmod reading a leading hyphen as an option; `--` does.
+    expect(chmodCommand(0o644, "-rf")).toBe("chmod 644 -- -rf");
+    expect(chmodCommand(0o644, "-my file")).toBe("chmod 644 -- '-my file'");
   });
 
   it("escapes single quotes", () => {

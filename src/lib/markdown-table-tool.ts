@@ -53,7 +53,8 @@ export const toMarkdown = (input: Table, compact = false) => {
   const header = table.headers.map(escapeCell);
   const body = table.rows.map((row) => row.map(escapeCell));
   if (compact) {
-    const line = (cells: string[]) => `|${cells.join("|")}|`;
+    // A cell ending in a backslash gets a space, or `\|` would escape its closing pipe.
+    const line = (cells: string[]) => `|${cells.map((cell) => (cell.endsWith("\\") ? `${cell} ` : cell)).join("|")}|`;
     const rule = table.align.map((align) => delimiter(align, align === "center" ? 3 : 2));
     return [line(header), line(rule), ...body.map(line)].join("\n");
   }

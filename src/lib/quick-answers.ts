@@ -343,9 +343,17 @@ const mathsShape = /^[\d\s.+\-*/%^()]+$/u;
 const dateLike = /^(?:\d{4}-\d{1,2}(?:-\d{1,2})?|\d{1,4}([-/])\d{1,2}\1\d{1,4})$/u;
 /** Nobody writes a sum with a leading zero (`07946-000000`), but phone numbers have them. */
 const leadingZero = /(?:^|[^\d.])0\d/u;
+/** Two whole numbers joined by a hyphen with no spaces are a range (`9-5`, `2023-2024`), not a sum. */
+const range = /^\d+-\d+$/u;
 
 const mathsAnswer = (query: string): QuickAnswer | undefined => {
-  if (!mathsShape.test(query) || !/\d/u.test(query) || dateLike.test(query) || leadingZero.test(query)) {
+  if (
+    !mathsShape.test(query) ||
+    !/\d/u.test(query) ||
+    dateLike.test(query) ||
+    leadingZero.test(query) ||
+    range.test(query)
+  ) {
     return undefined;
   }
   const result = evaluate(query);
