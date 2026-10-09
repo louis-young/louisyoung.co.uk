@@ -23,6 +23,7 @@ tests/                       unit, integration, types, e2e, a11y, visual, synthe
 - **MDX** through the `unified` processor (rehype-slug, autolinked headings, external-link marking). Code is highlighted at build time by Expressive Code.
 - **React 19** only for interactive article demos, hydrated with `client:visible`.
 - **Pagefind** indexes `dist/` after the build. Search runs entirely in the browser.
+- **The ⌘K palette** is a dialog shell in every page. Its options come from `/palette.json`, built from the content collections, and are fetched when the palette is first warmed. Queries that look like a timestamp, colour, cron expression, prefixed number, sum, CSS selector or `uuid` get a quick answer from the tool libraries in `src/lib`, which load only for such queries.
 - **Satori + resvg** render Open Graph images, the favicon and app icons from the site's own fonts at build time.
 
 ## Styling

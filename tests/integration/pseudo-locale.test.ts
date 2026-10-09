@@ -99,16 +99,8 @@ const untranslated = (html: string) => {
 const cases = [
   ["Header", Header, {}],
   ["Footer", Footer, {}],
-  [
-    "Palette",
-    Palette,
-    {
-      props: {
-        work: [{ title: "⟦Case⟧", href: "/work/a/" }],
-        articles: [{ title: "⟦Article⟧", href: "/a/" }],
-      },
-    },
-  ],
+  // The palette's options come from /palette.json; only its shell is in the page.
+  ["Palette", Palette, {}],
   ["Availability", Availability, {}],
   ["CvRoles", CvRoles, { props: { detailed: true } }],
   ["Services", Services, { props: { detailed: true } }],

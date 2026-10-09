@@ -19,7 +19,8 @@ const budgets: { name: string; budget: number; paths: string[] }[] = [
   { name: "article", budget: 8_400, paths: ["/how-to-fetch-data-from-backend-react/"] },
   { name: "listing", budget: 5_200, paths: ["/writing/", "/tags/", "/snippets/"] },
   { name: "tools index", budget: 5_700, paths: ["/tools/"] },
-  { name: "tool", budget: 11_400, paths: toolSlugs.map((slug) => `/tools/${slug}/`) },
+  // The QR tool, the largest, shipped after this budget was first measured and left it 64 B of headroom.
+  { name: "tool", budget: 12_600, paths: toolSlugs.map((slug) => `/tools/${slug}/`) },
   { name: "map", budget: 6_700, paths: ["/map/"] },
   { name: "snippet", budget: 7_900, paths: ["/snippets/debounce-and-throttle/"] },
   // The Pagefind UI is bundled into the page; its runtime and index load only once someone searches.

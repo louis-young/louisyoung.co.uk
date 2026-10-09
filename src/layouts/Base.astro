@@ -10,14 +10,8 @@ import ShortcutsHelp from "../components/ShortcutsHelp.astro";
 import Terminal from "../components/Terminal.astro";
 import { localeOf } from "../i18n/astro";
 import { useTranslations } from "../i18n";
-import { articlePath, getArticles } from "../lib/articles";
-import { getEntry } from "astro:content";
-
-import { cv } from "../../content/data/cv";
-import { filled } from "../lib/placeholders";
-import { getSnippets, languageName, snippetPath } from "../lib/snippets";
 import type { ToolSlug } from "../lib/tool-catalogue";
-import { getWork, isPagePublished, workPath } from "../lib/work";
+import { getSections } from "../components/palette-index";
 
 type Props = Parameters<typeof Head>[0] & {
   /** Set on tool pages (via `toolPageProps`): adds related tools and records the visit. */
@@ -30,29 +24,8 @@ const locale = localeOf(Astro);
 const t = useTranslations(locale);
 /** Vercel Web Analytics is cookieless and served first-party, so it only exists on Vercel. */
 const analytics = Boolean(process.env["VERCEL"]);
-const work = await getWork();
-const [nowPage, usesPage] = await Promise.all([getEntry("pages", "now"), getEntry("pages", "uses")]);
-const sections = {
-  work: work.length > 0,
-  now: Boolean(nowPage && isPagePublished(nowPage)),
-  cv: cv.roles.some((role) => filled(role.company)),
-};
-const showUses = Boolean(usesPage && isPagePublished(usesPage));
-const paletteWork = work.map((study) => ({
-  title: study.data.title,
-  href: workPath(study),
-  keywords: `${study.data.client} ${study.data.stack.join(" ")}`,
-}));
-const paletteArticles = (await getArticles()).map((article) => ({
-  title: article.data.title,
-  href: articlePath(article),
-  keywords: article.data.tags.join(" "),
-}));
-const paletteSnippets = (await getSnippets()).map((snippet) => ({
-  title: snippet.data.title,
-  href: snippetPath(snippet),
-  keywords: `snippet ${languageName(snippet.data.language)} ${snippet.data.tags.join(" ")}`,
-}));
+const sections = await getSections();
+const showUses = sections.uses;
 ---
 
 <!doctype html>
@@ -72,17 +45,7 @@ const paletteSnippets = (await getSnippets()).map((snippet) => ({
       {tool && <RelatedTools slug={tool} />}
     </main>
     <Footer showUses={showUses} />
-    <Palette
-      work={paletteWork}
-      articles={paletteArticles}
-      snippets={paletteSnippets}
-      hidden={[
-        ...(sections.work ? [] : ["/work/"]),
-        ...(sections.now ? [] : ["/now/"]),
-        ...(sections.cv ? [] : ["/cv/"]),
-        ...(showUses ? [] : ["/uses/"]),
-      ]}
-    />
+    <Palette />
     <Terminal
       pages={[
         ...(sections.work ? ["work"] : []),
@@ -116,7 +79,13 @@ const paletteSnippets = (await getSnippets()).map((snippet) => ({
       initSpotlight();
 
       // The palette, terminal and shortcuts help only load the first time someone opens them.
-      const openPalette = lazyOpener(() => import("../scripts/palette").then((module) => module.initPalette()));
+      const openPalette = lazyOpener(() => {
+        // The palette's options come from a JSON index: fetch it alongside the code, not after it.
+        const index = fetch(document.querySelector<HTMLElement>("#palette")?.dataset["index"] ?? "");
+        // It may fail before the palette's code arrives to handle it, which isn't an unhandled error.
+        index.catch(() => undefined);
+        return import("../scripts/palette").then((module) => module.initPalette({ index }));
+      });
       const openTerminal = lazyOpener(() => import("../scripts/terminal").then((module) => module.initTerminal()));
       const openHelp = lazyOpener(() =>
         import("../scripts/shortcuts-help").then((module) => module.initShortcutsHelp()),

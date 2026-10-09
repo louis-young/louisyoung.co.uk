@@ -44,6 +44,45 @@ test.describe("interactive states", () => {
   });
 
   for (const theme of themes) {
+    test(`the command palette's quick answers, loading and error states are accessible (${theme})`, async ({
+      page,
+      consoleErrors,
+    }) => {
+      await page.emulateMedia({ colorScheme: theme, reducedMotion: "reduce" });
+      const analyse = async () =>
+        (
+          await new AxeBuilder({ page })
+            .include("#palette")
+            .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa", "best-practice"])
+            .analyze()
+        ).violations.map(({ id, nodes }) => ({ id, targets: nodes.map((node) => node.target) }));
+
+      // Hold the index back to see the loading state, then fail it to see the error state.
+      let fail: () => void = () => undefined;
+      await page.route("**/palette.json", async (route) => {
+        await new Promise<void>((resolve) => {
+          fail = resolve;
+        });
+        await route.abort("internetdisconnected");
+      });
+      await page.goto("/");
+      await page.getByRole("button", { name: "Open command palette" }).first().click();
+      await expect(page.locator("[data-palette-loading]")).toBeVisible();
+      expect(await analyse()).toEqual([]);
+      fail();
+      await expect(page.locator("[data-palette-error]")).toBeVisible();
+      expect(await analyse()).toEqual([]);
+      consoleErrors.length = 0;
+
+      await page.unroute("**/palette.json");
+      await page.getByRole("button", { name: "Try again" }).click();
+      for (const query of ["#7c6cf0", "0 9 * * 1-5", "2^10"]) {
+        await page.getByRole("combobox").fill(query);
+        await expect(page.locator("#palette-answer")).toBeVisible();
+        expect(await analyse()).toEqual([]);
+      }
+    });
+
     test(`the quote toolbar and heading links are accessible when shown (${theme})`, async ({ page }) => {
       await page.emulateMedia({ colorScheme: theme, reducedMotion: "reduce" });
       await page.goto("/how-to-fetch-data-from-backend-react/");

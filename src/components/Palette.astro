@@ -1,102 +1,26 @@
 ---
 import { translatorFor } from "../i18n/astro";
-import { toolPath, tools } from "../lib/tool-catalogue";
-import { site } from "../site.config";
-
-interface Item {
-  title: string;
-  href: string;
-  keywords?: string;
-}
-
-interface Props {
-  work: readonly Item[];
-  articles: readonly Item[];
-  snippets?: readonly Item[];
-  /** Pages hidden from the navigation while they are drafts. */
-  hidden?: readonly string[];
-}
 
 const t = translatorFor(Astro);
-const { work, articles, snippets = [], hidden = [] } = Astro.props;
 
-interface Option {
-  title: string;
-  keywords?: string | undefined;
-  href?: string;
-  action?: string;
-  value?: string;
-  done?: string;
-  hint?: string;
-}
-
-const groups: { id: string; label: string; options: Option[] }[] = [
-  {
-    id: "pages",
-    label: t("palette.pages"),
-    options: [
-      { title: t("nav.home"), href: "/", hint: "/" },
-      { title: t("nav.work"), href: "/work/", hint: "/work" },
-      { title: t("nav.writing"), href: "/writing/", hint: "/writing" },
-      { title: t("nav.snippets"), href: "/snippets/", hint: "/snippets", keywords: "code copy paste toolbox" },
-      { title: t("nav.hire"), href: "/hire/", hint: "/hire" },
-      { title: t("nav.cv"), href: "/cv/", hint: "/cv" },
-      { title: t("nav.now"), href: "/now/", hint: "/now" },
-      { title: t("nav.uses"), href: "/uses/", hint: "/uses" },
-      { title: t("tags.title"), href: "/tags/", hint: "/tags" },
-      { title: t("nav.tools"), href: "/tools/", hint: "/tools" },
-      ...tools.map((tool) => ({ title: t(tool.title), href: toolPath(tool.slug), keywords: tool.keywords })),
-      { title: t("nav.stats"), href: "/stats/", hint: "/stats" },
-      {
-        title: t("map.title"),
-        href: "/map/",
-        hint: "/map",
-        keywords: "graph knowledge topics connections tags network",
-      },
-      {
-        title: t("changelog.title"),
-        href: "/changelog/",
-        hint: "/changelog",
-        keywords: "new release notes updates history",
-      },
-      { title: t("nav.colophon"), href: "/colophon/", hint: "/colophon" },
-      {
-        title: t("nav.accessibility"),
-        href: "/accessibility/",
-        hint: "/accessibility",
-        keywords: "a11y wcag statement keyboard screen reader",
-      },
-    ].filter((option) => !hidden.includes(option.href)),
-  },
-  {
-    id: "actions",
-    label: t("palette.actions"),
-    options: [
-      { title: t("palette.search"), action: "search", hint: "/" },
-      { title: t("hire.book"), href: "/hire/#book" },
-      {
-        title: t("palette.copyEmail"),
-        action: "copy",
-        value: site.author.email,
-        done: t("palette.copied"),
-        keywords: site.author.email,
-      },
-      { title: t("palette.downloadCv"), href: "/cv.pdf", action: "download" },
-      { title: t("palette.theme"), action: "theme", hint: "T" },
-      { title: t("palette.terminal"), action: "terminal", hint: "`", keywords: "terminal shell cli console" },
-      { title: t("shortcuts.title"), action: "shortcuts", hint: "?", keywords: "keys keyboard hotkeys help" },
-    ],
-  },
-  { id: "work", label: t("palette.work"), options: work.map((item) => ({ ...item })) },
-  { id: "writing", label: t("palette.writing"), options: articles.map((item) => ({ ...item })) },
-  { id: "snippets", label: t("palette.snippets"), options: snippets.map((item) => ({ ...item })) },
-].filter((group) => group.options.length > 0);
+/**
+ * The palette's shell. Its options are fetched from `/palette.json` when it is first warmed and
+ * rendered into these groups by `src/scripts/palette.ts`, so they aren't repeated in every page.
+ */
+const groups = [
+  { id: "pages", label: t("palette.pages") },
+  { id: "actions", label: t("palette.actions") },
+  { id: "work", label: t("palette.work") },
+  { id: "writing", label: t("palette.writing") },
+  { id: "snippets", label: t("palette.snippets") },
+];
 ---
 
 <dialog
   id="palette"
   class="palette"
   aria-labelledby="palette-title"
+  data-index="/palette.json"
   data-count-one={t("palette.countOne")}
   data-count-other={t("palette.countOther")}
 >
@@ -128,38 +52,25 @@ const groups: { id: string; label: string; options: Option[] }[] = [
   <div id="palette-list" class="palette__list" role="listbox" aria-label={t("palette.title")} tabindex="-1">
     <div role="none" class="palette__results" data-palette-results hidden></div>
     {groups.map((group) => (
-      <div role="group" aria-labelledby={`palette-group-${group.id}`} data-group={group.id}>
+      <div role="group" aria-labelledby={`palette-group-${group.id}`} data-group={group.id} hidden>
         <div id={`palette-group-${group.id}`} class="palette__group label">
           {group.label}
         </div>
-        <div role="none" class="palette__options">
-          {group.options.map((option, index) => (
-            <div
-              role="option"
-              id={`palette-${group.id}-${index}`}
-              class="palette__option"
-              aria-selected="false"
-              data-group={group.id}
-              data-title={option.title}
-              data-keywords={option.keywords}
-              data-href={option.href}
-              data-action={option.action}
-              data-value={option.value}
-              data-done={option.done}
-            >
-              <span class="palette__title">{option.title}</span>
-              {option.hint && (
-                <span class="palette__hint" aria-hidden="true">
-                  {option.hint}
-                </span>
-              )}
-            </div>
-          ))}
-        </div>
+        <div role="none" class="palette__options"></div>
       </div>
     ))}
   </div>
-  <p class="palette__empty" data-palette-empty hidden>
+  <p class="palette__note palette__loading" data-palette-loading hidden>
+    <span class="palette__spinner" aria-hidden="true"></span>
+    {t("palette.loading")}
+  </p>
+  <div class="palette__note palette__error" data-palette-error hidden>
+    <p>{t("palette.error")}</p>
+    <button type="button" class="button button--small" data-palette-retry>
+      {t("palette.retry")}
+    </button>
+  </div>
+  <p class="palette__note" data-palette-empty hidden>
     {t("palette.empty")}
   </p>
   <p class="visually-hidden" role="status" data-palette-status></p>
@@ -267,7 +178,8 @@ const groups: { id: string; label: string; options: Option[] }[] = [
     padding: 0.85rem 0.75rem 0.35rem;
   }
 
-  .palette__option {
+  /* Options are built by the script, so these rules can't rely on Astro's scoping attribute. */
+  .palette :global(.palette__option) {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -279,31 +191,140 @@ const groups: { id: string; label: string; options: Option[] }[] = [
     cursor: pointer;
   }
 
-  .palette__option[aria-selected="true"] {
+  .palette :global(.palette__option[aria-selected="true"]) {
     background: color-mix(in oklch, var(--accent) 16%, transparent);
     color: var(--ink);
     box-shadow: inset 2px 0 0 var(--accent);
   }
 
-  .palette__option[aria-selected="true"] .palette__hint {
+  .palette :global(.palette__option[aria-selected="true"] .palette__hint) {
     color: var(--ink-muted);
   }
 
-  .palette__title {
+  .palette :global(.palette__title) {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  .palette__hint {
+  .palette :global(.palette__hint) {
     flex-shrink: 0;
     font: 500 var(--text-step--2) / 1 var(--mono);
     color: var(--ink-faint);
   }
 
-  .palette__empty {
+  /* The quick answer: a larger row at the top of the results, above the pages that match. */
+  .palette :global(.palette__answer) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 0.35rem 1rem;
+    margin-block: 0.4rem 0.25rem;
+    padding: 0.75rem 0.9rem 0.85rem;
+    border: 1px solid var(--rule);
+    background: var(--paper-sunken);
+  }
+
+  /* Selected, it keeps its sunken surface (its faint labels are held to 4.5:1 on it) and gains the accent edge. */
+  .palette :global(.palette__answer[aria-selected="true"]) {
+    border-color: var(--accent);
+    background: var(--paper-sunken);
+  }
+
+  .palette :global(.palette__answer-label) {
+    color: var(--signal-text);
+  }
+
+  .palette :global(.palette__answer .palette__hint) {
+    display: flex;
+    gap: 0.4em;
+    align-items: center;
+  }
+
+  .palette :global(.palette__answer-main) {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-width: 0;
+  }
+
+  .palette :global(.palette__answer-value) {
+    overflow-wrap: anywhere;
+    font: 500 var(--text-step-1) / 1.25 var(--mono);
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+
+  .palette :global(.palette__answer[data-kind="cron"] .palette__answer-value) {
+    font-family: var(--sans);
+    letter-spacing: -0.015em;
+  }
+
+  .palette :global(.palette__swatch) {
+    flex-shrink: 0;
+    width: 1.6rem;
+    height: 1.6rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+  }
+
+  .palette :global(.palette__answer-details) {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1.1rem;
+    font: 400 var(--text-step--2) / 1.4 var(--mono);
+    color: var(--ink-muted);
+  }
+
+  .palette :global(.palette__answer-details > span) {
+    display: inline-flex;
+    gap: 0.5em;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .palette :global(.palette__answer-details .label) {
+    color: var(--ink-faint);
+  }
+
+  .palette__note {
     padding: 1.25rem 1.25rem 1.5rem;
     color: var(--ink-muted);
+  }
+
+  .palette__loading {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .palette__loading[hidden],
+  .palette__error[hidden] {
+    display: none;
+  }
+
+  .palette__spinner {
+    width: 0.9rem;
+    height: 0.9rem;
+    border: 2px solid var(--rule-strong);
+    border-block-start-color: var(--accent);
+    border-radius: 50%;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .palette__spinner {
+      animation: palette-spin 0.8s linear infinite;
+    }
+  }
+
+  .palette__error {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem 1rem;
   }
 
   .palette__footer {
@@ -327,6 +348,10 @@ const groups: { id: string; label: string; options: Option[] }[] = [
     .palette__footer {
       display: none;
     }
+
+    .palette :global(.palette__answer-value) {
+      font-size: var(--text-step-0);
+    }
   }
 
   /* Forced colours drop backgrounds and shadows, which is all that marked the active option. */
@@ -336,14 +361,25 @@ const groups: { id: string; label: string; options: Option[] }[] = [
       outline-offset: -2px;
     }
 
-    .palette__option[aria-selected="true"] {
+    .palette :global(.palette__option[aria-selected="true"]) {
       forced-color-adjust: none;
       background: Highlight;
       color: HighlightText;
     }
 
-    .palette__option[aria-selected="true"] .palette__hint {
+    .palette :global(.palette__option[aria-selected="true"] *) {
       color: HighlightText;
+    }
+
+    /* The swatch is the colour itself, so keep it. */
+    .palette :global(.palette__swatch) {
+      forced-color-adjust: none;
+    }
+  }
+
+  @keyframes palette-spin {
+    to {
+      rotate: 1turn;
     }
   }
 

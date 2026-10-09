@@ -107,5 +107,34 @@ The CSS generator's HTML grows by 0.1 kB gzipped because it now holds the defaul
 ## Recommendations (not changed)
 
 - **Reveal and LCP:** leave opacity out of the reveal for the LCP element (the page title, or the hero intro on home) and keep the rise and blur. That would take about 850 ms off desktop LCP on most pages. It changes the entrance, so it is a design decision.
-- **Palette data:** the palette's list of every page could be fetched as JSON when the palette first opens instead of being inlined, saving about 3.4 kB gzipped of HTML on every page. It needs care so the palette still opens instantly and keeps its accessibility behaviour.
+- **Palette data:** done; see [Palette index on demand](#palette-index-on-demand).
 - **`preload-helper.js`:** if a future Astro or Vite version lets the client build skip `__vitePreload` for dynamic imports with no CSS dependencies, that saves 805 B and one request on every page. Lower the budgets when that happens.
+
+## Palette index on demand
+
+A follow-up to finding 12. The palette's options (every page, tool, action, case study, article and snippet) were rendered into every page as static HTML. They now come from `/palette.json`, a build-time endpoint (`src/pages/palette.json.ts`), fetched when the palette is first warmed: the pointer or focus reaching an opener, or ⌘K. The page keeps the dialog shell: the input, the listbox, its groups and their labels, and the loading and error states. `src/scripts/palette.ts` renders the options with DOM APIs and `textContent` and checks the JSON's shape first (`parsePaletteIndex()`), so a stale or truncated response shows the error state, with a retry, rather than a half-built list.
+
+Measured as before: `SHOW_DRAFTS=true pnpm build`, then gzip -9 of every built page (78), with the palette `<dialog>` cut out to find its share.
+
+| HTML                                     |                     Before |        After |   Saved |
+| ---------------------------------------- | -------------------------: | -----------: | ------: |
+| Palette dialog, raw (every page)         |                   28,212 B |      3,860 B | 24.4 kB |
+| Palette dialog's share of a page, gzip   | 3,592 B (mean; 2.9–3.8 kB) | 646 B (mean) |  2.9 kB |
+| `/`, gzip                                |                   15,576 B |     12,492 B | 3,084 B |
+| `/how-to-fetch-data-from-backend-react/` |                   23,493 B |     20,367 B | 3,126 B |
+| `/writing/`, gzip                        |                   12,425 B |      9,515 B | 2,910 B |
+| `/tools/sql/`, gzip                      |                   12,332 B |      9,382 B | 2,950 B |
+| Mean page, gzip                          |                   13,299 B |     10,352 B | 2,947 B |
+| All 78 pages, gzip                       |                1,037,348 B |    807,481 B |  230 kB |
+
+So each page is about 2.9 kB gzipped (22%) and 24 kB raw smaller, and the browser parses about 300 fewer elements on every load. The index itself is 8.8 kB raw, 3.0 kB gzipped, and is fetched once, only by people who open the palette.
+
+**Caching.** `/palette.json` has no content hash in its path, so `vercel.json` serves it `public, max-age=0, must-revalidate` (asserted in `tests/unit/caching.test.ts`): after the first fetch, each page that warms the palette sends a conditional request and gets a 304. A hashed path would need every page to hash the index at build time, a second immutable rule outside `/_astro/`, and a page cached from an earlier deploy would then fetch an index that no longer exists. One small revalidation per page view that opens the palette is cheaper than that.
+
+**JavaScript.**
+
+- Every page: +50 B. `Base.astro` starts the index request alongside the palette's code, not after it, so ⌘K costs one round trip rather than two. The palette still loads only when warmed.
+- The palette's own chunk, loaded on warm: 1,354 B to 2,470 B gzipped (it now builds the options and has the loading and error states), and the shared `lib/palette` chunk 467 B to 748 B (index validation).
+- Quick answers (`src/scripts/palette-answer.ts` and `src/lib/quick-answers.ts`) are a separate chunk, 3.7 kB gzipped, plus the tool libraries they reuse, about 11.5 kB gzipped. They load only once a query passes `mayHaveQuickAnswer()` (a digit, `uuid`, or the punctuation colours, cron macros and selectors start with), never for plain words.
+- Because quick answers share libraries with tools, Vite now puts those libraries in their own chunks, so a few tool pages load an extra small chunk: `/tools/cron/` +346 B, `/tools/specificity/` +320 B, `/tools/base/` +290 B, `/tools/timestamp/` +263 B and `/tools/colour/` +186 B (all including the 50 B). The share-link helper that prefills a tool lives in `src/scripts/share-link.ts`, which every tool with share links already loads, so `lib/share-state` stays in that chunk rather than splitting out.
+- The tool budget moves from 11,400 B to 12,600 B. `/tools/qr/` was already at 11,336 B, 64 B under the old budget, because it shipped after the budgets were measured; it is now 11,410 B. 12,600 B is that plus about 10%, rounded up to 100 B, as for the other budgets. Every other budget is unchanged and every page still passes, as does the layout-stability check: the palette is only built after load, inside a closed dialog.

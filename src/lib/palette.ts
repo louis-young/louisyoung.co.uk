@@ -1,3 +1,5 @@
+import type { QuickAnswerMessages } from "./quick-answers";
+
 export interface Command {
   id: string;
   title: string;
@@ -53,4 +55,74 @@ export const sameOriginPath = (href: string, origin: string) => {
   } catch {
     return undefined;
   }
+};
+
+/** One palette option, as the build writes it to the palette index. */
+export interface PaletteOptionData {
+  title: string;
+  href?: string;
+  /** A built-in action: `search`, `copy`, `download`, `theme`, `terminal` or `shortcuts`. */
+  action?: string;
+  /** What `copy` copies. */
+  value?: string;
+  /** Announced once the action is done. */
+  done?: string;
+  /** A short visual hint, such as a path or a key. */
+  hint?: string;
+  keywords?: string;
+}
+
+/** Translated strings the palette only needs once its index has loaded. */
+export const paletteTextKeys = [
+  "answer",
+  "answerName",
+  "answerCopy",
+  "answerCopied",
+  "answerCopyFailed",
+  "answerOpen",
+  "answerSwatch",
+] as const;
+
+/**
+ * Everything the palette lists, fetched from `/palette.json` the first time it's warmed rather than
+ * written into every page. Group labels stay in the page, so groups are matched by `id`.
+ */
+export interface PaletteIndex {
+  groups: { id: string; options: PaletteOptionData[] }[];
+  text: Record<(typeof paletteTextKeys)[number], string>;
+  answers: QuickAnswerMessages;
+}
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+const isStrings = (value: unknown): value is Record<string, string> =>
+  isRecord(value) && Object.values(value).every((item) => typeof item === "string");
+
+const optionKeys = new Set(["title", "href", "action", "value", "done", "hint", "keywords"]);
+
+const isOption = (value: unknown): value is PaletteOptionData =>
+  isStrings(value) && typeof value["title"] === "string" && Object.keys(value).every((key) => optionKeys.has(key));
+
+/**
+ * Checks a fetched palette index has the shape the palette renders, so a truncated or stale
+ * response shows the error state instead of a half-built list. Returns undefined otherwise.
+ */
+export const parsePaletteIndex = (value: unknown): PaletteIndex | undefined => {
+  if (!isRecord(value) || !Array.isArray(value["groups"])) return undefined;
+  const groupsValid = value["groups"].every(
+    (group: unknown) =>
+      isRecord(group) &&
+      typeof group["id"] === "string" &&
+      Array.isArray(group["options"]) &&
+      group["options"].every(isOption),
+  );
+  const { text, answers } = value;
+  if (!groupsValid || !isStrings(text) || !paletteTextKeys.every((key) => key in text)) return undefined;
+  const answersValid =
+    isRecord(answers) &&
+    isStrings(answers["cron"]) &&
+    Object.entries(answers).every(([key, item]) => key === "cron" || typeof item === "string");
+  if (!answersValid) return undefined;
+  return value as unknown as PaletteIndex;
 };

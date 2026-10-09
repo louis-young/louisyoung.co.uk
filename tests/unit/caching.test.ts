@@ -26,4 +26,11 @@ describe("cache headers", () => {
     const immutable = rules.filter((rule) => cacheControl(rule)?.includes("immutable")).map(({ source }) => source);
     expect(immutable).toEqual(["/_astro/(.*)"]);
   });
+
+  it("make the palette index revalidate, since its path has no hash", () => {
+    const index = rules.find(({ source }) => source === "/palette.json");
+    const value = index && cacheControl(index);
+    expect(value).toMatch(/\bmust-revalidate\b/u);
+    expect(value).toMatch(/\bmax-age=0\b/u);
+  });
 });
