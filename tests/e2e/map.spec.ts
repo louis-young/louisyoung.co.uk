@@ -60,9 +60,10 @@ test.describe("content map", () => {
     expect(await near.count()).toBe(10);
     await expect(page.locator('[data-id="article:how-to-fetch-data-from-backend-react"]')).toHaveClass(/is-near/u);
     await expect(page.locator('[data-id="tool:json"]')).not.toHaveClass(/is-near|is-active/u);
-    expect(await page.locator('[data-id="tool:json"]').evaluate((node) => getComputedStyle(node).opacity)).not.toBe(
-      "1",
-    );
+    // A computed style isn't retried like the locator assertions around it, so poll until it settles.
+    await expect
+      .poll(() => page.locator('[data-id="tool:json"]').evaluate((node) => getComputedStyle(node).opacity))
+      .not.toBe("1");
     await expect(page.locator(".map__edge.is-lit")).toHaveCount(10);
     await expect(page.locator("[data-inspector-title]")).toHaveText("react");
 

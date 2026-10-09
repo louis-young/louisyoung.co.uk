@@ -1,38 +1,60 @@
 ---
 title: Uses
-description: The hardware, software and services I use to build things, kept up to date as they change.
-updated: 2026-10-08
-summary: "The tools on my desk and in my dock."
+description: The tools I build with and the stack behind this site, with a line on why each one earned its place. Kept up to date as things change.
+updated: 2026-10-09
+summary: "The stack behind this site, and the tools I reach for every day."
 # Remove once the placeholders are filled in; until then the page shows a short notice.
 draft: true
 ---
 
 ## Hardware
 
-- **Computer:** [Laptop / desktop and spec]
-- **Display:** [Monitor]
-- **Keyboard:** [Keyboard]
-- **Mouse / trackpad:** [Pointer]
-- **Audio:** [Headphones / microphone]
+- **Computer:** [PLACEHOLDER: laptop or desktop model and spec, and why you chose it]
+- **Display:** [PLACEHOLDER: monitor model and size, or delete this line if you work on the laptop screen]
+- **Keyboard and pointer:** [PLACEHOLDER: keyboard, and mouse or trackpad]
+- **Audio:** [PLACEHOLDER: headphones and microphone for calls, or delete this line]
 
 ## Editor and terminal
 
-- **Editor:** [VS Code / Neovim / Zed] with [THEME] and [FONT]
-- **Terminal:** [Ghostty / iTerm / Warp] running [SHELL]
-- **AI tooling:** [Claude Code, etc.]
+- **Editor:** [PLACEHOLDER: editor, colour theme and font]. Whatever I'm in, the repository's `.editorconfig` keeps it on two-space indents and LF line endings.
+- **Terminal:** [PLACEHOLDER: terminal app and shell, plus any prompt or plugins worth naming]
+- **Git:** a handful of aliases I'd miss, written up as a [snippet](/snippets/git-aliases/).
+- **AI:** Claude Code. I used it heavily to rebuild this site, working from a written brief and a `CLAUDE.md` in the repository. [PLACEHOLDER: confirm, and name any other AI tools you use day to day]
 
 ## Development
 
-- **Languages:** TypeScript first, [OTHERS]
-- **Runtime and packages:** Node.js and pnpm
-- **Browsers:** [Browser] for daily use, every engine for testing
+- **Languages:** TypeScript in strict mode wherever I can. [PLACEHOLDER: any other languages you use regularly, or delete]
+- **Runtime and packages:** Node.js 24, pinned in `.nvmrc`, and pnpm.
+- **Browsers:** [PLACEHOLDER: the browser you use day to day]. For testing, Chromium, Firefox and WebKit, which Playwright runs on every pull request.
+- **Code and CI:** GitHub, with GitHub Actions for CI and Dependabot for updates.
 
 ## This site
 
-Built with [Astro](https://astro.build), Tailwind CSS, MDX and a little React. Set in Schibsted Grotesk and JetBrains Mono. Tested with Vitest and Playwright, and hosted on Vercel. The [source is on GitHub](https://github.com/louis-young/louisyoung.co.uk).
+In October 2026 I rebuilt this site from a 2021 Gatsby blog into a static Astro site. The [colophon](/colophon/) covers the design and accessibility; this is the toolbox, and why each piece is there.
+
+- **[Astro](https://astro.build) 7** renders every page to static HTML. I picked it over Next.js because the site needs no server and almost no client-side JavaScript.
+- **React 19** only runs the live demos in articles, hydrated as islands when they scroll into view.
+- **TypeScript** in strict mode throughout. Articles, snippets and pages are content collections with Zod schemas, so a bad frontmatter field fails the build rather than the live site.
+- **MDX** for articles, snippets and pages like this one.
+- **Tailwind CSS 4** for the reset and utilities. Most styling is component-scoped CSS on a small set of OKLCH design tokens.
+- **Geist and Geist Mono**, self-hosted, so there's no third-party font request.
+- **Expressive Code** highlights code at build time and adds the copy button, so no highlighter ships to the browser.
+- **Pagefind** indexes the built site, so search runs entirely in the browser with nothing behind it.
+- **Satori and resvg** draw the Open Graph images and icons from the site's own fonts at build time, and **pdf-lib** generates the CV PDF from the same data as the web version.
+- **[Vercel](https://vercel.com)** hosts it, with a preview deployment for every pull request. Its Web Analytics is cookieless, which is why there's no consent banner.
+- **Vitest** runs the unit, integration, type and content tests. **Playwright** runs end-to-end, accessibility (with axe) and visual regression tests. Visual baselines are only rendered in a pinned container, so they don't drift between machines.
+- **Prettier, ESLint, cspell, ls-lint and knip** check formatting, code, spelling, file names and unused code. Lefthook runs them before a commit, and commitlint keeps commit messages conventional.
+- **Lighthouse CI** runs on every pull request with performance budgets.
+
+The [source is on GitHub](https://github.com/louis-young/louisyoung.co.uk).
+
+## Writing about
+
+My articles are about React and the JavaScript underneath it: state and hooks (functional state updates, avoiding derived state), the Context API, protected routes with React Router, fetching data with the Fetch API, destructuring props, and implicit and explicit returns. Most of them have a live demo or an embedded sandbox.
+
+The [snippets](/snippets/) lean towards TypeScript (`satisfies`, exhaustive switches with `never`, typed debounce and throttle), small React hooks, and CSS that holds up for everyone: focus rings in forced colours, a fluid type scale with `clamp()` and a visually hidden utility.
 
 ## Services
 
-- [Password manager]
-- [Notes app]
-- [Calendar / scheduling]
+- **Hosting and code:** Vercel and GitHub.
+- [PLACEHOLDER: other apps and services you'd recommend (password manager, notes, calendar or scheduling), or delete this section]
