@@ -4,12 +4,18 @@ test.describe("reading aids", () => {
   test("the time-left pill appears while reading and counts down", async ({ page }) => {
     await page.goto("/how-to-fetch-data-from-backend-react/");
     const pill = page.locator("[data-time-left]");
+    // Read the label's textContent: innerText is "" whenever the pill is visibility: hidden, which
+    // it briefly is each time it toggles with the scroll position, and parseInt("") is NaN.
+    const minutesLeft = async () =>
+      Number.parseInt((await pill.locator("[data-time-left-label]").textContent()) ?? "", 10);
     await expect(pill).toBeHidden();
     await page.locator("#tutorial").scrollIntoViewIfNeeded();
+    await expect(pill).toHaveAttribute("data-shown", "");
     await expect(pill).toBeVisible();
-    const start = Number.parseInt(await pill.innerText(), 10);
+    const start = await minutesLeft();
+    expect(start).toBeGreaterThan(0);
     await page.locator("#react-query").scrollIntoViewIfNeeded();
-    await expect.poll(async () => Number.parseInt(await pill.innerText(), 10)).toBeLessThan(start);
+    await expect.poll(minutesLeft).toBeLessThan(start);
   });
 
   test("ends with an author card", async ({ page }) => {

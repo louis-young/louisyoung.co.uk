@@ -1,0 +1,361 @@
+---
+import PageHero from "../../components/sections/PageHero.astro";
+import { useTranslations } from "../../i18n";
+import { localeOf } from "../../i18n/astro";
+import Base from "../../layouts/Base.astro";
+import { type Table, toMarkdown } from "../../lib/markdown-table-tool";
+import { toolPageProps } from "../../lib/tool-catalogue";
+
+const t = useTranslations(localeOf(Astro));
+const sample: Table = {
+  headers: ["Operator", "Name", "Example"],
+  rows: [
+    ["&&", "Logical AND", "a && b"],
+    ["||", "Logical OR", "a || b"],
+    ["??", "Nullish coalescing", "a ?? b"],
+  ],
+  align: ["center", "left", "left"],
+};
+---
+
+<Base {...toolPageProps("markdown-table", t)}>
+  <PageHero label={t("nav.tools")} title={t("tools.markdownTable.title")} lede={t("tools.markdownTable.summary")} />
+  <div
+    class="container-page mdt"
+    data-markdown-table
+    data-table={JSON.stringify(sample)}
+    data-copied={t("tools.copied")}
+    data-column={t("tools.markdownTable.column")}
+    data-header-row={t("tools.markdownTable.headerRow")}
+    data-header-cell={t("tools.markdownTable.headerCell")}
+    data-cell={t("tools.markdownTable.cell")}
+    data-align-label={t("tools.markdownTable.alignLabel")}
+    data-left={t("tools.markdownTable.left")}
+    data-center={t("tools.markdownTable.centre")}
+    data-right={t("tools.markdownTable.right")}
+    data-remove-row-label={t("tools.markdownTable.removeRow")}
+    data-remove-column-label={t("tools.markdownTable.removeColumn")}
+    data-size={t("tools.markdownTable.size")}
+    data-added-row={t("tools.markdownTable.addedRow")}
+    data-added-column={t("tools.markdownTable.addedColumn")}
+    data-removed-row={t("tools.markdownTable.removedRow")}
+    data-removed-column={t("tools.markdownTable.removedColumn")}
+    data-imported={t("tools.markdownTable.imported")}
+    data-import-empty={t("tools.markdownTable.importEmpty")}
+    data-format-markdown={t("tools.markdownTable.formatMarkdown")}
+    data-format-csv={t("tools.markdownTable.formatCsv")}
+    data-format-tsv={t("tools.markdownTable.formatTsv")}
+  >
+    <section class="mdt__editor card" aria-labelledby="mdt-editor">
+      <div class="mdt__head">
+        <h2 id="mdt-editor" class="label">
+          {t("tools.markdownTable.editor")}
+        </h2>
+        <div class="mdt__toolbar">
+          <button type="button" class="button button--small" data-add-row>
+            {t("tools.markdownTable.addRow")}
+          </button>
+          <button type="button" class="button button--small" data-add-column>
+            {t("tools.markdownTable.addColumn")}
+          </button>
+        </div>
+      </div>
+      <p id="mdt-keys" class="mdt__hint">
+        {t("tools.markdownTable.keys")}
+      </p>
+      <div class="mdt__scroll">
+        <table class="mdt__grid" aria-labelledby="mdt-editor" aria-describedby="mdt-keys" data-grid></table>
+      </div>
+      <p class="visually-hidden" role="status" data-announce></p>
+    </section>
+
+    <div class="mdt__import card">
+      <label class="mdt__label" for="mdt-import">
+        {t("tools.markdownTable.import")}
+      </label>
+      <textarea
+        id="mdt-import"
+        class="mdt__area"
+        rows="6"
+        spellcheck="false"
+        autocomplete="off"
+        autocapitalize="off"
+        aria-describedby="mdt-import-hint mdt-import-status"
+        data-import-input
+      ></textarea>
+      <p id="mdt-import-hint" class="mdt__hint">
+        {t("tools.markdownTable.importHint")}
+      </p>
+      <div>
+        <button type="button" class="button button--small" data-import>
+          {t("tools.markdownTable.importButton")}
+        </button>
+      </div>
+      <p id="mdt-import-status" class="mdt__note" role="status" data-import-status></p>
+    </div>
+
+    <div class="mdt__output card">
+      <div class="mdt__head">
+        <label class="label" for="mdt-output">
+          {t("tools.markdownTable.output")}
+        </label>
+        <button type="button" class="button button--small" data-copy>
+          <span data-copy-label>{t("tools.copy")}</span>
+          <span class="visually-hidden">{t("tools.markdownTable.output")}</span>
+        </button>
+      </div>
+      <label class="mdt__check">
+        <input type="checkbox" aria-describedby="mdt-compact-hint" data-compact />
+        <span>{t("tools.markdownTable.compact")}</span>
+      </label>
+      <p id="mdt-compact-hint" class="mdt__hint mdt__hint--tight">
+        {t("tools.markdownTable.compactHint")}
+      </p>
+      <p class="mdt__status" role="status" data-status></p>
+      <textarea
+        id="mdt-output"
+        class="mdt__area mdt__area--output"
+        rows="8"
+        readonly
+        spellcheck="false"
+        data-output
+      >{toMarkdown(sample)}</textarea>
+    </div>
+  </div>
+</Base>
+
+<script>
+  import { initMarkdownTable } from "../../scripts/tool-markdown-table";
+
+  initMarkdownTable();
+</script>
+
+<style>
+  .mdt {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+    gap: 1rem;
+    align-items: start;
+    padding-block-end: var(--spacing-section);
+  }
+
+  .mdt > .card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.75rem;
+    min-width: 0;
+    padding: clamp(1.25rem, 1rem + 1vw, 2rem);
+  }
+
+  .mdt__editor {
+    grid-column: 1 / -1;
+  }
+
+  .mdt__head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem 1rem;
+  }
+
+  .mdt__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .mdt__label {
+    font-weight: 500;
+    font-size: var(--text-step--1);
+  }
+
+  .mdt__hint {
+    color: var(--ink-muted);
+    font-size: var(--text-step--1);
+  }
+
+  .mdt__hint--tight {
+    margin-block-start: -0.75rem;
+  }
+
+  /* Positioned, so the visually hidden labels inside scroll with the table instead of widening the page. */
+  .mdt__scroll {
+    position: relative;
+    min-height: 13rem;
+    overflow-x: auto;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+  }
+
+  .mdt__scroll:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .mdt__grid {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: var(--text-step--1);
+  }
+
+  .mdt__grid :global(th),
+  .mdt__grid :global(td) {
+    padding: 0.3rem;
+    border-block-end: 1px solid var(--rule);
+    vertical-align: middle;
+  }
+
+  .mdt__grid :global(thead th) {
+    padding-block: 0.55rem 0.2rem;
+    border-block-end: 0;
+    color: var(--ink-faint);
+    font: 500 var(--text-step--2) / 1.2 var(--mono);
+    text-align: start;
+    white-space: nowrap;
+  }
+
+  .mdt__grid :global(tbody th) {
+    width: 4.5rem;
+    padding-inline: 0.75rem 0.4rem;
+    color: var(--ink-faint);
+    font: 500 var(--text-step--2) / 1.2 var(--mono);
+    text-align: start;
+    white-space: nowrap;
+  }
+
+  .mdt__grid :global(tbody tr:last-child > *) {
+    border-block-end: 0;
+  }
+
+  .mdt__grid :global(tr[data-header-row] > *) {
+    border-block-end: 2px solid var(--rule-strong);
+  }
+
+  .mdt__grid :global(tr[data-header-row] input) {
+    font-weight: 700;
+  }
+
+  .mdt__grid :global(.mdt__column) {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .mdt__grid :global(input),
+  .mdt__grid :global(select) {
+    width: 100%;
+    min-width: 8.5rem;
+    min-height: 2.5rem;
+    padding: 0.4rem 0.6rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: 0.4rem;
+    background: var(--paper-raised);
+    color: var(--ink);
+    font: 500 var(--text-step--1) / 1.4 var(--mono);
+  }
+
+  .mdt__grid :global(select) {
+    min-width: 0;
+    min-height: 2.25rem;
+    padding-block: 0.25rem;
+    font-family: var(--sans);
+  }
+
+  .mdt__grid :global(input:focus-visible),
+  .mdt__grid :global(select:focus-visible),
+  .mdt__grid :global(.mdt__remove:focus-visible) {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+
+  .mdt__grid :global(.mdt__remove) {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    color: var(--ink-muted);
+    font-size: var(--text-step-1);
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .mdt__grid :global(.mdt__remove:hover:not(:disabled)) {
+    border-color: var(--rule-strong);
+    color: var(--ink);
+  }
+
+  .mdt__grid :global(.mdt__remove:disabled) {
+    cursor: not-allowed;
+    opacity: 0.4;
+  }
+
+  .mdt__grid :global(td.mdt__actions) {
+    width: 2.75rem;
+  }
+
+  .mdt__area {
+    width: 100%;
+    min-width: 0;
+    min-height: 9rem;
+    padding: 0.8rem 1rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+    color: var(--ink);
+    font: 400 var(--text-step--1) / 1.6 var(--mono);
+    white-space: pre;
+    overflow-x: auto;
+    resize: vertical;
+  }
+
+  .mdt__area--output {
+    min-height: 12rem;
+  }
+
+  .mdt__area:focus-visible,
+  .mdt__check input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .mdt__check {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-height: 2.75rem;
+    font-size: var(--text-step--1);
+    cursor: pointer;
+  }
+
+  .mdt__check input {
+    width: 1.1rem;
+    height: 1.1rem;
+    margin: 0;
+    accent-color: var(--accent);
+  }
+
+  .mdt__status,
+  .mdt__note:not(:empty) {
+    padding: 0.6rem 0.9rem;
+    border-radius: var(--radius-sm);
+    background: var(--accent-soft);
+    color: var(--ink);
+    font-size: var(--text-step--1);
+  }
+
+  .mdt__note[data-invalid] {
+    background: var(--warning-soft);
+  }
+
+  @media (width < 56rem) {
+    .mdt {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

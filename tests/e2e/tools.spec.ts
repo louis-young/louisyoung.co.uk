@@ -320,4 +320,83 @@ test.describe("tools", () => {
       );
     }
   });
+
+  test("the specificity calculator ranks selectors and explains the winner", async ({ page }) => {
+    await page.goto("/tools/specificity/");
+    await page.getByLabel("Selectors, one per line").fill(".nav a\n#main :where(.x) p\n:is(.a, #b) li::before");
+    await expect(page.locator("#spec-status")).toHaveText(
+      "3 selectors ranked. :is(.a, #b) li::before wins with (1, 0, 2).",
+    );
+    const winner = page.locator("[data-list] > li").first();
+    await expect(winner.getByText("Wins")).toBeVisible();
+    await expect(winner.locator('[data-kind="ignored"]')).toHaveText(".a");
+    await expect(winner.locator('.spec__breakdown [data-weight="id"] [data-items]')).toHaveText("#b (inside :is())");
+    await page.getByLabel("Selectors, one per line").fill("a >\n.b");
+    await expect(page.getByText("Line 1, column 3: Nothing follows the combinator “>”.")).toBeVisible();
+  });
+
+  test("the URL parser takes a URL apart and rebuilds it from its parts", async ({ page }) => {
+    await page.goto("/tools/url/");
+    const input = page.getByLabel("URL", { exact: true });
+    await input.fill("example.com/search?colour=#fff&size=2");
+    await expect(page.getByText("There’s no protocol, so this assumes https://.")).toBeVisible();
+    await expect(page.getByText(/A # in the query ends it early/u)).toBeVisible();
+    await input.fill("https://example.com/search?q=flat+white");
+    await expect(page.getByLabel("Value of parameter 1")).toHaveValue("flat white");
+    await page.getByLabel("Hostname").fill("shop.example.org");
+    await page.getByRole("button", { name: "Add parameter" }).click();
+    await page.getByLabel("Name of parameter 2").fill("page");
+    await page.getByLabel("Value of parameter 2").fill("2");
+    await expect(input).toHaveValue("https://shop.example.org/search?q=flat+white&page=2");
+    await expect(page.locator("[data-origin]")).toHaveText("https://shop.example.org");
+    await page.getByLabel("Port").fill("http");
+    await expect(page.getByText("The URL can’t take this value, so it hasn’t changed.")).toBeVisible();
+    await page.getByRole("button", { name: "Remove parameter 1" }).click();
+    await expect(input).toHaveValue("https://shop.example.org/search?page=2");
+  });
+
+  test("the base converter keeps every base, the bits and the bytes in step", async ({ page }) => {
+    await page.goto("/tools/base/");
+    await page.getByLabel("Hexadecimal").fill("0xdead_beef");
+    await expect(page.getByLabel("Decimal base 10")).toHaveValue("3735928559");
+    await expect(page.getByLabel("Binary")).toHaveValue("11011110101011011011111011101111");
+    await expect(page.locator("[data-little]")).toHaveText("ef be ad de");
+    await page.getByLabel("Decimal base 10").fill("-1");
+    await expect(page.getByLabel("Signed (two’s complement)")).toBeChecked();
+    await expect(page.locator('[data-row="16"] [data-hex]')).toHaveText("0xffff");
+    await page.getByRole("radio", { name: "8-bit" }).check();
+    await page.getByRole("button", { name: "Bit 7", exact: true }).click();
+    await expect(page.getByLabel("Decimal base 10")).toHaveValue("127");
+    await expect(page.getByRole("button", { name: "Bit 7", exact: true })).toHaveAttribute("aria-pressed", "false");
+    await page.getByLabel("Decimal base 10").fill("18446744073709551615");
+    await expect(page.getByLabel("Hexadecimal")).toHaveValue("ffffffffffffffff");
+  });
+
+  test("the Markdown table generator edits, imports and copies a table", async ({ page, context, browserName }) => {
+    await page.goto("/tools/markdown-table/");
+    const output = page.getByLabel("Markdown", { exact: true });
+    await expect(output).toHaveValue(/^\| Operator \|/u);
+    await page.getByLabel("Paste CSV, TSV or a Markdown table").fill("Name,Role\nAnn,Lead | Dev");
+    await page.getByRole("button", { name: "Import" }).click();
+    await expect(page.locator("#mdt-import-status")).toHaveText("Imported 1 rows and 2 columns from CSV.");
+    await expect(output).toHaveValue("| Name | Role        |\n| :--- | :---------- |\n| Ann  | Lead \\| Dev |");
+    await page.getByLabel("Alignment of column 2").selectOption({ label: "Right" });
+    await page.getByLabel("Row 1, column 1").click();
+    await page.keyboard.press("End");
+    await page.keyboard.press("ArrowRight");
+    await expect(page.getByLabel("Row 1, column 2")).toBeFocused();
+    await page.keyboard.press("ArrowUp");
+    await expect(page.getByLabel("Header, column 2")).toBeFocused();
+    await page.getByRole("button", { name: "Add row" }).click();
+    await page.keyboard.type("Bo");
+    await page.getByLabel("Compact").check();
+    await expect(output).toHaveValue("|Name|Role|\n|:-|-:|\n|Ann|Lead \\| Dev|\n|Bo||");
+    if (browserName === "chromium") {
+      await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+      await page.getByRole("button", { name: "Copy Markdown" }).click();
+      expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
+        "|Name|Role|\n|:-|-:|\n|Ann|Lead \\| Dev|\n|Bo||",
+      );
+    }
+  });
 });
