@@ -1,0 +1,395 @@
+---
+import PageHero from "../../components/sections/PageHero.astro";
+import { useTranslations } from "../../i18n";
+import { localeOf } from "../../i18n/astro";
+import Base from "../../layouts/Base.astro";
+import { toolPageProps } from "../../lib/tool-catalogue";
+import { countLimits, inspectId } from "../../lib/uuid-tool";
+import { inspectRows } from "../../scripts/tool-uuid";
+
+const t = useTranslations(localeOf(Astro));
+const kinds = [
+  { value: "v4", label: t("tools.uuid.v4"), hint: t("tools.uuid.v4Hint") },
+  { value: "v7", label: t("tools.uuid.v7"), hint: t("tools.uuid.v7Hint") },
+  { value: "ulid", label: t("tools.uuid.ulid"), hint: t("tools.uuid.ulidHint") },
+];
+const versions = [
+  t("tools.uuid.version1"),
+  t("tools.uuid.version2"),
+  t("tools.uuid.version3"),
+  t("tools.uuid.version4"),
+  t("tools.uuid.version5"),
+  t("tools.uuid.version6"),
+  t("tools.uuid.version7"),
+  t("tools.uuid.version8"),
+];
+// A version 7 UUID made at 09:53:20 BST on 9 October 2025.
+const sample = "0199c82c-c000-7a3b-9c4d-5e6f7a8b9c0d";
+
+// The sample's details are rendered here too, so the page doesn't shift when the script fills
+// them in. This mirrors inspect() in src/scripts/tool-uuid.ts.
+const inspected = inspectId(sample);
+if (!inspected.ok) throw new Error("The sample UUID doesn’t parse.");
+const values = inspectRows(inspected.info, {
+  kind: t("tools.uuid.kindUuid"),
+  version: versions[6],
+  variant: t("tools.uuid.variantRfc"),
+});
+const rows = [
+  { key: "kind", label: t("tools.uuid.kind") },
+  { key: "version", label: t("tools.uuid.version") },
+  { key: "variant", label: t("tools.uuid.variant") },
+  { key: "time", label: t("tools.uuid.time") },
+  { key: "uuid", label: t("tools.uuid.uuidForm") },
+  { key: "ulid", label: t("tools.uuid.ulidForm") },
+] as const;
+---
+
+<Base {...toolPageProps("uuid", t)}>
+  {/* No share link: generated IDs are random, and an ID to inspect is quicker to paste. */}
+  <PageHero label={t("nav.tools")} title={t("tools.uuid.title")} lede={t("tools.uuid.summary")} />
+  <div
+    class="container-page uuid"
+    data-uuid
+    data-copied={t("tools.copied")}
+    data-generated-v4-one={t("tools.uuid.generatedV4One")}
+    data-generated-v4-other={t("tools.uuid.generatedV4Other")}
+    data-generated-v7-one={t("tools.uuid.generatedV7One")}
+    data-generated-v7-other={t("tools.uuid.generatedV7Other")}
+    data-generated-ulid-one={t("tools.uuid.generatedUlidOne")}
+    data-generated-ulid-other={t("tools.uuid.generatedUlidOther")}
+    data-inspect-empty={t("tools.uuid.inspectEmpty")}
+    data-inspect-invalid={t("tools.uuid.inspectInvalid")}
+    data-inspect-overflow={t("tools.uuid.inspectOverflow")}
+    data-status-uuid={t("tools.uuid.statusUuid")}
+    data-status-ulid={t("tools.uuid.statusUlid")}
+    data-status-nil={t("tools.uuid.statusNil")}
+    data-status-max={t("tools.uuid.statusMax")}
+    data-kind-uuid={t("tools.uuid.kindUuid")}
+    data-kind-ulid={t("tools.uuid.kindUlid")}
+    data-variant-ncs={t("tools.uuid.variantNcs")}
+    data-variant-rfc={t("tools.uuid.variantRfc")}
+    data-variant-microsoft={t("tools.uuid.variantMicrosoft")}
+    data-variant-future={t("tools.uuid.variantFuture")}
+    {...Object.fromEntries(versions.map((text, index) => [`data-version${index + 1}`, text]))}
+    data-version-unknown={t("tools.uuid.versionUnknown")}
+  >
+    <section class="uuid__card card" aria-labelledby="uuid-generate">
+      <h2 id="uuid-generate" class="label">
+        {t("tools.uuid.generate")}
+      </h2>
+      <fieldset class="uuid__kinds">
+        <legend class="uuid__label">{t("tools.uuid.type")}</legend>
+        {kinds.map(({ value, label, hint }) => (
+          <div class="uuid__kind">
+            <label class="uuid__kind-label">
+              <input
+                type="radio"
+                name="uuid-kind"
+                value={value}
+                checked={value === "v4"}
+                aria-describedby={`uuid-${value}-hint`}
+                data-kind
+              />
+              <span>{label}</span>
+            </label>
+            <p id={`uuid-${value}-hint`} class="uuid__kind-hint">
+              {hint}
+            </p>
+          </div>
+        ))}
+      </fieldset>
+      <div class="uuid__controls">
+        <label class="uuid__count">
+          <span class="uuid__label">{t("tools.uuid.count", { max: countLimits.max })}</span>
+          <input
+            type="number"
+            value="5"
+            min={countLimits.min}
+            max={countLimits.max}
+            step="1"
+            inputmode="numeric"
+            data-count
+          />
+        </label>
+        <label class="uuid__check">
+          <input type="checkbox" data-uppercase />
+          <span>{t("tools.uuid.uppercase")}</span>
+        </label>
+      </div>
+      <div class="uuid__actions">
+        <button type="button" class="button button--primary" disabled data-generate>
+          {t("tools.uuid.generateButton")}
+        </button>
+        <button type="button" class="button" disabled data-copy-all>
+          <span data-copy-label>{t("tools.uuid.copyAll")}</span>
+        </button>
+      </div>
+      <label class="uuid__label" for="uuid-output">
+        {t("tools.uuid.output")}
+      </label>
+      <textarea
+        id="uuid-output"
+        class="uuid__area"
+        rows="8"
+        readonly
+        spellcheck="false"
+        aria-describedby="uuid-status"
+        data-output
+      ></textarea>
+      <p id="uuid-status" class="uuid__status" role="status" data-status>
+        {t("tools.uuid.needsScript")}
+      </p>
+    </section>
+
+    <section class="uuid__card card" aria-labelledby="uuid-inspect">
+      <h2 id="uuid-inspect" class="label">
+        {t("tools.uuid.inspect")}
+      </h2>
+      <label class="uuid__label" for="uuid-inspect-input">
+        {t("tools.uuid.inspectInput")}
+      </label>
+      <input
+        id="uuid-inspect-input"
+        class="uuid__field"
+        type="text"
+        value={sample}
+        spellcheck="false"
+        autocomplete="off"
+        autocapitalize="off"
+        aria-describedby="uuid-inspect-hint uuid-inspect-status"
+        data-inspect
+      />
+      <p id="uuid-inspect-hint" class="uuid__hint">
+        {t("tools.uuid.inspectHint")}
+      </p>
+      <p id="uuid-inspect-status" class="uuid__status" role="status" data-inspect-status>
+        {t("tools.uuid.statusUuid")}
+      </p>
+      <dl class="uuid__list" aria-live="polite">
+        {rows.map(({ key, label }) => (
+          <div data-row={key} hidden={values[key] === undefined}>
+            <dt>{label}</dt>
+            <dd>
+              <code data-value>{values[key]}</code>
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  </div>
+</Base>
+
+<script>
+  import { initUuid } from "../../scripts/tool-uuid";
+
+  initUuid();
+</script>
+
+<style>
+  .uuid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 1rem;
+    align-items: start;
+    padding-block-end: var(--spacing-section);
+  }
+
+  .uuid .card {
+    display: grid;
+    gap: 0.75rem;
+    min-width: 0;
+    padding: clamp(1.25rem, 1rem + 1vw, 2rem);
+  }
+
+  .uuid__label {
+    font-weight: 500;
+    font-size: var(--text-step--1);
+  }
+
+  .uuid__kinds {
+    display: grid;
+    gap: 0.5rem;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  /* Floating the legend lays it out inside the fieldset rather than across its border. */
+  .uuid__kinds > legend {
+    float: left;
+    width: 100%;
+    padding: 0 0 0.25rem;
+  }
+
+  .uuid__kind {
+    display: grid;
+    gap: 0.1rem;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-sm);
+  }
+
+  .uuid__kind:has(input:checked) {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  .uuid__kind-label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-weight: 500;
+    font-size: var(--text-step--1);
+    cursor: pointer;
+  }
+
+  .uuid__kind-hint {
+    padding-inline-start: 1.85rem;
+    color: var(--ink-muted);
+    font-size: var(--text-step--2);
+  }
+
+  .uuid__kind:has(input:checked) .uuid__kind-hint {
+    color: var(--ink);
+  }
+
+  .uuid__kind input,
+  .uuid__check input {
+    width: 1.1rem;
+    height: 1.1rem;
+    margin: 0;
+    accent-color: var(--accent);
+  }
+
+  .uuid__controls,
+  .uuid__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: 0.75rem 1.5rem;
+  }
+
+  .uuid__actions {
+    gap: 0.75rem;
+  }
+
+  .uuid__count {
+    display: grid;
+    gap: 0.35rem;
+  }
+
+  .uuid__count input {
+    width: 7rem;
+  }
+
+  .uuid__check {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-height: 2.75rem;
+    font-size: var(--text-step--1);
+    cursor: pointer;
+  }
+
+  .uuid__count input,
+  .uuid__field,
+  .uuid__area {
+    min-width: 0;
+    min-height: 2.75rem;
+    padding: 0.6rem 0.9rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+    color: var(--ink);
+    font: 500 var(--text-step--1) / 1.6 var(--mono);
+  }
+
+  .uuid__field,
+  .uuid__area {
+    width: 100%;
+  }
+
+  .uuid__area {
+    font-weight: 400;
+    white-space: pre;
+    overflow-x: auto;
+    resize: vertical;
+  }
+
+  .uuid__field[aria-invalid="true"] {
+    border-color: var(--danger);
+  }
+
+  .uuid__count input:focus-visible,
+  .uuid__field:focus-visible,
+  .uuid__area:focus-visible,
+  .uuid__kind input:focus-visible,
+  .uuid__check input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .uuid__hint {
+    color: var(--ink-muted);
+    font-size: var(--text-step--1);
+  }
+
+  .uuid__status {
+    padding: 0.6rem 0.9rem;
+    border-radius: var(--radius-sm);
+    background: var(--accent-soft);
+    color: var(--ink);
+    font-size: var(--text-step--1);
+    overflow-wrap: anywhere;
+  }
+
+  .uuid__status[data-invalid] {
+    background: var(--warning-soft);
+  }
+
+  .uuid__list {
+    display: grid;
+    min-width: 0;
+  }
+
+  .uuid__list > div {
+    display: grid;
+    grid-template-columns: minmax(0, 8rem) minmax(0, 1fr);
+    align-items: baseline;
+    gap: 0.25rem 1rem;
+    padding-block: 0.5rem;
+    border-block-start: 1px solid var(--rule);
+    font-size: var(--text-step--1);
+  }
+
+  .uuid__list > div:first-child {
+    border-block-start: 0;
+  }
+
+  .uuid__list > div[hidden] {
+    display: none;
+  }
+
+  .uuid__list dt {
+    color: var(--ink-muted);
+  }
+
+  .uuid__list code {
+    font: 500 var(--text-step--1) / 1.5 var(--mono);
+    overflow-wrap: anywhere;
+  }
+
+  @media (width < 56rem) {
+    .uuid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  @media (width < 34rem) {
+    .uuid__list > div {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

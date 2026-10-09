@@ -239,6 +239,24 @@ export const tools = [
     keywords: "password passphrase generator random secure entropy diceware eff words",
   },
   {
+    slug: "jwt",
+    title: "tools.jwt.title",
+    summary: "tools.jwt.summary",
+    icon: "JWT",
+    category: "encoding",
+    added: "2026-10-09T11:50:00+01:00",
+    keywords: "jwt json web token decode bearer oauth claims exp expiry jws",
+  },
+  {
+    slug: "uuid",
+    title: "tools.uuid.title",
+    summary: "tools.uuid.summary",
+    icon: "v7",
+    category: "encoding",
+    added: "2026-10-09T11:50:00+01:00",
+    keywords: "uuid guid ulid v4 v7 random unique id generator inspect",
+  },
+  {
     slug: "http-status",
     title: "tools.http.title",
     summary: "tools.http.summary",
@@ -291,6 +309,15 @@ export const tools = [
     category: "web",
     added: "2026-10-09T05:26:30+01:00",
     keywords: "glob pattern minimatch picomatch gitignore wildcard path match files",
+  },
+  {
+    slug: "cidr",
+    title: "tools.cidr.title",
+    summary: "tools.cidr.summary",
+    icon: "/24",
+    category: "web",
+    added: "2026-10-09T11:50:00+01:00",
+    keywords: "cidr subnet ip ipv4 netmask wildcard network broadcast hosts range calculator",
   },
 ] as const satisfies readonly Tool[];
 

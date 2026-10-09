@@ -140,14 +140,14 @@ describe("quickAnswer: colours", () => {
 });
 
 describe("quickAnswer: UUIDs", () => {
-  it("makes a UUID for uuid, uuid v4 and guid, and points at the hash tool", () => {
+  it("makes a UUID for uuid, uuid v4 and guid, and points at the UUID tool", () => {
     for (const query of ["uuid", "UUID", "uuid v4", "uuidv4", "guid"]) {
       expect(answer(query), query).toEqual({
         kind: "uuid",
         value: "123e4567-e89b-42d3-a456-426614174000",
         copy: "123e4567-e89b-42d3-a456-426614174000",
         details: [],
-        tool: { slug: "hash" },
+        tool: { slug: "uuid" },
       });
     }
   });

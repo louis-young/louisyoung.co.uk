@@ -1,0 +1,442 @@
+---
+import PageHero from "../../components/sections/PageHero.astro";
+import { useTranslations } from "../../i18n";
+import { localeOf } from "../../i18n/astro";
+import Base from "../../layouts/Base.astro";
+import { decodeJwt, formatClaimDate, validity } from "../../lib/jwt-tool";
+import { toolPageProps } from "../../lib/tool-catalogue";
+import { fromNow } from "../../scripts/tool-jwt";
+
+const t = useTranslations(localeOf(Astro));
+// HS256 over this header and payload with the secret “your-256-bit-secret”. It expires in 2100.
+const sample = [
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
+  "eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkFkYSBMb3ZlbGFjZSIsImFkbWluIjp0cnVlLCJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20iLCJhdWQiOiJhcGkiLCJpYXQiOjE3NjAwMDAwMDAsImV4cCI6NDEwMjQ0NDgwMH0",
+  "hPp1yGBLgFLq0ml0tej0Fcrlpp6b78T3LE6bxV8YZsQ",
+].join(".");
+const partNames = ["header", "payload", "signature"];
+const claimLabels = {
+  iss: t("tools.jwt.claimIss"),
+  sub: t("tools.jwt.claimSub"),
+  aud: t("tools.jwt.claimAud"),
+  jti: t("tools.jwt.claimJti"),
+  iat: t("tools.jwt.claimIat"),
+  nbf: t("tools.jwt.claimNbf"),
+  exp: t("tools.jwt.claimExp"),
+};
+const statusMessages = {
+  expired: t("tools.jwt.expired"),
+  notYet: t("tools.jwt.notYet"),
+  active: t("tools.jwt.active"),
+};
+
+// The sample's results are rendered here too, so the page doesn't shift when the script fills
+// them in. This mirrors update() in src/scripts/tool-jwt.ts.
+const result = decodeJwt(sample);
+if (!result.ok) throw new Error("The sample JWT doesn’t decode.");
+const { token } = result;
+const now = new Date();
+const state = validity(token, now);
+const statusText =
+  state.state === "noExpiry"
+    ? t("tools.jwt.noExpiry")
+    : statusMessages[state.state].replace("{when}", fromNow(state.at, now));
+---
+
+<Base {...toolPageProps("jwt", t)}>
+  {/* No share link here, on purpose: tokens are credentials and never go in a URL. */}
+  <PageHero label={t("nav.tools")} title={t("tools.jwt.title")} lede={t("tools.jwt.summary")} />
+  <div
+    class="container-page jwt"
+    data-jwt
+    data-copied={t("tools.copied")}
+    data-empty={t("tools.jwt.empty")}
+    data-encrypted={t("tools.jwt.encrypted")}
+    data-parts-error={t("tools.jwt.partsError")}
+    data-error-base64={t("tools.jwt.errorBase64")}
+    data-error-utf8={t("tools.jwt.errorUtf8")}
+    data-error-json={t("tools.jwt.errorJson")}
+    data-error-object={t("tools.jwt.errorObject")}
+    data-segment-header={t("tools.jwt.segmentHeader")}
+    data-segment-payload={t("tools.jwt.segmentPayload")}
+    data-segment-signature={t("tools.jwt.segmentSignature")}
+    data-expired={statusMessages.expired}
+    data-not-yet={statusMessages.notYet}
+    data-active={statusMessages.active}
+    data-no-expiry={t("tools.jwt.noExpiry")}
+    data-no-alg={t("tools.jwt.noAlg")}
+    data-warning-unsecured={t("tools.jwt.warningUnsecured")}
+    data-warning-unsecured-signature={t("tools.jwt.warningUnsecuredSignature")}
+    data-warning-missing-signature={t("tools.jwt.warningMissingSignature")}
+    data-warning-not-base64-url={t("tools.jwt.warningNotBase64Url")}
+    data-warning-claim-type={t("tools.jwt.warningClaimType")}
+    data-warning-milliseconds={t("tools.jwt.warningMilliseconds")}
+    data-claim-iss={claimLabels.iss}
+    data-claim-sub={claimLabels.sub}
+    data-claim-aud={claimLabels.aud}
+    data-claim-jti={claimLabels.jti}
+    data-claim-iat={claimLabels.iat}
+    data-claim-nbf={claimLabels.nbf}
+    data-claim-exp={claimLabels.exp}
+  >
+    <div class="jwt__input card">
+      <label class="jwt__label" for="jwt-input">
+        {t("tools.jwt.input")}
+      </label>
+      <textarea
+        id="jwt-input"
+        class="jwt__area"
+        rows="7"
+        spellcheck="false"
+        autocomplete="off"
+        autocapitalize="off"
+        aria-describedby="jwt-hint jwt-status"
+        data-input
+      >{sample}</textarea>
+      <p id="jwt-hint" class="jwt__hint">
+        {t("tools.jwt.inputHint")}
+      </p>
+      <ul class="jwt__notices" role="list">
+        <li class="jwt__notice">
+          <strong>{t("tools.jwt.privateTitle")}</strong>
+          {t("tools.jwt.private")}
+        </li>
+        <li class="jwt__notice jwt__notice--warning">
+          <strong>{t("tools.jwt.unverifiedTitle")}</strong>
+          {t("tools.jwt.unverified")}
+        </li>
+      </ul>
+      <p id="jwt-status" class="jwt__status" role="status" data-status data-state={state.state}>
+        {statusText}
+      </p>
+      <div aria-live="polite">
+        <ul class="jwt__warnings" role="list" data-warnings hidden></ul>
+      </div>
+      <section class="jwt__section" aria-labelledby="jwt-parts">
+        <h2 id="jwt-parts" class="label">
+          {t("tools.jwt.parts")}
+        </h2>
+        <code class="jwt__parts" data-parts>
+          {token.parts.map((text, index) => (
+            <>
+              {index > 0 && "."}
+              <span data-part={partNames[index]}>{text}</span>
+            </>
+          ))}
+        </code>
+        <ul class="jwt__legend" role="list">
+          <li data-part="header">{t("tools.jwt.header")}</li>
+          <li data-part="payload">{t("tools.jwt.payload")}</li>
+          <li data-part="signature">{t("tools.jwt.signature")}</li>
+        </ul>
+      </section>
+    </div>
+
+    <div class="jwt__output">
+      {(
+        [
+          { part: "header", label: t("tools.jwt.header"), json: token.headerJson },
+          { part: "payload", label: t("tools.jwt.payload"), json: token.payloadJson },
+        ] as const
+      ).map(({ part, label, json }) => (
+        <section class="jwt__card card" aria-labelledby={`jwt-${part}`}>
+          <div class="jwt__head">
+            <h2 id={`jwt-${part}`} class="label">
+              {label}
+            </h2>
+            <button type="button" class="button button--small" data-copy={part}>
+              <span data-copy-label>{t("tools.copy")}</span>
+              <span class="visually-hidden">{label}</span>
+            </button>
+          </div>
+          <pre class="jwt__json"><code {...{ [`data-${part}`]: "" }}>{json}</code></pre>
+        </section>
+      ))}
+
+      <section class="jwt__card card" aria-labelledby="jwt-claims">
+        <h2 id="jwt-claims" class="label">
+          {t("tools.jwt.claims")}
+        </h2>
+        <dl class="jwt__list" aria-live="polite" data-claims>
+          {token.claims.map((claim) => (
+            <div>
+              <dt>{claimLabels[claim.name]}</dt>
+              <dd>{claim.value}</dd>
+            </div>
+          ))}
+          {token.times.map((claim) => (
+            <div>
+              <dt>{claimLabels[claim.name]}</dt>
+              <dd>
+                <time datetime={claim.date.toISOString()}>{formatClaimDate(claim.date)}</time>
+                <span class="jwt__relative">{fromNow(claim.date, now)}</span>
+              </dd>
+            </div>
+          ))}
+        </dl>
+        <p class="jwt__hint" data-no-claims hidden>
+          {t("tools.jwt.noClaims")}
+        </p>
+      </section>
+
+      <section class="jwt__card card" aria-labelledby="jwt-signature">
+        <h2 id="jwt-signature" class="label">
+          {t("tools.jwt.signature")}
+        </h2>
+        <dl class="jwt__list">
+          <div>
+            <dt>{t("tools.jwt.algorithm")}</dt>
+            <dd>
+              <code data-alg>{token.alg}</code>
+            </dd>
+          </div>
+          <div>
+            <dt>{t("tools.jwt.length")}</dt>
+            <dd data-length>{token.signatureBytes}</dd>
+          </div>
+          <div>
+            <dt>{t("tools.jwt.signatureValue")}</dt>
+            <dd>
+              <code class="jwt__signature" data-signature>
+                {token.parts[2]}
+              </code>
+            </dd>
+          </div>
+        </dl>
+      </section>
+    </div>
+  </div>
+</Base>
+
+<script>
+  import { initJwt } from "../../scripts/tool-jwt";
+
+  initJwt();
+</script>
+
+<style>
+  .jwt {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    gap: 1rem;
+    align-items: start;
+    padding-block-end: var(--spacing-section);
+  }
+
+  .jwt .card {
+    display: grid;
+    gap: 0.75rem;
+    min-width: 0;
+    padding: clamp(1.25rem, 1rem + 1vw, 2rem);
+  }
+
+  .jwt__output {
+    display: grid;
+    gap: 1rem;
+    min-width: 0;
+  }
+
+  .jwt__label {
+    font-weight: 500;
+    font-size: var(--text-step--1);
+  }
+
+  .jwt__area {
+    width: 100%;
+    min-width: 0;
+    min-height: 10rem;
+    padding: 0.7rem 1rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+    color: var(--ink);
+    font: 400 var(--text-step--1) / 1.6 var(--mono);
+    overflow-wrap: anywhere;
+    word-break: break-all;
+    resize: vertical;
+  }
+
+  .jwt__area[aria-invalid="true"] {
+    border-color: var(--danger);
+  }
+
+  .jwt__area:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .jwt__hint {
+    color: var(--ink-muted);
+    font-size: var(--text-step--1);
+  }
+
+  .jwt__hint[hidden],
+  .jwt__warnings[hidden] {
+    display: none;
+  }
+
+  .jwt__notices {
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  .jwt__notice {
+    padding: 0.6rem 0.9rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+    color: var(--ink);
+    font-size: var(--text-step--1);
+  }
+
+  .jwt__notice--warning {
+    border-color: var(--warning);
+    background: var(--warning-soft);
+  }
+
+  .jwt__notice strong {
+    font-weight: 600;
+  }
+
+  .jwt__status {
+    padding: 0.6rem 0.9rem;
+    border-radius: var(--radius-sm);
+    background: var(--accent-soft);
+    color: var(--ink);
+    font-size: var(--text-step--1);
+    overflow-wrap: anywhere;
+  }
+
+  .jwt__status[data-invalid],
+  .jwt__status[data-state="expired"],
+  .jwt__status[data-state="notYet"] {
+    background: var(--warning-soft);
+  }
+
+  .jwt__warnings {
+    display: grid;
+    gap: 0.4rem;
+    padding: 0.6rem 0.9rem;
+    border-radius: var(--radius-sm);
+    background: var(--warning-soft);
+    color: var(--ink);
+    font-size: var(--text-step--1);
+  }
+
+  .jwt__section {
+    display: grid;
+    gap: 0.6rem;
+  }
+
+  .jwt__parts {
+    display: block;
+    padding: 0.7rem 0.9rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+    color: var(--ink-muted);
+    font: 500 var(--text-step--1) / 1.6 var(--mono);
+    word-break: break-all;
+  }
+
+  .jwt :global([data-part="header"]) {
+    color: var(--syntax-type);
+  }
+
+  .jwt :global([data-part="payload"]) {
+    color: var(--syntax-string);
+  }
+
+  .jwt :global([data-part="signature"]) {
+    color: var(--accent);
+  }
+
+  .jwt__parts :global([data-broken]) {
+    text-decoration: underline wavy var(--danger);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.25em;
+  }
+
+  .jwt__legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1.25rem;
+    font: 600 var(--text-step--2) / 1.4 var(--mono);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  .jwt__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .jwt__json {
+    min-width: 0;
+    margin: 0;
+    padding: 0.7rem 0.9rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunken);
+    color: var(--ink);
+    font: 400 var(--text-step--1) / 1.6 var(--mono);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .jwt__list {
+    display: grid;
+    gap: 0;
+    min-width: 0;
+  }
+
+  .jwt__list > :global(div) {
+    display: grid;
+    grid-template-columns: minmax(0, 10rem) minmax(0, 1fr);
+    gap: 0.25rem 1rem;
+    padding-block: 0.5rem;
+    border-block-start: 1px solid var(--rule);
+    font-size: var(--text-step--1);
+  }
+
+  .jwt__list > :global(div:first-child) {
+    border-block-start: 0;
+  }
+
+  .jwt__list :global(dt) {
+    color: var(--ink-muted);
+  }
+
+  .jwt__list :global(dd) {
+    display: grid;
+    gap: 0.15rem;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .jwt__list code {
+    font: 500 var(--text-step--1) / 1.5 var(--mono);
+  }
+
+  .jwt__list :global(.jwt__relative) {
+    color: var(--ink-muted);
+  }
+
+  .jwt__signature {
+    word-break: break-all;
+  }
+
+  @media (width < 56rem) {
+    .jwt {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  @media (width < 34rem) {
+    .jwt__list > :global(div) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

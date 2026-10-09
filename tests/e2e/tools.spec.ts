@@ -484,6 +484,96 @@ test.describe("tools", () => {
     await expect(page.locator('[data-form="NFD"] [data-verdict]')).toHaveText("Same as the input");
     await expect(page.locator('[data-count="graphemes"]')).toHaveText("1");
   });
+
+  test("the JWT decoder decodes a token, dates its claims and keeps it out of the URL", async ({ page }) => {
+    const encode = (value: unknown) => Buffer.from(JSON.stringify(value)).toString("base64url");
+    const twoDaysAgo = Math.floor(Date.now() / 1000) - 2 * 24 * 60 * 60;
+    const token = `${encode({ alg: "RS256", typ: "JWT" })}.${encode({ sub: "ada", exp: twoDaysAgo })}.c2lnbmF0dXJl`;
+    await page.goto("/tools/jwt/");
+    await expect(page.getByText("Nothing leaves your browser.", { exact: true })).toBeVisible();
+    await expect(page.getByText("The signature is not verified.", { exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Copy share link" })).toHaveCount(0);
+    await page.getByLabel("Encoded token").fill(`Bearer ${token}`);
+    await expect(page.locator("#jwt-status")).toHaveText("Expired 2 days ago.");
+    await expect(page.locator("[data-header]")).toHaveText('{\n  "alg": "RS256",\n  "typ": "JWT"\n}');
+    await expect(page.locator("[data-claims]")).toContainText("Subject (sub)ada");
+    await expect(page.locator("[data-alg]")).toHaveText("RS256");
+
+    await page.getByLabel("Encoded token").fill(`${encode({ alg: "none" })}.${encode({ sub: "x" })}.`);
+    await expect(page.locator("#jwt-status")).toHaveText("Never expires: there’s no exp claim.");
+    await expect(page.locator("[data-warnings]")).toContainText("This token is unsecured (alg: none)");
+
+    await page.getByLabel("Encoded token").fill(`${encode({ alg: "HS256" })}.not*base64.sig`);
+    await expect(page.locator("#jwt-status")).toHaveText("The payload (the second part) isn’t valid base64url.");
+    await expect(page.getByLabel("Encoded token")).toHaveAttribute("aria-invalid", "true");
+    await expect(page.locator('[data-parts] [data-part="payload"]')).toHaveAttribute("data-broken", "");
+
+    expect(new URL(page.url()).hash).toBe("");
+    const stored = await page.evaluate(() =>
+      JSON.stringify([Object.entries(localStorage), Object.entries(sessionStorage)]),
+    );
+    expect(stored).not.toContain("not*base64");
+  });
+
+  test("the CIDR calculator works out a block, normalises host addresses and checks membership", async ({ page }) => {
+    await page.goto("/tools/cidr/");
+    const block = page.getByLabel("CIDR block");
+    await block.fill("192.168.1.130/26");
+    await expect(page.locator("#cidr-status")).toHaveText("192.168.1.128/26: 64 addresses, 62 usable hosts.");
+    await expect(
+      page.getByText(
+        "192.168.1.130 has host bits set, so it’s been normalised to the block it’s in, 192.168.1.128/26.",
+      ),
+    ).toBeVisible();
+    await expect(page.locator('[data-value="broadcast"]')).toHaveText("192.168.1.191");
+    await expect(page.locator('[data-value="first"]')).toHaveText("192.168.1.129");
+    await expect(page.locator('[data-value="last"]')).toHaveText("192.168.1.190");
+    await expect(page.locator('[data-value="netmask"]')).toHaveText("255.255.255.192");
+    await expect(page.locator('[data-value="wildcard"]')).toHaveText("0.0.0.63");
+    await expect(page.locator('[data-value="range"]')).toHaveText("Private (RFC 1918)");
+    await expect(page.locator('[data-bits="netmask"] .cidr__network')).toHaveText("11111111.11111111.11111111.11");
+
+    await page.getByLabel("Is this address in the block?").fill("192.168.1.200");
+    await expect(page.locator("#cidr-check-status")).toHaveText("No: 192.168.1.200 isn’t in 192.168.1.128/26.");
+
+    await block.fill("10.0.0.0/31");
+    await expect(page.getByText("A /31 is a point-to-point link")).toBeVisible();
+    await expect(page.locator('[data-value="usable"]')).toHaveText("2");
+
+    await block.fill("10.0.0.0/33");
+    await expect(page.locator("#cidr-status")).toHaveText("The prefix length must be a whole number from 0 to 32.");
+    await expect(block).toHaveAttribute("aria-invalid", "true");
+  });
+
+  test("the UUID tool generates v4, v7 and ULIDs and inspects them", async ({ page }) => {
+    await page.goto("/tools/uuid/");
+    const output = page.getByLabel("Generated IDs");
+    await expect(page.locator("#uuid-status")).toHaveText("Generated 5 version 4 UUIDs.");
+    await expect(output).toHaveValue(/^(?:[\da-f]{8}-[\da-f]{4}-4[\da-f]{3}-[89ab][\da-f]{3}-[\da-f]{12}\n?){5}$/u);
+    await page.getByRole("radio", { name: /UUID version 7/u }).check();
+    await page.getByLabel("How many (1 to 1,000)").fill("3");
+    await page.getByLabel("How many (1 to 1,000)").press("Tab");
+    await expect(page.locator("#uuid-status")).toHaveText("Generated 3 version 7 UUIDs.");
+    const v7 = (await output.inputValue()).split("\n");
+    expect(v7).toHaveLength(3);
+    expect(v7).toEqual([...v7].sort());
+
+    await page.getByLabel("UUID or ULID").fill(v7[0] ?? "");
+    await expect(page.locator("#uuid-inspect-status")).toHaveText("A valid UUID.");
+    await expect(page.locator('[data-row="version"] [data-value]')).toHaveText("7 (Unix time-ordered)");
+    await expect(page.locator('[data-row="time"] [data-value]')).toHaveText(
+      new RegExp(`^${new Date().toISOString().slice(0, 10)}T`, "u"),
+    );
+
+    await page.getByRole("radio", { name: /ULID/u }).check();
+    await expect(page.locator("#uuid-status")).toHaveText("Generated 3 ULIDs.");
+    await page.getByLabel("UUID or ULID").fill("01ARZ3NDEKTSV4RRFFQ69G5FAV");
+    await expect(page.locator("#uuid-inspect-status")).toHaveText("A valid ULID.");
+    await expect(page.locator('[data-row="time"] [data-value]')).toHaveText("2016-07-30T23:54:10.259Z");
+    await expect(page.locator('[data-row="version"]')).toBeHidden();
+    await page.getByLabel("UUID or ULID").fill("not an id");
+    await expect(page.locator("#uuid-inspect-status")).toHaveText(/^That isn’t a UUID or a ULID\./u);
+  });
 });
 
 test.describe("tools index", () => {
@@ -491,9 +581,9 @@ test.describe("tools index", () => {
     await page.goto("/tools/");
     const status = page.locator("[data-tools-status]");
     const colour = page.getByRole("heading", { level: 2, name: /^Colour & design/u });
-    await expect(status).toHaveText("All 29 tools");
+    await expect(status).toHaveText("All 32 tools");
     await expect(colour).toBeVisible();
-    await expect(page.locator("[data-tool]")).toHaveCount(29);
+    await expect(page.locator("[data-tool]")).toHaveCount(32);
 
     // `/` focuses this page's search rather than opening the palette.
     await page.keyboard.press("/");
@@ -515,9 +605,9 @@ test.describe("tools index", () => {
     await expect(status).toHaveText("No tools match.");
     await expect(page.getByText("Nothing matches that.")).toBeVisible();
     await page.getByRole("button", { name: "Clear filters" }).click();
-    await expect(status).toHaveText("All 29 tools");
+    await expect(status).toHaveText("All 32 tools");
     await expect(search).toBeFocused();
-    await expect(page.locator("[data-tool]:visible")).toHaveCount(29);
+    await expect(page.locator("[data-tool]:visible")).toHaveCount(32);
   });
 
   test("shows recently used tools, newest first", async ({ page }) => {
@@ -534,7 +624,7 @@ test.describe("tools index", () => {
     const context = await browser.newContext({ javaScriptEnabled: false });
     const page = await context.newPage();
     await page.goto("/tools/");
-    await expect(page.locator("[data-tool]:visible")).toHaveCount(29);
+    await expect(page.locator("[data-tool]:visible")).toHaveCount(32);
     await expect(page.getByLabel("Search tools")).toBeHidden();
     await context.close();
   });
@@ -554,7 +644,7 @@ test.describe("related tools", () => {
     await expect(page).toHaveURL(/\/tools\/diff\/$/u);
     await page
       .getByRole("complementary", { name: "Related tools" })
-      .getByRole("link", { name: "All 29 tools" })
+      .getByRole("link", { name: "All 32 tools" })
       .click();
     await expect(page).toHaveURL(/\/tools\/$/u);
   });
