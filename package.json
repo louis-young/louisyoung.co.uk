@@ -77,7 +77,7 @@
     "@testing-library/user-event": "^14.6.1",
     "@types/hast": "^3.0.5",
     "@types/jsdom": "^30.0.0",
-    "@types/node": "^24.0.0",
+    "@types/node": "^26.6.3",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitest/coverage-v8": "^5.0.3",
