@@ -74,7 +74,7 @@
     "@ls-lint/ls-lint": "^2.3.1",
     "@playwright/test": "1.65.0",
     "@testing-library/react": "^16.3.3",
-    "@testing-library/user-event": "^14.6.8",
+    "@testing-library/user-event": "^14.6.10",
     "@types/hast": "^3.0.5",
     "@types/jsdom": "^30.0.0",
     "@types/node": "^24.0.0",
